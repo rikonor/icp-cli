@@ -1,20 +1,78 @@
-use std::{env::args_os, ffi::OsString, fs::read, io::ErrorKind, path::PathBuf, str::FromStr};
+use std::{
+    env::args_os,
+    ffi::OsString,
+    fs::read,
+    io::ErrorKind,
+    path::PathBuf,
+    str::FromStr,
+    time::{SystemTime, UNIX_EPOCH},
+};
 
 use anyhow::{anyhow, Context, Error};
 use clap::{value_parser, Arg, Command};
-use extension::Manifest;
+use my_namespace::my_package::host::{self, Host};
 use serde_json::from_slice;
 
+use wasmtime::{
+    component::{bindgen, Component, Linker},
+    Engine, Store,
+};
+
 mod extension;
+use extension::Manifest;
+
 mod spec;
+use spec::CommandSpec;
+
+bindgen!({
+    path: "wit",
+    world: "extension",
+});
 
 const MANIFEST_PATH_DEFAULT: &str = "~/.smt/manifest.json";
 
 const ARG_MANIFEST_SHORT: char = 'm';
 const ARG_MANIFEST_LONG: &str = "manifest";
 
+struct State;
+
+impl Host for State {
+    fn print(&mut self, s: String) {
+        println!("{s}");
+    }
+
+    fn time(&mut self) -> u64 {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .expect("failed to get current time")
+            .as_millis() as u64
+    }
+
+    fn rand(&mut self) -> u8 {
+        todo!()
+    }
+}
+
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    // Engine
+    let ngn = Engine::default();
+
+    // Linker
+    let mut lnk = Linker::new(&ngn);
+
+    // Link host imports
+    host::add_to_linker(
+        &mut lnk,                  // linker
+        |state: &mut State| state, // get
+    )?;
+
+    // Store
+    let mut store = Store::new(
+        &ngn,  // engine
+        State, // data
+    );
+
     // Command
     let c = Command::new("smt");
 
@@ -87,7 +145,26 @@ async fn main() -> Result<(), Error> {
 
     // Extensions
     let c = m.xs.iter().try_fold(c, |c, cur| {
-        // c.subcommand(subcmd)
+        let cmpnt = Component::from_file(
+            &ngn,      // engine
+            &cur.path, // path
+        )?;
+
+        let inst = Extension::instantiate(
+            &mut store, // store
+            &cmpnt,     // component
+            &lnk,       // linker
+        )?;
+
+        let cspec = inst
+            .my_namespace_my_package_cli()
+            .call_spec(&mut store)
+            .context("failed to retrieve spec")?;
+
+        let c = c.subcommand({
+            let cspec: CommandSpec = serde_json::from_str(&cspec)?;
+            cspec
+        });
 
         Ok::<_, Error>(c)
     })?;
@@ -95,7 +172,7 @@ async fn main() -> Result<(), Error> {
     // Subcommand
     let ms = c.get_matches();
 
-    if let Some((cmd, ms)) = ms.subcommand() {
+    if let Some((cmd, _ms)) = ms.subcommand() {
         println!("{cmd:?}");
     }
 

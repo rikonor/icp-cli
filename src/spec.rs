@@ -45,6 +45,7 @@ impl From<CommandSpec> for Command {
             .into_iter()
             .fold(c, |acc, cur| acc.subcommand(cur));
 
+        #[allow(clippy::let_and_return)]
         c
     }
 }
