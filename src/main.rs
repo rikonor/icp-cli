@@ -10,12 +10,15 @@ use std::{
 
 use anyhow::{anyhow, Context, Error};
 use clap::{value_parser, Arg, Command};
+use dashmap::DashMap;
+use futures::future::try_join_all;
 use my_namespace::my_package::host::{self, Host};
 use serde_json::from_slice;
 
+use tokio::task::{self, JoinHandle};
 use wasmtime::{
     component::{bindgen, Component, Linker},
-    Engine, Store,
+    CodeBuilder, Config, Engine, Store,
 };
 
 mod extension;
@@ -27,6 +30,7 @@ use spec::CommandSpec;
 bindgen!({
     path: "wit",
     world: "extension",
+    async: true,
 });
 
 const MANIFEST_PATH_DEFAULT: &str = "~/.smt/manifest.json";
@@ -37,26 +41,30 @@ const ARG_MANIFEST_LONG: &str = "manifest";
 struct State;
 
 impl Host for State {
-    fn print(&mut self, s: String) {
+    async fn print(&mut self, s: String) {
         println!("{s}");
     }
 
-    fn time(&mut self) -> u64 {
+    async fn time(&mut self) -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("failed to get current time")
             .as_millis() as u64
     }
 
-    fn rand(&mut self) -> u8 {
+    async fn rand(&mut self) -> u8 {
         todo!()
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
+    // WASM Configuration
+    let mut cfg = Config::new();
+    let cfg = cfg.async_support(true);
+
     // Engine
-    let ngn = Engine::default();
+    let ngn = Engine::new(cfg)?;
 
     // Linker
     let mut lnk = Linker::new(&ngn);
@@ -143,31 +151,62 @@ async fn main() -> Result<(), Error> {
             .subcommand(Command::new("invoke")),
     );
 
-    // Extensions
-    let c = m.xs.iter().try_fold(c, |c, cur| {
-        let cmpnt = Component::from_file(
-            &ngn,      // engine
-            &cur.path, // path
-        )?;
+    // Components (initialize)
+    let cmpnts: DashMap<String, Component> = try_join_all(m.xs.iter().cloned().map(|x| {
+        flatten(task::spawn({
+            let ngn = ngn.clone();
 
-        let inst = Extension::instantiate(
+            async move {
+                let c = Component::from_file(
+                    &ngn,    // engine
+                    &x.path, // path
+                )?;
+
+                Ok((x.name, c))
+            }
+        }))
+    }))
+    .await?
+    .into_iter()
+    .collect();
+
+    // Components (instantiate)
+    let insts: DashMap<String, Extension> = DashMap::new();
+
+    for p in &cmpnts {
+        let (name, cmpnt) = p.pair();
+
+        let inst = Extension::instantiate_async(
             &mut store, // store
-            &cmpnt,     // component
+            cmpnt,      // component
             &lnk,       // linker
-        )?;
+        )
+        .await?;
 
+        insts.insert(
+            name.to_owned(), // key
+            inst,            // value
+        );
+    }
+
+    // Extensions (hydrate)
+    let mut c = c;
+
+    for p in &insts {
+        let (_, inst) = p.pair();
+
+        // Call spec for CommandSpec
         let cspec = inst
             .my_namespace_my_package_cli()
             .call_spec(&mut store)
+            .await
             .context("failed to retrieve spec")?;
 
-        let c = c.subcommand({
+        c = c.subcommand({
             let cspec: CommandSpec = serde_json::from_str(&cspec)?;
             cspec
         });
-
-        Ok::<_, Error>(c)
-    })?;
+    }
 
     // Subcommand
     let ms = c.get_matches();
@@ -177,4 +216,12 @@ async fn main() -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+async fn flatten<T>(handle: JoinHandle<Result<T, Error>>) -> Result<T, Error> {
+    match handle.await {
+        Ok(Ok(result)) => Ok(result),
+        Ok(Err(err)) => Err(err),
+        Err(err) => Err(err.into()),
+    }
 }
