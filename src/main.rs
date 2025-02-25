@@ -11,14 +11,12 @@ use std::{
 use anyhow::{anyhow, Context, Error};
 use clap::{value_parser, Arg, Command};
 use dashmap::DashMap;
-use futures::future::try_join_all;
 use my_namespace::my_package::host::{self, Host};
 use serde_json::from_slice;
 
-use tokio::task::{self, JoinHandle};
 use wasmtime::{
     component::{bindgen, Component, Linker},
-    CodeBuilder, Config, Engine, Store,
+    Config, Engine, Store,
 };
 
 mod extension;
@@ -152,23 +150,18 @@ async fn main() -> Result<(), Error> {
     );
 
     // Components (initialize)
-    let cmpnts: DashMap<String, Component> = try_join_all(m.xs.iter().cloned().map(|x| {
-        flatten(task::spawn({
-            let ngn = ngn.clone();
-
-            async move {
+    let cmpnts: DashMap<String, Component> =
+        m.xs.iter()
+            .cloned()
+            .map(|x| {
                 let c = Component::from_file(
                     &ngn,    // engine
                     &x.path, // path
                 )?;
 
-                Ok((x.name, c))
-            }
-        }))
-    }))
-    .await?
-    .into_iter()
-    .collect();
+                Ok::<_, Error>((x.name, c))
+            })
+            .collect::<Result<_, _>>()?;
 
     // Components (instantiate)
     let insts: DashMap<String, Extension> = DashMap::new();
@@ -216,12 +209,4 @@ async fn main() -> Result<(), Error> {
     }
 
     Ok(())
-}
-
-async fn flatten<T>(handle: JoinHandle<Result<T, Error>>) -> Result<T, Error> {
-    match handle.await {
-        Ok(Ok(result)) => Ok(result),
-        Ok(Err(err)) => Err(err),
-        Err(err) => Err(err.into()),
-    }
 }
