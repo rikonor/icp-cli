@@ -1,30 +1,40 @@
+use std::{
+    fs::{read, remove_file, write},
+    path::PathBuf,
+};
+
 use anyhow::Context as _;
 use async_trait::async_trait;
-use fluent_uri::{component::Scheme, Uri};
-use serde::{Deserialize, Serialize};
+use http::Uri;
 use wasmtime::Engine;
 
-const SCHEME_HTTP: &Scheme = Scheme::new_or_panic("http");
-const SCHEME_HTTPS: &Scheme = Scheme::new_or_panic("https");
-const SCHEME_GIT: &Scheme = Scheme::new_or_panic("git");
-const SCHEME_FILE: &Scheme = Scheme::new_or_panic("file");
+use crate::manifest::{Extension, Load, ManifestHandle, Store};
 
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct Extension {
-    pub name: String,
-    pub path: String,
+enum AdditionType {
+    _Uri(Uri),
+    File(PathBuf),
 }
 
-#[derive(Debug, Default, Deserialize, Serialize)]
-pub struct Manifest {
-    #[serde(rename = "extensions")]
-    pub xs: Vec<Extension>,
+impl From<&str> for AdditionType {
+    fn from(value: &str) -> Self {
+        // match value.parse::<Uri>() {
+        //     Ok(uri) => Self::Uri(uri),
+
+        //     // Assume local path
+        //     Err(_) => Self::File(value.into()),
+        // }
+
+        Self::File(value.into())
+    }
 }
 
 #[derive(Debug, thiserror::Error)]
 pub enum AddExtensionError {
+    #[error("extension with name {0} already installed")]
+    AlreadyExists(String),
+
     #[error("invalid uri: {0}")]
-    InvalidUri(String),
+    _InvalidUri(String),
 
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
@@ -32,41 +42,78 @@ pub enum AddExtensionError {
 
 #[async_trait]
 pub trait AddExtension: Sync + Send {
-    async fn add(&self, name: &str, path: &str) -> Result<(), AddExtensionError>;
-}
-
-pub struct Adders {
-    pub http: Http,
-    pub local: Local,
+    async fn add(&self, name: &str, p: &str) -> Result<(), AddExtensionError>;
 }
 
 pub struct ExtensionAdder {
     ngn: Engine,
-    adders: Adders,
+    mh: ManifestHandle,
+    // extensions_dir: PathBuf,
+    // precompiles_dir: PathBuf,
 }
 
 impl ExtensionAdder {
-    pub fn new(ngn: Engine, adders: Adders) -> Self {
-        Self { ngn, adders }
+    pub fn new(ngn: Engine, mh: ManifestHandle) -> Self {
+        Self { ngn, mh }
     }
 }
 
 #[async_trait]
 impl AddExtension for ExtensionAdder {
-    async fn add(&self, name: &str, uri: &str) -> Result<(), AddExtensionError> {
-        let uri = Uri::parse(uri).context("failed to parse uri")?;
+    async fn add(&self, name: &str, p: &str) -> Result<(), AddExtensionError> {
+        let m = self.mh.load().await.context("failed to load manifest")?;
 
-        // http
-        if uri.scheme() == SCHEME_HTTP || uri.scheme() == SCHEME_HTTPS {
-            return self.adders.http.add(uri.as_str()).await;
+        if m.xs.iter().any(|x| x.name == name) {
+            return Err(AddExtensionError::AlreadyExists(
+                name.to_owned(), // name
+            ));
         }
 
-        // file
-        if uri.scheme() == SCHEME_FILE {
-            return self.adders.local.add(uri.as_str()).await;
-        }
+        let ext = match AdditionType::from(p) {
+            AdditionType::File(path) => {
+                read(&path).context(format!("failed to read extension file: {:?}", path))?
+            }
 
-        Err(AddExtensionError::InvalidUri(uri.to_string()))
+            AdditionType::_Uri(_uri) => {
+                unimplemented!()
+            }
+        };
+
+        // TODO? What if its a uri but it's malformed? we should not assume its a file
+        // Err(AddExtensionError::InvalidUri(uri.to_string()))
+
+        // Precompile
+        let pre = self
+            .ngn
+            .precompile_component(&ext)
+            .context("failed to precompile component")?;
+
+        // Compatibility hash
+        // let h = self.ngn.precompile_compatibility_hash();
+
+        // Store extension
+        // TODO(or.ricon): Clean this up...
+        write("cmpnt.wasm", &ext).context("failed to write extension to disk")?;
+
+        // Store precompile
+        // TODO(or.ricon): Clean this up...
+        write("pre.bin", &pre).context("failed to write precompile to disk")?;
+
+        // Update manifest
+        let mut m = m;
+
+        m.xs.push(Extension {
+            name: name.to_string(),
+            wasm: "cmpnt.wasm".into(),
+            pre: "pre.bin".into(),
+        });
+
+        self.mh
+            .store(&m)
+            .await
+            .context("failed to store manifest")?;
+
+        Ok(())
     }
 }
 
@@ -84,31 +131,41 @@ pub trait RemoveExtension: Sync + Send {
     async fn remove(&self, name: &str) -> Result<(), RemoveExtensionError>;
 }
 
-pub struct ExtensionRemover;
+pub struct ExtensionRemover {
+    mh: ManifestHandle,
+}
+
+impl ExtensionRemover {
+    pub fn new(mh: ManifestHandle) -> Self {
+        Self { mh }
+    }
+}
 
 #[async_trait]
 impl RemoveExtension for ExtensionRemover {
     async fn remove(&self, name: &str) -> Result<(), RemoveExtensionError> {
-        println!("Removing {name}");
+        let m = self.mh.load().await.context("failed to load manifest")?;
 
-        Ok(())
-    }
-}
+        let x =
+            m.xs.iter()
+                .find(|x| x.name == name)
+                .ok_or(RemoveExtensionError::NotFound(name.to_owned()))?;
 
-pub struct Http;
+        // Clean files
+        for p in [&x.pre, &x.wasm] {
+            remove_file(p).context("failed to remove precompile")?;
+        }
 
-impl Http {
-    async fn add(&self, uri: &str) -> Result<(), AddExtensionError> {
-        println!("adding http: {uri}");
-        Ok(())
-    }
-}
+        // Update manifest
+        let mut m = m;
 
-pub struct Local;
+        m.xs.retain(|x| x.name != name);
 
-impl Local {
-    pub async fn add(&self, path: &str) -> Result<(), AddExtensionError> {
-        println!("adding local: {path}");
+        self.mh
+            .store(&m)
+            .await
+            .context("failed to store manifest")?;
+
         Ok(())
     }
 }

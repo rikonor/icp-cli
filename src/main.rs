@@ -1,18 +1,16 @@
 use std::{
     env::args_os,
     ffi::OsString,
-    fs::read,
-    io::ErrorKind,
     path::PathBuf,
     str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use anyhow::{anyhow, Context, Error};
+use anyhow::{Context, Error};
 use clap::{value_parser, Arg, Command};
 use dashmap::DashMap;
+use manifest::{Load as _, LoadError, Manifest, ManifestHandle};
 use my_namespace::my_package::host::{self, Host};
-use serde_json::from_slice;
 
 use wasmtime::{
     component::{bindgen, Component, Linker},
@@ -20,12 +18,12 @@ use wasmtime::{
 };
 
 mod extension;
-use extension::{
-    AddExtension, Adders, ExtensionAdder, ExtensionRemover, Http, Local, Manifest, RemoveExtension,
-};
+use extension::{AddExtension, ExtensionAdder, ExtensionRemover, RemoveExtension};
 
 mod spec;
 use spec::CommandSpec;
+
+mod manifest;
 
 bindgen!({
     path: "wit",
@@ -34,9 +32,14 @@ bindgen!({
 });
 
 const MANIFEST_PATH_DEFAULT: &str = "~/.smt/manifest.json";
-
 const ARG_MANIFEST_SHORT: char = 'm';
 const ARG_MANIFEST_LONG: &str = "manifest";
+
+const EXTENSIONS_DIR_DEFAULT: &str = "~/.smt/extensions";
+const ARG_EXTENSIONS_LONG: &str = "extensions-dir";
+
+const PRECOMPILES_DIR_DEFAULT: &str = "~/.smt/precompiles";
+const ARG_PRECOMPILES_LONG: &str = "precompiles-dir";
 
 struct State;
 
@@ -122,20 +125,8 @@ async fn main() -> Result<(), Error> {
         .get_one::<PathBuf>("manifest")
         .context("missing manifest path")?;
 
-    let m = match read(mpath) {
-        // Ok
-        Ok(bs) => from_slice(&bs).context("failed to parse manifest"),
-
-        // Err
-        Err(err) => match err.kind() {
-            // NotFound -> default
-            // TODO(or): Ask for confirmation from the user first or accept a -y / --yes option
-            ErrorKind::NotFound => Ok(Manifest::default()),
-
-            // _
-            err => Err(anyhow!("failed to read manifest: {err}")),
-        },
-    }?;
+    // Manifest (handle)
+    let mh = ManifestHandle(mpath.to_owned());
 
     // Setup
     let c = c
@@ -143,19 +134,21 @@ async fn main() -> Result<(), Error> {
         .disable_version_flag(true)
         .arg_required_else_help(true);
 
-    // Extension (Adder)
-    let adders = Adders {
-        http: Http,
-        local: Local,
-    };
-
-    let add = ExtensionAdder::new(
-        ngn.clone(), // engine
-        adders,      // adders
+    // Arg (extensions-dir)
+    let c = c.arg(
+        Arg::new("extensions-dir")
+            .long(ARG_EXTENSIONS_LONG)
+            .default_value(EXTENSIONS_DIR_DEFAULT)
+            .value_parser(value_parser!(PathBuf)),
     );
 
-    // Extension (Remover)
-    let rm = ExtensionRemover;
+    // Arg (precompiles-dir)
+    let c = c.arg(
+        Arg::new("precompiles-dir")
+            .long(ARG_PRECOMPILES_LONG)
+            .default_value(PRECOMPILES_DIR_DEFAULT)
+            .value_parser(value_parser!(PathBuf)),
+    );
 
     // Extension
     let c = c.subcommand(
@@ -168,6 +161,15 @@ async fn main() -> Result<(), Error> {
             .subcommand(Command::new("rm").arg(Arg::new("name").required(true))),
     );
 
+    // Manifest (load)
+    let m = mh.load().await.or_else(|err| match err {
+        // TODO(or.ricon): Prompt the user to create the manifest if it doesn't exist
+        LoadError::NotFound(_) => Ok(Manifest::default()),
+
+        //
+        _ => Err(err),
+    })?;
+
     // Components (initialize)
     let cmpnts: DashMap<String, Component> =
         m.xs.iter()
@@ -175,7 +177,7 @@ async fn main() -> Result<(), Error> {
             .map(|x| {
                 let c = Component::from_file(
                     &ngn,    // engine
-                    &x.path, // path
+                    &x.wasm, // path
                 )?;
 
                 Ok((x.name, c))
@@ -222,6 +224,23 @@ async fn main() -> Result<(), Error> {
 
     // Subcommand
     let ms = c.get_matches();
+
+    let _extdir = ms
+        .get_one::<PathBuf>("extensions-dir")
+        .context("missing extensions directory")?;
+
+    let _predir = ms
+        .get_one::<PathBuf>("precompiles-dir")
+        .context("missing precompiles directory")?;
+
+    // Extension (Adder)
+    let add = ExtensionAdder::new(
+        ngn.clone(), // engine
+        mh.clone(),  // mh
+    );
+
+    // Extension (Remover)
+    let rm = ExtensionRemover::new(mh);
 
     match ms.subcommand() {
         Some(("extension", ms)) => {
