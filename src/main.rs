@@ -225,18 +225,20 @@ async fn main() -> Result<(), Error> {
     // Subcommand
     let ms = c.get_matches();
 
-    let _extdir = ms
+    let extdir = ms
         .get_one::<PathBuf>("extensions-dir")
         .context("missing extensions directory")?;
 
-    let _predir = ms
+    let predir = ms
         .get_one::<PathBuf>("precompiles-dir")
         .context("missing precompiles directory")?;
 
     // Extension (Adder)
     let add = ExtensionAdder::new(
-        ngn.clone(), // engine
-        mh.clone(),  // mh
+        ngn.clone(),    // engine
+        mh.clone(),     // mh
+        extdir.clone(), // extensions_dir
+        predir.clone(), // precompiles_dir
     );
 
     // Extension (Remover)

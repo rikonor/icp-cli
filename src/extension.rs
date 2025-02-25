@@ -47,14 +47,28 @@ pub trait AddExtension: Sync + Send {
 
 pub struct ExtensionAdder {
     ngn: Engine,
+
+    // Manifest
     mh: ManifestHandle,
-    // extensions_dir: PathBuf,
-    // precompiles_dir: PathBuf,
+
+    // Dirs
+    extensions_dir: PathBuf,
+    precompiles_dir: PathBuf,
 }
 
 impl ExtensionAdder {
-    pub fn new(ngn: Engine, mh: ManifestHandle) -> Self {
-        Self { ngn, mh }
+    pub fn new(
+        ngn: Engine,
+        mh: ManifestHandle,
+        extensions_dir: PathBuf,
+        precompiles_dir: PathBuf,
+    ) -> Self {
+        Self {
+            ngn,
+            mh,
+            extensions_dir,
+            precompiles_dir,
+        }
     }
 }
 
@@ -92,20 +106,20 @@ impl AddExtension for ExtensionAdder {
         // let h = self.ngn.precompile_compatibility_hash();
 
         // Store extension
-        // TODO(or.ricon): Clean this up...
-        write("cmpnt.wasm", &ext).context("failed to write extension to disk")?;
+        let ext_path = self.extensions_dir.join(format!("{name}.component.wasm"));
+        write(&ext_path, &ext).context("failed to write extension to disk")?;
 
         // Store precompile
-        // TODO(or.ricon): Clean this up...
-        write("pre.bin", &pre).context("failed to write precompile to disk")?;
+        let pre_path = self.precompiles_dir.join(format!("{name}.precompile.bin"));
+        write(&pre_path, &pre).context("failed to write precompile to disk")?;
 
         // Update manifest
         let mut m = m;
 
         m.xs.push(Extension {
             name: name.to_string(),
-            wasm: "cmpnt.wasm".into(),
-            pre: "pre.bin".into(),
+            wasm: ext_path,
+            pre: pre_path,
         });
 
         self.mh
