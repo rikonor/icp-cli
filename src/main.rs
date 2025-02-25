@@ -20,7 +20,9 @@ use wasmtime::{
 };
 
 mod extension;
-use extension::Manifest;
+use extension::{
+    AddExtension, Adders, ExtensionAdder, ExtensionRemover, Http, Local, Manifest, RemoveExtension,
+};
 
 mod spec;
 use spec::CommandSpec;
@@ -141,12 +143,29 @@ async fn main() -> Result<(), Error> {
         .disable_version_flag(true)
         .arg_required_else_help(true);
 
+    // Extension (Adder)
+    let adders = Adders {
+        http: Http,
+        local: Local,
+    };
+
+    let add = ExtensionAdder::new(
+        ngn.clone(), // engine
+        adders,      // adders
+    );
+
+    // Extension (Remover)
+    let rm = ExtensionRemover;
+
     // Extension
     let c = c.subcommand(
         Command::new("extension")
-            .subcommand(Command::new("add"))
-            .subcommand(Command::new("remove"))
-            .subcommand(Command::new("invoke")),
+            .subcommand(
+                Command::new("add")
+                    .arg(Arg::new("name").long("name"))
+                    .arg(Arg::new("uri")),
+            )
+            .subcommand(Command::new("rm").arg(Arg::new("name").required(true))),
     );
 
     // Components (initialize)
@@ -159,9 +178,9 @@ async fn main() -> Result<(), Error> {
                     &x.path, // path
                 )?;
 
-                Ok::<_, Error>((x.name, c))
+                Ok((x.name, c))
             })
-            .collect::<Result<_, _>>()?;
+            .collect::<Result<_, Error>>()?;
 
     // Components (instantiate)
     let insts: DashMap<String, Extension> = DashMap::new();
@@ -204,8 +223,36 @@ async fn main() -> Result<(), Error> {
     // Subcommand
     let ms = c.get_matches();
 
-    if let Some((cmd, _ms)) = ms.subcommand() {
-        println!("{cmd:?}");
+    match ms.subcommand() {
+        Some(("extension", ms)) => {
+            match ms.subcommand() {
+                Some(("add", ms)) => {
+                    add.add(
+                        ms.try_get_one::<String>("name")?.expect("missing name"), // name
+                        ms.try_get_one::<String>("uri")?.expect("missing uri"),   // uri
+                    )
+                    .await
+                    .context("failed to add extension")?;
+                }
+
+                Some(("rm", ms)) => {
+                    rm.remove(
+                        ms.try_get_one::<String>("name")?.expect("missing name"), // name
+                    )
+                    .await
+                    .context("failed to remove extension")?;
+                }
+
+                _ => unreachable!(),
+            }
+        }
+
+        Some((cmd, _ms)) => {
+            // call extension's `run` export with `_ms`
+            print!("{cmd}");
+        }
+
+        _ => println!("none"),
     }
 
     Ok(())
