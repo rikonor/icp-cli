@@ -1,5 +1,5 @@
 use std::{
-    fs::{read, remove_file, write},
+    fs::{create_dir_all, read, remove_file, write},
     path::PathBuf,
 };
 
@@ -107,10 +107,12 @@ impl AddExtension for ExtensionAdder {
 
         // Store extension
         let ext_path = self.extensions_dir.join(format!("{name}.component.wasm"));
+        create_dir_all(&self.extensions_dir).context("failed to create extensions directory")?;
         write(&ext_path, &ext).context("failed to write extension to disk")?;
 
         // Store precompile
         let pre_path = self.precompiles_dir.join(format!("{name}.precompile.bin"));
+        create_dir_all(&self.precompiles_dir).context("failed to create precompiles directory")?;
         write(&pre_path, &pre).context("failed to write precompile to disk")?;
 
         // Update manifest

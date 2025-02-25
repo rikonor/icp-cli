@@ -175,10 +175,12 @@ async fn main() -> Result<(), Error> {
         m.xs.iter()
             .cloned()
             .map(|x| {
-                let c = Component::from_file(
-                    &ngn,    // engine
-                    &x.wasm, // path
-                )?;
+                let c = unsafe {
+                    Component::deserialize_file(
+                        &ngn,   // engine
+                        &x.pre, // path
+                    )
+                }?;
 
                 Ok((x.name, c))
             })
