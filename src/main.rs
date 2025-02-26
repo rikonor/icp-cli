@@ -1,7 +1,7 @@
 use std::{
     env::args_os,
     ffi::OsString,
-    path::PathBuf,
+    path::{Path, PathBuf},
     str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -12,6 +12,7 @@ use dashmap::DashMap;
 use manifest::{Load as _, LoadError, Manifest, ManifestHandle};
 use my_namespace::my_package::host::{self, Host};
 
+use once_cell::sync::Lazy;
 use wasmtime::{
     component::{bindgen, Component, Linker},
     Config, Engine, Store,
@@ -31,14 +32,27 @@ bindgen!({
     async: true,
 });
 
-const MANIFEST_PATH_DEFAULT: &str = "~/.smt/manifest.json";
+static MANIFEST_PATH_DEFAULT: Lazy<PathBuf> = Lazy::new(|| {
+    dirs::home_dir()
+        .expect("no home dir found")
+        .join(".smt/manifest.json")
+});
+
+static EXTENSIONS_DIR_DEFAULT: Lazy<PathBuf> = Lazy::new(|| {
+    dirs::cache_dir()
+        .expect("no cache dir found")
+        .join("smt/extensions-dir")
+});
+
+static PRECOMPILES_DIR_DEFAULT: Lazy<PathBuf> = Lazy::new(|| {
+    dirs::cache_dir()
+        .expect("no cache dir found")
+        .join("smt/precompiles-dir")
+});
+
 const ARG_MANIFEST_SHORT: char = 'm';
 const ARG_MANIFEST_LONG: &str = "manifest";
-
-const EXTENSIONS_DIR_DEFAULT: &str = "~/.smt/extensions";
 const ARG_EXTENSIONS_LONG: &str = "extensions-dir";
-
-const PRECOMPILES_DIR_DEFAULT: &str = "~/.smt/precompiles";
 const ARG_PRECOMPILES_LONG: &str = "precompiles-dir";
 
 struct State;
@@ -95,7 +109,7 @@ async fn main() -> Result<(), Error> {
         Arg::new("manifest")
             .short(ARG_MANIFEST_SHORT)
             .long(ARG_MANIFEST_LONG)
-            .default_value(MANIFEST_PATH_DEFAULT)
+            .default_value(MANIFEST_PATH_DEFAULT.as_os_str())
             .value_parser(value_parser!(PathBuf)),
     );
 
@@ -138,7 +152,7 @@ async fn main() -> Result<(), Error> {
     let c = c.arg(
         Arg::new("extensions-dir")
             .long(ARG_EXTENSIONS_LONG)
-            .default_value(EXTENSIONS_DIR_DEFAULT)
+            .default_value(EXTENSIONS_DIR_DEFAULT.as_os_str())
             .value_parser(value_parser!(PathBuf)),
     );
 
@@ -146,7 +160,7 @@ async fn main() -> Result<(), Error> {
     let c = c.arg(
         Arg::new("precompiles-dir")
             .long(ARG_PRECOMPILES_LONG)
-            .default_value(PRECOMPILES_DIR_DEFAULT)
+            .default_value(PRECOMPILES_DIR_DEFAULT.as_os_str())
             .value_parser(value_parser!(PathBuf)),
     );
 
