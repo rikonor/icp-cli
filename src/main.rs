@@ -174,13 +174,13 @@ async fn main() -> Result<(), Error> {
     // Extension
     let c = c.subcommand(
         Command::new("extension")
+            .about("manage extensions")
             .subcommand_required(true)
             .subcommand(Command::new("ls").alias("list"))
             .subcommand(
                 Command::new("add")
-                    .alias("install")
-                    .arg(Arg::new("name").long("name"))
-                    .arg(Arg::new("uri")),
+                    .arg(Arg::new("name").long("name").required(true))
+                    .arg(Arg::new("uri").help("Local path or Uri").required(true)),
             )
             .subcommand(
                 Command::new("rm")
