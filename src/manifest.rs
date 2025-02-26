@@ -1,11 +1,10 @@
 use std::{
-    fs::{read, write},
+    fs::{create_dir_all, read, write},
     io::ErrorKind,
     path::PathBuf,
 };
 
 use anyhow::{anyhow, Context as _};
-use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 use serde_json::{from_slice, to_vec_pretty};
 
@@ -31,9 +30,8 @@ pub enum LoadError {
     UnexpectedError(#[from] anyhow::Error),
 }
 
-#[async_trait]
 pub trait Load: Sync + Send {
-    async fn load(&self) -> Result<Manifest, LoadError>;
+    fn load(&self) -> Result<Manifest, LoadError>;
 }
 
 #[derive(Debug, thiserror::Error)]
@@ -42,17 +40,15 @@ pub enum StoreError {
     UnexpectedError(#[from] anyhow::Error),
 }
 
-#[async_trait]
 pub trait Store: Sync + Send {
-    async fn store(&self, m: &Manifest) -> Result<(), StoreError>;
+    fn store(&self, m: &Manifest) -> Result<(), StoreError>;
 }
 
 #[derive(Clone)]
 pub struct ManifestHandle(pub PathBuf);
 
-#[async_trait]
 impl Load for ManifestHandle {
-    async fn load(&self) -> Result<Manifest, LoadError> {
+    fn load(&self) -> Result<Manifest, LoadError> {
         // Read
         let bs = read(&self.0).map_err(|err| match err.kind() {
             // NotFound
@@ -67,10 +63,16 @@ impl Load for ManifestHandle {
     }
 }
 
-#[async_trait]
 impl Store for ManifestHandle {
-    async fn store(&self, m: &Manifest) -> Result<(), StoreError> {
+    fn store(&self, m: &Manifest) -> Result<(), StoreError> {
         let bs = to_vec_pretty(m).context("failed to serialize manifest")?;
+
+        let md = self
+            .0
+            .parent()
+            .context("failed to infer manifest directory")?;
+
+        create_dir_all(md).context("failed to create manifest directory")?;
 
         write(
             &self.0, // path

@@ -78,7 +78,7 @@ impl ExtensionAdder {
 #[async_trait]
 impl AddExtension for ExtensionAdder {
     async fn add(&self, name: &str, p: &str) -> Result<(), AddExtensionError> {
-        let m = self.mh.load().await.context("failed to load manifest")?;
+        let m = self.mh.load().context("failed to load manifest")?;
 
         if m.xs.iter().any(|x| x.name == name) {
             return Err(AddExtensionError::AlreadyExists(
@@ -130,8 +130,7 @@ impl AddExtension for ExtensionAdder {
 
         self.mh
             .store(&m)
-            .await
-            .context("failed to store manifest")?;
+            .context("failed to store extensions manifest")?;
 
         Ok(())
     }
@@ -164,7 +163,10 @@ impl ExtensionRemover {
 #[async_trait]
 impl RemoveExtension for ExtensionRemover {
     async fn remove(&self, name: &str) -> Result<(), RemoveExtensionError> {
-        let m = self.mh.load().await.context("failed to load manifest")?;
+        let m = self
+            .mh
+            .load()
+            .context("failed to load extensions manifest")?;
 
         let x =
             m.xs.iter()
@@ -183,8 +185,7 @@ impl RemoveExtension for ExtensionRemover {
 
         self.mh
             .store(&m)
-            .await
-            .context("failed to store manifest")?;
+            .context("failed to store extensions manifest")?;
 
         Ok(())
     }

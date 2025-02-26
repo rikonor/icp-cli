@@ -1,7 +1,7 @@
 use std::{
     env::args_os,
     ffi::OsString,
-    path::{Path, PathBuf},
+    path::PathBuf,
     str::FromStr,
     time::{SystemTime, UNIX_EPOCH},
 };
@@ -9,7 +9,7 @@ use std::{
 use anyhow::{Context, Error};
 use clap::{value_parser, Arg, Command};
 use dashmap::DashMap;
-use manifest::{Load as _, LoadError, Manifest, ManifestHandle};
+use manifest::{Load as _, LoadError, Manifest, ManifestHandle, Store as _};
 use my_namespace::my_package::host::{self, Host};
 
 use once_cell::sync::Lazy;
@@ -32,28 +32,32 @@ bindgen!({
     async: true,
 });
 
-static MANIFEST_PATH_DEFAULT: Lazy<PathBuf> = Lazy::new(|| {
+const SERVICE_NAME: &str = "dfx-2";
+
+static DEFAULT_PATH_MANIFEST: Lazy<PathBuf> = Lazy::new(|| {
     dirs::home_dir()
         .expect("no home dir found")
-        .join(".smt/manifest.json")
+        .join(format!(".{SERVICE_NAME}/manifest.json"))
 });
 
-static EXTENSIONS_DIR_DEFAULT: Lazy<PathBuf> = Lazy::new(|| {
+const ARG_SHORT_MANIFEST: char = 'm';
+const ARG_LONG_MANIFEST: &str = "manifest";
+
+static DEFAULT_DIR_EXTENSIONS: Lazy<PathBuf> = Lazy::new(|| {
     dirs::cache_dir()
         .expect("no cache dir found")
-        .join("smt/extensions-dir")
+        .join(format!("{SERVICE_NAME}/extensions-dir"))
 });
 
-static PRECOMPILES_DIR_DEFAULT: Lazy<PathBuf> = Lazy::new(|| {
+const ARG_LONG_EXTENSIONS: &str = "extensions-dir";
+
+static DEFAULT_DIR_PRECOMPILES: Lazy<PathBuf> = Lazy::new(|| {
     dirs::cache_dir()
         .expect("no cache dir found")
-        .join("smt/precompiles-dir")
+        .join(format!("{SERVICE_NAME}/precompiles-dir"))
 });
 
-const ARG_MANIFEST_SHORT: char = 'm';
-const ARG_MANIFEST_LONG: &str = "manifest";
-const ARG_EXTENSIONS_LONG: &str = "extensions-dir";
-const ARG_PRECOMPILES_LONG: &str = "precompiles-dir";
+const ARG_LONG_PRECOMPILES: &str = "precompiles-dir";
 
 struct State;
 
@@ -99,7 +103,7 @@ async fn main() -> Result<(), Error> {
     );
 
     // Command
-    let c = Command::new("smt");
+    let c = Command::new(SERVICE_NAME);
 
     // Version
     let c = c.version("1.0.0");
@@ -107,9 +111,9 @@ async fn main() -> Result<(), Error> {
     // Arg (manifest)
     let c = c.arg(
         Arg::new("manifest")
-            .short(ARG_MANIFEST_SHORT)
-            .long(ARG_MANIFEST_LONG)
-            .default_value(MANIFEST_PATH_DEFAULT.as_os_str())
+            .short(ARG_SHORT_MANIFEST)
+            .long(ARG_LONG_MANIFEST)
+            .default_value(DEFAULT_PATH_MANIFEST.as_os_str())
             .value_parser(value_parser!(PathBuf)),
     );
 
@@ -118,8 +122,8 @@ async fn main() -> Result<(), Error> {
 
     let mpath = args.windows(2).find(|&p| {
         [
-            format!("-{ARG_MANIFEST_SHORT}"),
-            format!("--{ARG_MANIFEST_LONG}"),
+            format!("-{ARG_SHORT_MANIFEST}"),
+            format!("--{ARG_LONG_MANIFEST}"),
         ]
         .iter()
         .any(|f| *f.as_str() == p[0])
@@ -151,16 +155,16 @@ async fn main() -> Result<(), Error> {
     // Arg (extensions-dir)
     let c = c.arg(
         Arg::new("extensions-dir")
-            .long(ARG_EXTENSIONS_LONG)
-            .default_value(EXTENSIONS_DIR_DEFAULT.as_os_str())
+            .long(ARG_LONG_EXTENSIONS)
+            .default_value(DEFAULT_DIR_EXTENSIONS.as_os_str())
             .value_parser(value_parser!(PathBuf)),
     );
 
     // Arg (precompiles-dir)
     let c = c.arg(
         Arg::new("precompiles-dir")
-            .long(ARG_PRECOMPILES_LONG)
-            .default_value(PRECOMPILES_DIR_DEFAULT.as_os_str())
+            .long(ARG_LONG_PRECOMPILES)
+            .default_value(DEFAULT_DIR_PRECOMPILES.as_os_str())
             .value_parser(value_parser!(PathBuf)),
     );
 
@@ -176,9 +180,16 @@ async fn main() -> Result<(), Error> {
     );
 
     // Manifest (load)
-    let m = mh.load().await.or_else(|err| match err {
-        // TODO(or.ricon): Prompt the user to create the manifest if it doesn't exist
-        LoadError::NotFound(_) => Ok(Manifest::default()),
+    let m = mh.load().or_else(|err| match err {
+        LoadError::NotFound(_) => {
+            let m = Manifest::default();
+
+            // TODO(or.ricon): Prompt the user to create the manifest if it doesn't exist
+            mh.store(&m)
+                .context("failed to store initial extensions manifest")?;
+
+            Ok(m)
+        }
 
         //
         _ => Err(err),
