@@ -1,30 +1,33 @@
 use std::{
-    fs::{create_dir_all, read, remove_file, write},
+    fs::{create_dir_all, exists, read, remove_file, write},
     path::PathBuf,
 };
 
-use anyhow::Context as _;
+use anyhow::{Context as _, Error};
 use async_trait::async_trait;
 use http::Uri;
+use reqwest::get;
 use wasmtime::Engine;
 
 use crate::manifest::{Extension, Load, ManifestHandle, Store};
 
 enum AdditionType {
-    _Uri(Uri),
+    Uri(Uri),
     File(PathBuf),
 }
 
-impl From<&str> for AdditionType {
-    fn from(value: &str) -> Self {
-        // match value.parse::<Uri>() {
-        //     Ok(uri) => Self::Uri(uri),
+impl TryFrom<&str> for AdditionType {
+    type Error = Error;
 
-        //     // Assume local path
-        //     Err(_) => Self::File(value.into()),
-        // }
+    fn try_from(value: &str) -> Result<Self, Self::Error> {
+        // File
+        if exists(value)? {
+            return Ok(Self::File(value.into()));
+        }
 
-        Self::File(value.into())
+        // Uri
+        let u = value.parse::<Uri>()?;
+        Ok(Self::Uri(u))
     }
 }
 
@@ -83,18 +86,19 @@ impl AddExtension for ExtensionAdder {
             ));
         }
 
-        let ext = match AdditionType::from(p) {
+        let ext = match AdditionType::try_from(p)? {
             AdditionType::File(path) => {
                 read(&path).context(format!("failed to read extension file: {:?}", path))?
             }
 
-            AdditionType::_Uri(_uri) => {
-                unimplemented!()
-            }
+            AdditionType::Uri(uri) => get(uri.to_string())
+                .await
+                .context("failed to download file")?
+                .bytes()
+                .await
+                .context("failed to read body")?
+                .to_vec(),
         };
-
-        // TODO? What if its a uri but it's malformed? we should not assume its a file
-        // Err(AddExtensionError::InvalidUri(uri.to_string()))
 
         // Precompile
         let pre = self
