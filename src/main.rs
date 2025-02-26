@@ -292,11 +292,16 @@ async fn main() -> Result<(), Error> {
         Some(("extension", ms)) => {
             match ms.subcommand() {
                 Some(("ls", _)) => {
-                    ls.list()
+                    let names = ls
+                        .list()
                         .await
-                        .context("failed to list extensions")?
-                        .iter()
-                        .for_each(|name| println!("{name}"));
+                        .context("failed to list installed extensions")?;
+
+                    if names.is_empty() {
+                        println!("No extensions installed");
+                    } else {
+                        names.iter().for_each(|name| println!("{name}"));
+                    }
                 }
 
                 Some(("add", ms)) => {
