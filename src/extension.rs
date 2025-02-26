@@ -194,7 +194,7 @@ impl RemoveExtension for ExtensionRemover {
 #[derive(Debug, thiserror::Error)]
 pub enum ListExtensionsError {
     #[error("not found: {0}")]
-    NotFound(String),
+    _NotFound(String),
 
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
