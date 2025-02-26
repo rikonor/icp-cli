@@ -7,7 +7,7 @@ use std::{
 };
 
 use anyhow::{Context, Error};
-use clap::{value_parser, Arg, Command};
+use clap::{value_parser, Arg, ArgAction, Command};
 use dashmap::DashMap;
 use manifest::{Load as _, LoadError, Manifest, ManifestHandle, Store as _};
 use my_namespace::my_package::host::{self, Host};
@@ -19,7 +19,10 @@ use wasmtime::{
 };
 
 mod extension;
-use extension::{AddExtension, ExtensionAdder, ExtensionRemover, RemoveExtension};
+use extension::{
+    AddExtension, ExtensionAdder, ExtensionLister, ExtensionRemover, ListExtensions,
+    RemoveExtension,
+};
 
 mod spec;
 use spec::CommandSpec;
@@ -172,12 +175,19 @@ async fn main() -> Result<(), Error> {
     let c = c.subcommand(
         Command::new("extension")
             .subcommand_required(true)
+            .subcommand(Command::new("ls").alias("list"))
             .subcommand(
                 Command::new("add")
+                    .alias("install")
                     .arg(Arg::new("name").long("name"))
                     .arg(Arg::new("uri")),
             )
-            .subcommand(Command::new("rm").arg(Arg::new("name").required(true))),
+            .subcommand(
+                Command::new("rm")
+                    .alias("remove")
+                    .arg(Arg::new("keep").short('k').action(ArgAction::SetTrue))
+                    .arg(Arg::new("name").required(true)),
+            ),
     );
 
     // Manifest (load)
@@ -264,6 +274,9 @@ async fn main() -> Result<(), Error> {
         .get_one::<PathBuf>("precompiles-dir")
         .context("missing precompiles directory")?;
 
+    // Extension (Lister)
+    let ls = ExtensionLister::new(mh.clone());
+
     // Extension (Adder)
     let add = ExtensionAdder::new(
         ngn.clone(),    // engine
@@ -278,6 +291,14 @@ async fn main() -> Result<(), Error> {
     match ms.subcommand() {
         Some(("extension", ms)) => {
             match ms.subcommand() {
+                Some(("ls", _)) => {
+                    ls.list()
+                        .await
+                        .context("failed to list extensions")?
+                        .iter()
+                        .for_each(|name| println!("{name}"));
+                }
+
                 Some(("add", ms)) => {
                     add.add(
                         ms.try_get_one::<String>("name")?.expect("missing name"), // name

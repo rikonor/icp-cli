@@ -190,3 +190,43 @@ impl RemoveExtension for ExtensionRemover {
         Ok(())
     }
 }
+
+#[derive(Debug, thiserror::Error)]
+pub enum ListExtensionsError {
+    #[error("not found: {0}")]
+    NotFound(String),
+
+    #[error(transparent)]
+    UnexpectedError(#[from] anyhow::Error),
+}
+
+#[async_trait]
+pub trait ListExtensions: Sync + Send {
+    async fn list(&self) -> Result<Vec<String>, ListExtensionsError>;
+}
+
+pub struct ExtensionLister {
+    mh: ManifestHandle,
+}
+
+impl ExtensionLister {
+    pub fn new(mh: ManifestHandle) -> Self {
+        Self { mh }
+    }
+}
+
+#[async_trait]
+impl ListExtensions for ExtensionLister {
+    async fn list(&self) -> Result<Vec<String>, ListExtensionsError> {
+        let m = self
+            .mh
+            .load()
+            .context("failed to load extensions manifest")?;
+
+        Ok(m.xs
+            .iter()
+            .cloned()
+            .map(|x| x.name)
+            .collect::<Vec<String>>())
+    }
+}
