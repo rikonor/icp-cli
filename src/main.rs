@@ -234,7 +234,7 @@ async fn main() -> Result<(), Error> {
     let mut c = c;
 
     for p in &insts {
-        let (_, inst) = p.pair();
+        let (name, inst) = p.pair();
 
         // Call spec for CommandSpec
         let cspec = inst
@@ -245,7 +245,10 @@ async fn main() -> Result<(), Error> {
 
         c = c.subcommand({
             let cspec: CommandSpec = serde_json::from_str(&cspec)?;
-            cspec
+            let c: Command = cspec.into();
+
+            // Overwrite name
+            c.name(name)
         });
     }
 
