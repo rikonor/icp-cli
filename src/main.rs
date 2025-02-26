@@ -171,6 +171,7 @@ async fn main() -> Result<(), Error> {
     // Extension
     let c = c.subcommand(
         Command::new("extension")
+            .subcommand_required(true)
             .subcommand(
                 Command::new("add")
                     .arg(Arg::new("name").long("name"))
