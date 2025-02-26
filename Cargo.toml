@@ -2,6 +2,8 @@
 name = "dfx-2"
 version = "0.1.0"
 edition = "2021"
+description = "Internet Computer utility with WASM extensions support"
+license = "MIT"
 
 [dependencies]
 anyhow = "1.0.96"
