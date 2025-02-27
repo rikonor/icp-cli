@@ -311,6 +311,8 @@ async fn main() -> Result<(), Error> {
                     )
                     .await
                     .context("failed to add extension")?;
+
+                    println!("Extension added");
                 }
 
                 Some(("rm", ms)) => {
@@ -321,16 +323,37 @@ async fn main() -> Result<(), Error> {
                     .context("failed to remove extension")?;
                 }
 
-                _ => unreachable!(),
+                _ => unreachable!("invalid command"),
             }
         }
 
-        Some((cmd, _ms)) => {
-            // call extension's `run` export with `_ms`
-            print!("{cmd}");
+        Some((cmd, _)) => {
+            // Trim arguments for extension
+            let args: Vec<_> = args
+                .iter()
+                .skip(1)
+                .map(|arg| {
+                    arg.to_str()
+                        .expect("invalid command-line argument")
+                        .to_owned()
+                })
+                .collect();
+
+            // Invoke extension
+            match insts.get(cmd) {
+                Some(inst) => {
+                    let exit_code = inst
+                        .my_namespace_my_package_cli()
+                        .call_run(&mut store, &args)
+                        .await?;
+
+                    println!("{exit_code}");
+                }
+                None => unreachable!("invalid extension"),
+            }
         }
 
-        _ => println!("none"),
+        _ => unreachable!("invalid command"),
     }
 
     Ok(())

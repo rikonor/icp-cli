@@ -1,6 +1,6 @@
 [package]
 name = "dfx-2"
-version = "0.1.3"
+version = "0.1.5"
 edition = "2021"
 description = "Internet Computer utility with WASM extensions support"
 license = "MIT"
