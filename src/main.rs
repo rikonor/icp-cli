@@ -228,12 +228,19 @@ async fn main() -> Result<(), Error> {
     for p in &cmpnts {
         let (name, cmpnt) = p.pair();
 
-        let inst = Extension::instantiate_async(
+        // Component (generic)
+        let inst = lnk
+            .instantiate_async(
+                &mut store, // store
+                cmpnt,      // component
+            )
+            .await?;
+
+        // Component (typed)
+        let inst = Extension::new(
             &mut store, // store
-            cmpnt,      // component
-            &lnk,       // linker
-        )
-        .await?;
+            &inst,      // instance
+        )?;
 
         insts.insert(
             name.to_owned(), // key
