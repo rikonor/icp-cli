@@ -24,7 +24,7 @@ This document outlines the working process for implementing the extension inter-
 1. **Update PROJECT_STATUS.md**: Update the status of tasks and overall project progress.
 2. **Update GUIDELINES.md**: Make suggestions to improve workflow and update accordingly.
 3. **Create Handoff Document**: Document the current state, what was accomplished, and next steps.
-4. **Final Commit**: Commit all changes with a descriptive message.
+4. **Final Commit**: Commit all changes with a descriptive message. **This is a hard requirement** - no session should end without committing all changes to ensure continuity between sessions.
 
 ## Documentation Standards
 
@@ -99,6 +99,16 @@ Description of the current state of the project and any work in progress.
 
 Any other relevant information or observations that might be helpful for the next session.
 ```
+
+## Code Modification Best Practices
+
+1. **Prefer Targeted Changes**: When modifying existing files, use the `replace_in_file` tool with carefully crafted SEARCH/REPLACE blocks rather than overwriting the entire file with `write_to_file`.
+
+2. **Retry Diff Operations**: If you encounter issues with the `replace_in_file` tool, it's preferable to retry with adjusted SEARCH blocks rather than immediately falling back to `write_to_file`. This is because diffs are much more efficient than full file rewrites.
+
+3. **Reserve `write_to_file` for New Files**: Only use `write_to_file` when creating entirely new files or when the changes are so extensive that using `replace_in_file` would be impractical.
+
+4. **Incremental Changes**: Make changes in small, logical increments that can be easily reviewed and understood.
 
 ## Code Quality Expectations
 
