@@ -4,27 +4,28 @@
 
 | Phase | Description                                | Status      | Completion |
 | ----- | ------------------------------------------ | ----------- | ---------- |
-| 1     | Foundation Setup and WIT Interface Updates | In Progress | 50%        |
-| 2     | Extension Discovery and Analysis           | Not Started | 0%         |
-| 3     | Dependency Resolution and Loading Order    | Not Started | 0%         |
+| 1     | Foundation Setup and WIT Interface Updates | Completed   | 100%       |
+| 2     | Extension Discovery and Analysis           | Completed   | 100%       |
+| 3     | Dependency Resolution and Loading Order    | Completed   | 100%       |
 | 4     | Dynamic Linking Implementation             | Not Started | 0%         |
 | 5     | Integration and Extension Commands         | Not Started | 0%         |
 | 6     | Testing and Refinement                     | Not Started | 0%         |
 
-**Overall Project Completion:** 10%
+**Overall Project Completion:** 50%
 
 ## Recently Completed Tasks
 
-- Updated `Extension` struct in `manifest.rs` to track library interfaces
-- Added `ExportedInterface` and `ImportedInterface` structs
-- Added conversion methods between library.rs types and manifest.rs types
-- Modified `DetectLibraryInterfaces` trait to be object-safe
-- Updated `ExtensionAdder` to detect and store library interfaces when adding an extension
-- Updated `main.rs` to create and pass the detector to the `ExtensionAdder`
+- Created `DependencyGraph` struct to represent dependencies between extensions
+- Implemented cycle detection using depth-first search
+- Implemented topological sorting for determining the correct loading order
+- Added dependency validation to check for missing interfaces and functions
+- Updated `main.rs` to use the dependency graph for loading extensions
+- Added a new `deps` subcommand to display extension dependencies
+- Updated `ExtensionAdder` to validate dependencies during installation
 
 ## Current Focus
 
-Implementing Phase 1: Foundation Setup and WIT Interface Updates
+Implementing Phase 4: Dynamic Linking Implementation
 
 ## Blockers / Challenges
 
@@ -32,12 +33,10 @@ _No blockers identified yet_
 
 ## Next Steps
 
-1. Implement dependency resolution functionality
-   - Create a dependency graph for extensions
-   - Implement an algorithm to determine the correct extension loading order
-   - Add cycle detection for circular dependencies
-2. Create function reference registry
-3. Update extension loading process to respect dependency order
+1. Create a function reference registry to track inter-extension function references
+2. Implement dynamic linking functions for imports that reference exports
+3. Implement automatic resolution of function references
+4. Add support for calling functions across extension boundaries
 
 ## Notes and Observations
 

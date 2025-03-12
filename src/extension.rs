@@ -10,6 +10,7 @@ use http::Uri;
 use reqwest::get;
 use wasmtime::{component::Component, Engine, Store as WasmtimeStore};
 
+use crate::dependency::DependencyGraph;
 use crate::library::DetectLibraryInterfaces;
 use crate::manifest::{
     ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store,
@@ -42,6 +43,9 @@ pub enum AddExtensionError {
 
     #[error("invalid uri: {0}")]
     _InvalidUri(String),
+
+    #[error("dependency validation failed: {0}")]
+    DependencyValidationFailed(String),
 
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
@@ -142,7 +146,7 @@ impl AddExtension for ExtensionAdder {
             .context("failed to detect library interfaces")?;
 
         // Create a new extension with detected library interfaces
-        let mut extension = Extension::new(name.to_string(), ext_path, pre_path);
+        let mut extension = Extension::new(name.to_string(), ext_path.clone(), pre_path.clone());
 
         // Add exported interfaces
         for interface in library_interfaces {
@@ -150,6 +154,24 @@ impl AddExtension for ExtensionAdder {
                 extension
                     .add_exported_interface(ExportedInterface::from_library_interface(&interface));
             }
+        }
+
+        // Validate dependencies before adding the extension
+        let dependency_graph =
+            DependencyGraph::new(&m).context("failed to create dependency graph")?;
+
+        // Check for potential circular dependencies and missing interfaces
+        if let Err(err) = dependency_graph.validate_extension_dependencies(&extension, &m) {
+            // Clean up temporary files since we're not adding the extension
+            for p in [&ext_path, &pre_path] {
+                if p.exists() {
+                    remove_file(p).context("failed to remove temporary file")?;
+                }
+            }
+
+            return Err(AddExtensionError::DependencyValidationFailed(
+                err.to_string(),
+            ));
         }
 
         // Update manifest

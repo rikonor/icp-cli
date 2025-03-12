@@ -31,13 +31,16 @@ use spec::CommandSpec;
 
 mod manifest;
 
+mod dependency;
+use dependency::DependencyGraph;
+
 // WIT Bindings
 use local::host::misc::{self, Host};
 
 bindgen!({
     path: "wit",
     world: "extension",
-    async: true,
+    async: true
 });
 
 const SERVICE_NAME: &str = "dfx-2";
@@ -201,6 +204,17 @@ async fn main() -> Result<(), Error> {
                     .alias("remove")
                     .arg(Arg::new("keep").short('k').action(ArgAction::SetTrue))
                     .arg(Arg::new("name").required(true)),
+            )
+            .subcommand(
+                Command::new("deps")
+                    .about("Show extension dependencies")
+                    .arg(Arg::new("name").help("Extension name").required(false))
+                    .arg(
+                        Arg::new("validate")
+                            .long("validate")
+                            .action(ArgAction::SetTrue)
+                            .help("Validate dependencies"),
+                    ),
             ),
     );
 
@@ -220,46 +234,69 @@ async fn main() -> Result<(), Error> {
         _ => Err(err),
     })?;
 
-    // Components (initialize)
-    let cmpnts: DashMap<String, Component> =
-        m.xs.iter()
-            .cloned()
-            .map(|x| {
-                let c = unsafe {
-                    Component::deserialize_file(
-                        &ngn,   // engine
-                        &x.pre, // path
-                    )
-                }?;
+    // Create dependency graph and resolve loading order
+    let dependency_graph = DependencyGraph::new(&m).context("failed to create dependency graph")?;
 
-                Ok((x.name, c))
-            })
-            .collect::<Result<_, Error>>()?;
+    // Check for circular dependencies
+    if dependency_graph.has_cycles() {
+        eprintln!("Warning: Circular dependencies detected in extensions:");
+        eprintln!("{}", dependency_graph.format_cycles());
+        eprintln!("Some extensions may not function correctly.");
+    }
+
+    // Resolve loading order
+    let loading_order = dependency_graph
+        .resolve_loading_order()
+        .context("failed to resolve extension loading order")?;
+
+    // Validate dependencies
+    if let Err(err) = dependency_graph.validate_dependencies(&m) {
+        eprintln!("Warning: Dependency validation failed: {}", err);
+        eprintln!("Some extensions may not function correctly.");
+    }
+
+    // Components (initialize)
+    let cmpnts: DashMap<String, Component> = DashMap::new();
+
+    // Load components in dependency order
+    for name in &loading_order {
+        if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
+            let component = unsafe {
+                Component::deserialize_file(
+                    &ngn,           // engine
+                    &extension.pre, // path
+                )
+            }?;
+
+            cmpnts.insert(name.clone(), component);
+        }
+    }
 
     // Components (instantiate)
     let insts: DashMap<String, Extension> = DashMap::new();
 
-    for p in &cmpnts {
-        let (name, cmpnt) = p.pair();
+    // Instantiate components in dependency order
+    for name in &loading_order {
+        if let Some(component) = cmpnts.get(name) {
+            // Component (generic)
+            let inst = lnk
+                .instantiate_async(
+                    &mut store,        // store
+                    component.value(), // component
+                )
+                .await?;
 
-        // Component (generic)
-        let inst = lnk
-            .instantiate_async(
+            // Component (typed)
+            let inst = Extension::new(
                 &mut store, // store
-                cmpnt,      // component
-            )
-            .await?;
+                &inst,      // instance
+            )?;
 
-        // Component (typed)
-        let inst = Extension::new(
-            &mut store, // store
-            &inst,      // instance
-        )?;
-
-        insts.insert(
-            name.to_owned(), // key
-            inst,            // value
-        );
+            insts.insert(
+                name.to_owned(), // key
+                inst,            // value
+            );
+        }
     }
 
     // Extensions (hydrate)
@@ -326,6 +363,60 @@ async fn main() -> Result<(), Error> {
                         println!("No extensions installed");
                     } else {
                         names.iter().for_each(|name| println!("{name}"));
+                    }
+                }
+
+                Some(("deps", ms)) => {
+                    // Create dependency graph
+                    let graph =
+                        DependencyGraph::new(&m).context("failed to create dependency graph")?;
+
+                    // Check if a specific extension was specified
+                    if let Some(name) = ms.try_get_one::<String>("name")? {
+                        // Check if the extension exists
+                        if !m.xs.iter().any(|x| x.name == *name) {
+                            eprintln!("Extension '{}' not found", name);
+                            return Ok(());
+                        }
+
+                        // Filter the text representation to only show the specified extension
+                        let full_text = graph.format_text_representation();
+                        let lines: Vec<&str> = full_text.lines().collect();
+
+                        let mut in_extension = false;
+                        let mut result = String::new();
+
+                        for line in lines {
+                            if line.starts_with(&format!("Extension: {}", name)) {
+                                in_extension = true;
+                                result.push_str(line);
+                                result.push('\n');
+                            } else if line.starts_with("Extension: ") {
+                                in_extension = false;
+                            } else if in_extension {
+                                result.push_str(line);
+                                result.push('\n');
+                            }
+                        }
+
+                        println!("{}", result);
+                    } else {
+                        // Show all dependencies
+                        println!("{}", graph.format_text_representation());
+                    }
+
+                    // Validate dependencies if requested
+                    if ms.get_flag("validate") {
+                        println!("\nValidating dependencies...");
+                        match graph.validate_dependencies(&m) {
+                            Ok(_) => println!("All dependencies are satisfied."),
+                            Err(err) => println!("Dependency validation failed: {}", err),
+                        }
+
+                        if graph.has_cycles() {
+                            println!("\nCircular dependencies detected:");
+                            println!("{}", graph.format_cycles());
+                        }
                     }
                 }
 
