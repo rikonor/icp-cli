@@ -10,8 +10,6 @@ use anyhow::{Context, Error};
 use clap::{value_parser, Arg, ArgAction, Command};
 use dashmap::DashMap;
 use manifest::{Load as _, LoadError, Manifest, ManifestHandle, Store as _};
-use my_namespace::my_package::host::{self, Host};
-
 use once_cell::sync::Lazy;
 use wasmtime::{
     component::{bindgen, Component, Linker},
@@ -28,6 +26,9 @@ mod spec;
 use spec::CommandSpec;
 
 mod manifest;
+
+// WIT Bindings
+use local::host::misc::{self, Host};
 
 bindgen!({
     path: "wit",
@@ -94,7 +95,7 @@ async fn main() -> Result<(), Error> {
     let mut lnk = Linker::new(&ngn);
 
     // Link host imports
-    host::add_to_linker(
+    misc::add_to_linker(
         &mut lnk,                  // linker
         |state: &mut State| state, // get
     )?;
@@ -256,7 +257,7 @@ async fn main() -> Result<(), Error> {
 
         // Call spec for CommandSpec
         let cspec = inst
-            .my_namespace_my_package_cli()
+            .local_extension_cli()
             .call_spec(&mut store)
             .await
             .context("failed to retrieve spec")?;
@@ -328,6 +329,8 @@ async fn main() -> Result<(), Error> {
                     )
                     .await
                     .context("failed to remove extension")?;
+
+                    println!("Extension removed");
                 }
 
                 _ => unreachable!("invalid command"),
@@ -350,7 +353,7 @@ async fn main() -> Result<(), Error> {
             match insts.get(cmd) {
                 Some(inst) => {
                     let exit_code = inst
-                        .my_namespace_my_package_cli()
+                        .local_extension_cli()
                         .call_run(&mut store, &args)
                         .await?;
 
