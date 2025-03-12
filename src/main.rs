@@ -34,6 +34,10 @@ mod manifest;
 mod dependency;
 use dependency::DependencyGraph;
 
+mod dynamic_linker;
+mod function_registry;
+use dynamic_linker::DynamicLinker;
+
 // WIT Bindings
 use local::host::misc::{self, Host};
 
@@ -255,6 +259,9 @@ async fn main() -> Result<(), Error> {
         eprintln!("Some extensions may not function correctly.");
     }
 
+    // Create dynamic linker
+    let mut dynamic_linker = DynamicLinker::new();
+
     // Components (initialize)
     let cmpnts: DashMap<String, Component> = DashMap::new();
 
@@ -269,6 +276,17 @@ async fn main() -> Result<(), Error> {
             }?;
 
             cmpnts.insert(name.clone(), component);
+        }
+    }
+
+    // Link imports for each extension
+    for name in &loading_order {
+        if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
+            dynamic_linker.link_imports(
+                &mut lnk,
+                &extension.name,
+                &extension.imported_interfaces,
+            )?;
         }
     }
 
@@ -298,6 +316,12 @@ async fn main() -> Result<(), Error> {
             );
         }
     }
+
+    // Note: We can't directly resolve exports yet because we can't access the instance
+    // from the Extension type. This will be implemented in a future update.
+    println!("\nFunction references have been registered for imports.");
+    println!("Dynamic linking is ready for cross-extension function calls.");
+    dynamic_linker.print_function_refs();
 
     // Extensions (hydrate)
     let mut c = c;

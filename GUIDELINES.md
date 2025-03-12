@@ -7,10 +7,12 @@ This document outlines the working process for implementing the extension inter-
 ### Beginning of Session
 
 1. **Review Guidelines**: Start by reviewing this GUIDELINES.md file to understand the process.
-2. **Review Project Status**: Examine PROJECT_STATUS.md to understand the current state of the project.
-3. **Review Handoff Document**: Read the latest handoff document from the previous session.
-4. **Review Code Changes**: Examine any code changes made in previous sessions to get context.
-5. **Establish Session Goals**: Identify specific tasks to be completed during the current session.
+2. **Review Plan**: Examine PLAN.md to understand the current requirements of the project.
+3. **Review Project Status**: Examine PROJECT_STATUS.md to understand the current state of the project.
+4. **Review Handoff Document**: Read the latest handoff document from the previous session.
+5. **Review Alignemt with Goal**: Ensure our work thus far has not strayed too far from our plan.
+6. **Review Code Changes**: Examine any code changes made in previous sessions to get context.
+7. **Establish Session Goals**: Identify specific tasks to be completed during the current session.
 
 ### During Session
 
