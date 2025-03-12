@@ -53,3 +53,11 @@ Key files to focus on in the next session:
 - src/main.rs: Contains the main application logic that loads and runs extensions
 
 The next session should focus on creating the library interface detection functionality, which is the foundation for the rest of the implementation.
+
+## Next Session Instructions
+
+To begin the next session effectively, please provide:
+
+1. The current state of the project repository (it should include all the changes committed in this session)
+2. Access to the test extensions with library interfaces that you mentioned, including their WIT definitions and WASM files
+3. Any specific requirements or constraints for the library interface detection implementation that weren't covered in our planning discussions
