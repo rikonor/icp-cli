@@ -1,15 +1,19 @@
 use std::{
     fs::{create_dir_all, exists, read, remove_file, write},
     path::PathBuf,
+    sync::Arc,
 };
 
 use anyhow::{Context as _, Error};
 use async_trait::async_trait;
 use http::Uri;
 use reqwest::get;
-use wasmtime::Engine;
+use wasmtime::{component::Component, Engine, Store as WasmtimeStore};
 
-use crate::manifest::{Extension, Load, ManifestHandle, Store};
+use crate::library::DetectLibraryInterfaces;
+use crate::manifest::{
+    ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store,
+};
 
 enum AdditionType {
     Uri(Uri),
@@ -57,6 +61,9 @@ pub struct ExtensionAdder {
     // Dirs
     extensions_dir: PathBuf,
     precompiles_dir: PathBuf,
+
+    // Library interface detector
+    detector: Arc<dyn DetectLibraryInterfaces>,
 }
 
 impl ExtensionAdder {
@@ -65,12 +72,14 @@ impl ExtensionAdder {
         mh: ManifestHandle,
         extensions_dir: PathBuf,
         precompiles_dir: PathBuf,
+        detector: Arc<dyn DetectLibraryInterfaces>,
     ) -> Self {
         Self {
             ngn,
             mh,
             extensions_dir,
             precompiles_dir,
+            detector,
         }
     }
 }
@@ -119,14 +128,33 @@ impl AddExtension for ExtensionAdder {
         create_dir_all(&self.precompiles_dir).context("failed to create precompiles directory")?;
         write(&pre_path, &pre).context("failed to write precompile to disk")?;
 
+        // Deserialize the precompiled component for library interface detection
+        let component = unsafe {
+            Component::deserialize(&self.ngn, &pre)
+                .context("failed to deserialize precompiled component")?
+        };
+
+        // Detect library interfaces
+        let library_interfaces = self
+            .detector
+            .detect(&component, name)
+            .await
+            .context("failed to detect library interfaces")?;
+
+        // Create a new extension with detected library interfaces
+        let mut extension = Extension::new(name.to_string(), ext_path, pre_path);
+
+        // Add exported interfaces
+        for interface in library_interfaces {
+            if interface.is_valid() {
+                extension
+                    .add_exported_interface(ExportedInterface::from_library_interface(&interface));
+            }
+        }
+
         // Update manifest
         let mut m = m;
-
-        m.xs.push(Extension {
-            name: name.to_string(),
-            wasm: ext_path,
-            pre: pre_path,
-        });
+        m.xs.push(extension);
 
         self.mh
             .store(&m)

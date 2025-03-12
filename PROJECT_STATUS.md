@@ -4,22 +4,23 @@
 
 | Phase | Description                                | Status      | Completion |
 | ----- | ------------------------------------------ | ----------- | ---------- |
-| 1     | Foundation Setup and WIT Interface Updates | In Progress | 25%        |
+| 1     | Foundation Setup and WIT Interface Updates | In Progress | 50%        |
 | 2     | Extension Discovery and Analysis           | Not Started | 0%         |
 | 3     | Dependency Resolution and Loading Order    | Not Started | 0%         |
 | 4     | Dynamic Linking Implementation             | Not Started | 0%         |
 | 5     | Integration and Extension Commands         | Not Started | 0%         |
 | 6     | Testing and Refinement                     | Not Started | 0%         |
 
-**Overall Project Completion:** 5%
+**Overall Project Completion:** 10%
 
 ## Recently Completed Tasks
 
-- Created `src/library.rs` module with core data structures for library interface detection
-- Implemented `LibraryFunction` and `LibraryInterface` structs
-- Implemented `DetectLibraryInterfaces` trait and its implementation
-- Added tests for library interface detection
-- Updated `src/main.rs` to include the new library module
+- Updated `Extension` struct in `manifest.rs` to track library interfaces
+- Added `ExportedInterface` and `ImportedInterface` structs
+- Added conversion methods between library.rs types and manifest.rs types
+- Modified `DetectLibraryInterfaces` trait to be object-safe
+- Updated `ExtensionAdder` to detect and store library interfaces when adding an extension
+- Updated `main.rs` to create and pass the detector to the `ExtensionAdder`
 
 ## Current Focus
 
@@ -31,12 +32,12 @@ _No blockers identified yet_
 
 ## Next Steps
 
-1. Update `Extension` struct in `manifest.rs` to track library interfaces
-   - Add fields for exported and imported library interfaces
-   - Update serialization/deserialization to include the new fields
-   - Add tests for the updated manifest model
-2. Implement dependency resolution functionality
-3. Create function reference registry
+1. Implement dependency resolution functionality
+   - Create a dependency graph for extensions
+   - Implement an algorithm to determine the correct extension loading order
+   - Add cycle detection for circular dependencies
+2. Create function reference registry
+3. Update extension loading process to respect dependency order
 
 ## Notes and Observations
 

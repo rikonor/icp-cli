@@ -23,6 +23,8 @@ use extension::{
 };
 
 mod library;
+use library::LibraryInterfaceDetector;
+use std::sync::Arc;
 
 mod spec;
 use spec::CommandSpec;
@@ -296,12 +298,16 @@ async fn main() -> Result<(), Error> {
     // Extension (Lister)
     let ls = ExtensionLister::new(mh.clone());
 
+    // Create library interface detector
+    let detector = Arc::new(LibraryInterfaceDetector::new());
+
     // Extension (Adder)
     let add = ExtensionAdder::new(
         ngn.clone(),    // engine
         mh.clone(),     // mh
         extdir.clone(), // extensions_dir
         predir.clone(), // precompiles_dir
+        detector,       // detector
     );
 
     // Extension (Remover)

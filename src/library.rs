@@ -43,10 +43,9 @@ impl LibraryInterface {
 #[async_trait]
 pub trait DetectLibraryInterfaces: Sync + Send {
     /// Detects library interfaces in a WebAssembly component
-    async fn detect<T>(
+    async fn detect(
         &self,
         component: &Component,
-        store: &mut Store<T>,
         extension_name: &str,
     ) -> Result<Vec<LibraryInterface>, Error>;
 }
@@ -62,10 +61,9 @@ impl LibraryInterfaceDetector {
 
 #[async_trait]
 impl DetectLibraryInterfaces for LibraryInterfaceDetector {
-    async fn detect<T>(
+    async fn detect(
         &self,
         _component: &Component,
-        _store: &mut Store<T>,
         extension_name: &str,
     ) -> Result<Vec<LibraryInterface>, Error> {
         // This implementation is a placeholder and will need to be updated
@@ -123,9 +121,6 @@ mod tests {
         let cfg = cfg.async_support(true);
         let engine = wasmtime::Engine::new(cfg).unwrap();
 
-        // Create a store
-        let mut store = Store::new(&engine, ());
-
         // Create a detector
         let detector = LibraryInterfaceDetector::new();
 
@@ -136,10 +131,7 @@ mod tests {
         let mock_component = Component::new(&engine, wat).expect("Failed to create mock component");
 
         // Test with ext-js extension name
-        let interfaces = detector
-            .detect(&mock_component, &mut store, "ext-js")
-            .await
-            .unwrap();
+        let interfaces = detector.detect(&mock_component, "ext-js").await.unwrap();
 
         // Verify that we detected the local:js/lib interface
         assert_eq!(interfaces.len(), 1);
@@ -148,10 +140,7 @@ mod tests {
         assert!(interfaces[0].functions.contains_key("add"));
 
         // Test with ext-add extension name (should not have library interfaces)
-        let interfaces = detector
-            .detect(&mock_component, &mut store, "ext-add")
-            .await
-            .unwrap();
+        let interfaces = detector.detect(&mock_component, "ext-add").await.unwrap();
 
         // Verify that we didn't detect any interfaces
         assert_eq!(interfaces.len(), 0);
