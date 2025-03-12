@@ -25,6 +25,7 @@ This document outlines the working process for implementing the extension inter-
 2. **Update GUIDELINES.md**: Make suggestions to improve workflow and update accordingly.
 3. **Create Handoff Document**: Document the current state, what was accomplished, and next steps.
 4. **Final Commit**: Commit all changes with a descriptive message. **This is a hard requirement** - no session should end without committing all changes to ensure continuity between sessions.
+5. **Provide Next Session Instructions**: Clearly communicate what the user should provide at the beginning of the next session to help resume work effectively (e.g., "Please provide X at the beginning of the next session so I can resume work").
 
 ## Documentation Standards
 
