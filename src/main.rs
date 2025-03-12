@@ -22,6 +22,8 @@ use extension::{
     RemoveExtension,
 };
 
+mod library;
+
 mod spec;
 use spec::CommandSpec;
 
@@ -105,6 +107,15 @@ async fn main() -> Result<(), Error> {
         &ngn,  // engine
         State, // data
     );
+
+    let wat = r#"
+        (component)
+    "#;
+
+    Component::new(
+        &ngn, // engine
+        wat,  // bytes
+    )?;
 
     // Command
     let c = Command::new(SERVICE_NAME);

@@ -111,6 +111,8 @@ Any other relevant information or observations that might be helpful for the nex
 
 4. **Incremental Changes**: Make changes in small, logical increments that can be easily reviewed and understood.
 
+5. **Use WebAssembly Tools**: The `wasm-tools` binary is installed and available for examining WebAssembly components. For example, use `wasm-tools component wit <PATH>` to examine the WIT definitions of components.
+
 ## Code Quality Expectations
 
 1. **Error Handling**: All operations should have proper error handling with meaningful error messages.
