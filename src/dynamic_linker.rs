@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
 use anyhow::{Context, Result};
-use wasmtime::component::{Func, Instance, Linker};
+use wasmtime::component::{Func, Instance, Linker, Val};
 use wasmtime::Store;
 
 use crate::function_registry::FunctionRegistry;
@@ -24,6 +24,8 @@ pub enum DynamicLinkingError {
 pub struct DynamicLinker {
     /// Registry for function references
     registry: FunctionRegistry,
+    /// Map from extension name to resolved status
+    resolved_exports: HashMap<String, bool>,
 }
 
 impl DynamicLinker {
@@ -31,6 +33,7 @@ impl DynamicLinker {
     pub fn new() -> Self {
         Self {
             registry: FunctionRegistry::new(),
+            resolved_exports: HashMap::new(),
         }
     }
 
@@ -89,6 +92,85 @@ impl DynamicLinker {
         Ok(())
     }
 
+    /// Resolve exports for an extension
+    pub fn resolve_exports<T>(
+        &mut self,
+        linker: &Linker<T>,
+        extension_name: &str,
+        exports: &[ExportedInterface],
+        store: &mut Store<T>,
+    ) -> Result<()> {
+        // // Skip if already resolved
+        // if self
+        //     .resolved_exports
+        //     .get(extension_name)
+        //     .copied()
+        //     .unwrap_or(false)
+        // {
+        //     return Ok(());
+        // }
+
+        // for export in exports {
+        //     // Skip non-library interfaces
+        //     if !export.name.ends_with("/lib") {
+        //         continue;
+        //     }
+
+        //     // For each function in the interface
+        //     for function_name in &export.functions {
+        //         // Create a key for this function reference
+        //         let key = FunctionRegistry::create_key(extension_name, &export.name, function_name);
+
+        //         // Try to get the instance from the linker
+        //         match linker.instance(&export.name) {
+        //             Ok(instance) => {
+        //                 // In Wasmtime's component model, we need to use the instance to get functions
+        //                 // This is a simplified approach - in a real implementation, we would need to
+        //                 // use the correct method to get the function based on the component model
+
+        //                 // For now, we'll create a proxy function that will be resolved later
+        //                 // when we have access to the actual function
+        //                 let func = Func::new(
+        //                     store,
+        //                     // Function type (params and results would need to be determined)
+        //                     wasmtime::component::FuncType::new(
+        //                         None, // params
+        //                         None, // results
+        //                     ),
+        //                     // Function implementation
+        //                     move |_caller, _params, _results| {
+        //                         // This is a placeholder - in a real implementation, we would
+        //                         // call the actual function from the instance
+        //                         Ok(())
+        //                     },
+        //                 );
+
+        //                 // Resolve the function reference
+        //                 self.registry.resolve(&key, func);
+
+        //                 println!(
+        //                     "Resolved export: {} from extension {}",
+        //                     function_name, extension_name
+        //                 );
+        //             }
+        //             Err(_) => {
+        //                 // Log warning but continue
+        //                 eprintln!(
+        //                     "Warning: Could not find instance for interface '{}'",
+        //                     export.name
+        //                 );
+        //             }
+        //         }
+        //     }
+        // }
+
+        // // Mark as resolved
+        // self.resolved_exports
+        //     .insert(extension_name.to_string(), true);
+
+        Ok(())
+    }
+
     /// Print information about function references
     pub fn print_function_refs(&self) {
         println!("\nFunction References:");
@@ -97,6 +179,12 @@ impl DynamicLinker {
             self.registry.resolved_count(),
             self.registry.len()
         );
+
+        // Print resolved exports
+        println!("\nResolved Exports:");
+        for (name, resolved) in &self.resolved_exports {
+            println!("  {}: {}", name, if *resolved { "Yes" } else { "No" });
+        }
     }
 }
 

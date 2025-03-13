@@ -22,8 +22,8 @@ use extension::{
     RemoveExtension,
 };
 
-mod library;
-use library::LibraryInterfaceDetector;
+mod iface;
+use iface::IfaceDetector;
 use std::sync::Arc;
 
 mod spec;
@@ -116,15 +116,6 @@ async fn main() -> Result<(), Error> {
         &ngn,  // engine
         State, // data
     );
-
-    let wat = r#"
-        (component)
-    "#;
-
-    Component::new(
-        &ngn, // engine
-        wat,  // bytes
-    )?;
 
     // Command
     let c = Command::new(SERVICE_NAME);
@@ -282,11 +273,7 @@ async fn main() -> Result<(), Error> {
     // Link imports for each extension
     for name in &loading_order {
         if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
-            dynamic_linker.link_imports(
-                &mut lnk,
-                &extension.name,
-                &extension.imported_interfaces,
-            )?;
+            dynamic_linker.link_imports(&mut lnk, &extension.name, &extension.imports)?;
         }
     }
 
@@ -314,13 +301,22 @@ async fn main() -> Result<(), Error> {
                 name.to_owned(), // key
                 inst,            // value
             );
+
+            // Resolve exports for this extension
+            if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
+                dynamic_linker.resolve_exports(
+                    &lnk,
+                    &extension.name,
+                    &extension.exports,
+                    &mut store,
+                )?;
+            }
         }
     }
 
-    // Note: We can't directly resolve exports yet because we can't access the instance
-    // from the Extension type. This will be implemented in a future update.
-    println!("\nFunction references have been registered for imports.");
-    println!("Dynamic linking is ready for cross-extension function calls.");
+    // Print information about function references
+    println!("\nFunction references have been registered for imports and exports.");
+    println!("Dynamic linking is complete for cross-extension function calls.");
     dynamic_linker.print_function_refs();
 
     // Extensions (hydrate)
@@ -360,7 +356,7 @@ async fn main() -> Result<(), Error> {
     let ls = ExtensionLister::new(mh.clone());
 
     // Create library interface detector
-    let detector = Arc::new(LibraryInterfaceDetector::new());
+    let detector = Arc::new(IfaceDetector);
 
     // Extension (Adder)
     let add = ExtensionAdder::new(

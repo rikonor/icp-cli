@@ -8,13 +8,16 @@ use anyhow::{Context as _, Error};
 use async_trait::async_trait;
 use http::Uri;
 use reqwest::get;
-use wasmtime::{component::Component, Engine, Store as WasmtimeStore};
+use wasmtime::{component::Component, Engine};
 
-use crate::dependency::DependencyGraph;
-use crate::library::DetectLibraryInterfaces;
-use crate::manifest::{
-    ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store,
+use crate::{
+    dependency::DependencyError,
+    manifest::{ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store},
 };
+use crate::{dependency::DependencyGraph, iface::ComponentInterfaces};
+use crate::{iface::DetectIfaces, manifest};
+
+const LIBRARY_SUFFIX: &str = "/lib";
 
 enum AdditionType {
     Uri(Uri),
@@ -44,8 +47,8 @@ pub enum AddExtensionError {
     #[error("invalid uri: {0}")]
     _InvalidUri(String),
 
-    #[error("dependency validation failed: {0}")]
-    DependencyValidationFailed(String),
+    #[error(transparent)]
+    DependencyValidationFailed(#[from] DependencyError),
 
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),
@@ -67,7 +70,7 @@ pub struct ExtensionAdder {
     precompiles_dir: PathBuf,
 
     // Library interface detector
-    detector: Arc<dyn DetectLibraryInterfaces>,
+    detector: Arc<dyn DetectIfaces>,
 }
 
 impl ExtensionAdder {
@@ -76,7 +79,7 @@ impl ExtensionAdder {
         mh: ManifestHandle,
         extensions_dir: PathBuf,
         precompiles_dir: PathBuf,
-        detector: Arc<dyn DetectLibraryInterfaces>,
+        detector: Arc<dyn DetectIfaces>,
     ) -> Self {
         Self {
             ngn,
@@ -132,36 +135,55 @@ impl AddExtension for ExtensionAdder {
         create_dir_all(&self.precompiles_dir).context("failed to create precompiles directory")?;
         write(&pre_path, &pre).context("failed to write precompile to disk")?;
 
-        // Deserialize the precompiled component for library interface detection
-        let component = unsafe {
+        let cmpnt = unsafe {
             Component::deserialize(&self.ngn, &pre)
                 .context("failed to deserialize precompiled component")?
         };
 
-        // Detect library interfaces
-        let library_interfaces = self
+        let ComponentInterfaces { imports, exports } = self
             .detector
-            .detect(&component, name)
+            .detect(&self.ngn, &cmpnt)
             .await
             .context("failed to detect library interfaces")?;
 
+        let [imports, exports] = [imports, exports].map(|ifaces| {
+            ifaces
+                .into_iter()
+                .filter(|x| x.name.ends_with(LIBRARY_SUFFIX))
+                .collect::<Vec<_>>()
+        });
+
         // Create a new extension with detected library interfaces
-        let mut extension = Extension::new(name.to_string(), ext_path.clone(), pre_path.clone());
+        let imports = imports
+            .into_iter()
+            .map(|imp| ImportedInterface {
+                name: imp.name,
+                provider: "TODO".to_string(),
+                functions: imp.funcs,
+            })
+            .collect();
 
-        // Add exported interfaces
-        for interface in library_interfaces {
-            if interface.is_valid() {
-                extension
-                    .add_exported_interface(ExportedInterface::from_library_interface(&interface));
-            }
-        }
+        let exports = exports
+            .into_iter()
+            .map(|exp| ExportedInterface {
+                name: exp.name,
+                funcs: exp.funcs,
+            })
+            .collect();
 
-        // Validate dependencies before adding the extension
-        let dependency_graph =
-            DependencyGraph::new(&m).context("failed to create dependency graph")?;
+        let x = Extension {
+            name: name.to_string(),
+            wasm: ext_path.clone(),
+            pre: pre_path.clone(),
+            imports,
+            exports,
+        };
 
-        // Check for potential circular dependencies and missing interfaces
-        if let Err(err) = dependency_graph.validate_extension_dependencies(&extension, &m) {
+        // Validate dependencies
+        if let Err(err) = DependencyGraph::new(&m)
+            .context("failed to create dependency graph")?
+            .validate_extension_dependencies(&x, &m)
+        {
             // Clean up temporary files since we're not adding the extension
             for p in [&ext_path, &pre_path] {
                 if p.exists() {
@@ -169,14 +191,12 @@ impl AddExtension for ExtensionAdder {
                 }
             }
 
-            return Err(AddExtensionError::DependencyValidationFailed(
-                err.to_string(),
-            ));
+            return Err(err.into());
         }
 
         // Update manifest
         let mut m = m;
-        m.xs.push(extension);
+        m.xs.push(x);
 
         self.mh
             .store(&m)
@@ -243,8 +263,8 @@ impl RemoveExtension for ExtensionRemover {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ListExtensionsError {
-    #[error("not found: {0}")]
-    _NotFound(String),
+    #[error(transparent)]
+    LoadError(#[from] manifest::LoadError),
 
     #[error(transparent)]
     UnexpectedError(#[from] anyhow::Error),

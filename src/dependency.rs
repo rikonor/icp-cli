@@ -1,12 +1,11 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use anyhow::Context;
-use thiserror::Error;
 
 use crate::manifest::{Extension, Manifest};
 
 /// Errors that can occur during dependency resolution
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum DependencyError {
     /// A circular dependency was detected
     #[error("circular dependency detected: {0}")]
@@ -17,6 +16,7 @@ pub enum DependencyError {
     MissingInterface {
         /// Name of the extension that imports the interface
         importer: String,
+
         /// Name of the interface that is missing
         interface: String,
     },
@@ -26,10 +26,13 @@ pub enum DependencyError {
     MissingFunction {
         /// Name of the extension that imports the function
         importer: String,
+
         /// Name of the interface that should contain the function
         interface: String,
+
         /// Name of the function that is missing
         function: String,
+
         /// Name of the extension that exports the interface
         exporter: String,
     },
@@ -40,92 +43,122 @@ pub enum DependencyError {
 }
 
 /// A graph representing dependencies between extensions
+#[derive(Debug)]
 pub struct DependencyGraph {
     /// Map from extension name to the names of extensions it depends on
     dependencies: HashMap<String, Vec<String>>,
+
     /// Map from extension name to the names of extensions that depend on it
     dependents: HashMap<String, Vec<String>>,
+
     /// Map from interface name to the extension that exports it
     interface_providers: HashMap<String, String>,
+
     /// Map from extension name to the interfaces it exports
-    exported_interfaces: HashMap<String, Vec<String>>,
+    exports: HashMap<String, Vec<String>>,
+
     /// Map from extension name to the interfaces it imports
-    imported_interfaces: HashMap<String, Vec<String>>,
+    imports: HashMap<String, Vec<String>>,
+
     /// Map from interface name to the functions it provides
     interface_functions: HashMap<String, HashSet<String>>,
+
     /// All extension names in the graph
     extension_names: Vec<String>,
+
     /// Detected cycles in the dependency graph
     cycles: Vec<Vec<String>>,
 }
 
 impl DependencyGraph {
     /// Creates a new dependency graph from a manifest
-    pub fn new(manifest: &Manifest) -> Result<Self, DependencyError> {
-        let mut graph = Self {
+    pub fn new(m: &Manifest) -> Result<Self, DependencyError> {
+        let mut g = Self {
             dependencies: HashMap::new(),
             dependents: HashMap::new(),
             interface_providers: HashMap::new(),
-            exported_interfaces: HashMap::new(),
-            imported_interfaces: HashMap::new(),
+            exports: HashMap::new(),
+            imports: HashMap::new(),
             interface_functions: HashMap::new(),
             extension_names: Vec::new(),
             cycles: Vec::new(),
         };
 
-        graph.build_graph(manifest)?;
-        graph.detect_cycles();
+        g.build(m)?;
+        g.detect_cycles();
 
-        Ok(graph)
+        Ok(g)
     }
+}
 
+impl DependencyGraph {
     /// Builds the dependency graph from a manifest
-    fn build_graph(&mut self, manifest: &Manifest) -> Result<(), DependencyError> {
-        // Initialize collections
-        for extension in &manifest.xs {
-            self.extension_names.push(extension.name.clone());
-            self.dependencies.insert(extension.name.clone(), Vec::new());
-            self.dependents.insert(extension.name.clone(), Vec::new());
+    fn build(&mut self, m: &Manifest) -> Result<(), DependencyError> {
+        for x in &m.xs {
+            // Names
+            self.extension_names.push(x.name.clone());
 
-            // Track exported interfaces
-            let mut exported = Vec::new();
-            for interface in &extension.exported_interfaces {
-                exported.push(interface.name.clone());
-                self.interface_providers
-                    .insert(interface.name.clone(), extension.name.clone());
+            // Dependencies
+            self.dependencies.insert(x.name.clone(), Vec::new());
+
+            // Dependents
+            self.dependents.insert(x.name.clone(), Vec::new());
+        }
+
+        // Track imports
+        for x in &m.xs {
+            let mut imps = Vec::new();
+
+            for iface in &x.imports {
+                imps.push(iface.name.clone());
+            }
+
+            self.imports.insert(
+                x.name.clone(), // name
+                imps,           // imports
+            );
+        }
+
+        // Track exports
+        for x in &m.xs {
+            let mut exps = Vec::new();
+
+            for iface in &x.exports {
+                exps.push(iface.name.clone());
+
+                self.interface_providers.insert(
+                    iface.name.clone(), // interface
+                    x.name.clone(),     // extension
+                );
 
                 // Track functions provided by this interface
-                let functions: HashSet<String> = interface.functions.iter().cloned().collect();
-                self.interface_functions
-                    .insert(interface.name.clone(), functions);
+                self.interface_functions.insert(
+                    iface.name.clone(),
+                    iface.funcs.iter().cloned().collect::<HashSet<String>>(),
+                );
             }
-            self.exported_interfaces
-                .insert(extension.name.clone(), exported);
 
-            // Track imported interfaces
-            let mut imported = Vec::new();
-            for interface in &extension.imported_interfaces {
-                imported.push(interface.name.clone());
-            }
-            self.imported_interfaces
-                .insert(extension.name.clone(), imported);
+            self.exports.insert(
+                x.name.clone(), // name
+                exps,           // exports
+            );
         }
 
         // Build dependency edges
-        for extension in &manifest.xs {
-            for imported in &extension.imported_interfaces {
-                if let Some(provider) = self.interface_providers.get(&imported.name) {
+        for x in &m.xs {
+            for imp in &x.imports {
+                if let Some(p) = self.interface_providers.get(&imp.name) {
                     // Add dependency edge
-                    if let Some(deps) = self.dependencies.get_mut(&extension.name) {
-                        if !deps.contains(provider) {
-                            deps.push(provider.clone());
+                    if let Some(deps) = self.dependencies.get_mut(&x.name) {
+                        if !deps.contains(p) {
+                            deps.push(p.clone());
                         }
                     }
 
                     // Add dependent edge
-                    if let Some(deps) = self.dependents.get_mut(provider) {
-                        if !deps.contains(&extension.name) {
-                            deps.push(extension.name.clone());
+                    if let Some(deps) = self.dependents.get_mut(p) {
+                        if !deps.contains(&x.name) {
+                            deps.push(x.name.clone());
                         }
                     }
                 }
@@ -134,7 +167,9 @@ impl DependencyGraph {
 
         Ok(())
     }
+}
 
+impl DependencyGraph {
     /// Detects cycles in the dependency graph using depth-first search
     fn detect_cycles(&mut self) {
         let mut visited = HashSet::new();
@@ -217,7 +252,9 @@ impl DependencyGraph {
         }
         result
     }
+}
 
+impl DependencyGraph {
     /// Resolves the loading order of extensions using topological sorting
     pub fn resolve_loading_order(&self) -> Result<Vec<String>, DependencyError> {
         if self.has_cycles() {
@@ -266,29 +303,32 @@ impl DependencyGraph {
     }
 
     /// Validates that all dependencies are satisfied
-    pub fn validate_dependencies(&self, manifest: &Manifest) -> Result<(), DependencyError> {
-        for extension in &manifest.xs {
-            for imported in &extension.imported_interfaces {
+    pub fn validate_dependencies(&self, m: &Manifest) -> Result<(), DependencyError> {
+        for x in &m.xs {
+            for imp in &x.imports {
                 // Check if the interface is exported by any extension
-                if let Some(provider) = self.interface_providers.get(&imported.name) {
-                    // Check if all required functions are provided
-                    if let Some(provided_functions) = self.interface_functions.get(&imported.name) {
-                        for function in &imported.functions {
-                            if !provided_functions.contains(function) {
-                                return Err(DependencyError::MissingFunction {
-                                    importer: extension.name.clone(),
-                                    interface: imported.name.clone(),
-                                    function: function.clone(),
-                                    exporter: provider.clone(),
-                                });
+                match self.interface_providers.get(&imp.name) {
+                    Some(p) => {
+                        if let Some(fs) = self.interface_functions.get(&imp.name) {
+                            for f in &imp.functions {
+                                if !fs.contains(f) {
+                                    return Err(DependencyError::MissingFunction {
+                                        importer: x.name.clone(),
+                                        interface: imp.name.clone(),
+                                        function: f.clone(),
+                                        exporter: p.clone(),
+                                    });
+                                }
                             }
                         }
                     }
-                } else {
-                    return Err(DependencyError::MissingInterface {
-                        importer: extension.name.clone(),
-                        interface: imported.name.clone(),
-                    });
+
+                    None => {
+                        return Err(DependencyError::MissingInterface {
+                            importer: x.name.clone(),
+                            interface: imp.name.clone(),
+                        })
+                    }
                 }
             }
         }
@@ -299,26 +339,26 @@ impl DependencyGraph {
     /// Validates that a new extension's dependencies are satisfied
     pub fn validate_extension_dependencies(
         &self,
-        extension: &Extension,
-        manifest: &Manifest,
+        x: &Extension,
+        m: &Manifest,
     ) -> Result<(), DependencyError> {
-        for imported in &extension.imported_interfaces {
+        for imp in &x.imports {
             // Check if the interface is exported by any extension
             let mut provider_found = false;
 
-            for existing in &manifest.xs {
-                for exported in &existing.exported_interfaces {
-                    if exported.name == imported.name {
+            for x in &m.xs {
+                for exp in &x.exports {
+                    if exp.name == imp.name {
                         provider_found = true;
 
                         // Check if all required functions are provided
-                        for function in &imported.functions {
-                            if !exported.functions.contains(function) {
+                        for function in &imp.functions {
+                            if !exp.funcs.contains(function) {
                                 return Err(DependencyError::MissingFunction {
-                                    importer: extension.name.clone(),
-                                    interface: imported.name.clone(),
+                                    importer: x.name.clone(),
+                                    interface: imp.name.clone(),
                                     function: function.clone(),
-                                    exporter: existing.name.clone(),
+                                    exporter: x.name.clone(),
                                 });
                             }
                         }
@@ -328,28 +368,28 @@ impl DependencyGraph {
 
             if !provider_found {
                 return Err(DependencyError::MissingInterface {
-                    importer: extension.name.clone(),
-                    interface: imported.name.clone(),
+                    importer: x.name.clone(),
+                    interface: imp.name.clone(),
                 });
             }
         }
 
         // Check for potential cycles
-        let mut temp_manifest = manifest.clone();
-        temp_manifest.xs.push(extension.clone());
+        let mut mtmp = m.clone();
+        mtmp.xs.push(x.clone());
 
-        let temp_graph = DependencyGraph::new(&temp_manifest)
-            .context("failed to create temporary dependency graph")?;
+        let gtmp =
+            DependencyGraph::new(&mtmp).context("failed to create temporary dependency graph")?;
 
-        if temp_graph.has_cycles() {
-            return Err(DependencyError::CircularDependency(
-                temp_graph.format_cycles(),
-            ));
+        if gtmp.has_cycles() {
+            return Err(DependencyError::CircularDependency(gtmp.format_cycles()));
         }
 
         Ok(())
     }
+}
 
+impl DependencyGraph {
     /// Formats a text representation of the dependency graph
     pub fn format_text_representation(&self) -> String {
         let mut result = String::new();
@@ -358,29 +398,28 @@ impl DependencyGraph {
             result.push_str(&format!("Extension: {}\n", ext));
 
             // Exports
-            if let Some(exports) = self.exported_interfaces.get(ext) {
-                if exports.is_empty() {
+            if let Some(exps) = self.exports.get(ext) {
+                if exps.is_empty() {
                     result.push_str("├── Exports: none\n");
                 } else {
                     result.push_str("├── Exports:\n");
-                    for (i, interface) in exports.iter().enumerate() {
-                        let prefix = if i == exports.len() - 1 {
+                    for (i, iface) in exps.iter().enumerate() {
+                        let prefix = if i == exps.len() - 1 {
                             "    └── "
                         } else {
                             "    ├── "
                         };
-                        result.push_str(&format!("{}{}\n", prefix, interface));
+                        result.push_str(&format!("{}{}\n", prefix, iface));
 
                         // Functions
-                        if let Some(functions) = self.interface_functions.get(interface) {
-                            let functions: Vec<_> = functions.iter().collect();
-                            for (j, function) in functions.iter().enumerate() {
-                                let func_prefix = if j == functions.len() - 1 {
+                        if let Some(fs) = self.interface_functions.get(iface) {
+                            for (j, f) in fs.iter().collect::<Vec<_>>().iter().enumerate() {
+                                let func_prefix = if j == fs.len() - 1 {
                                     "        └── "
                                 } else {
                                     "        ├── "
                                 };
-                                result.push_str(&format!("{}{}\n", func_prefix, function));
+                                result.push_str(&format!("{}{}\n", func_prefix, f));
                             }
                         }
                     }
@@ -388,26 +427,26 @@ impl DependencyGraph {
             }
 
             // Imports
-            if let Some(imports) = self.imported_interfaces.get(ext) {
-                if imports.is_empty() {
+            if let Some(imps) = self.imports.get(ext) {
+                if imps.is_empty() {
                     result.push_str("└── Imports: none\n");
                 } else {
                     result.push_str("└── Imports:\n");
-                    for (i, interface) in imports.iter().enumerate() {
-                        let prefix = if i == imports.len() - 1 {
+                    for (i, iface) in imps.iter().enumerate() {
+                        let prefix = if i == imps.len() - 1 {
                             "    └── "
                         } else {
                             "    ├── "
                         };
 
                         // Find provider
-                        let provider = self
+                        let p = self
                             .interface_providers
-                            .get(interface)
+                            .get(iface)
                             .map(|p| format!(" (from {})", p))
                             .unwrap_or_else(|| " (provider not found)".to_string());
 
-                        result.push_str(&format!("{}{}{}\n", prefix, interface, provider));
+                        result.push_str(&format!("{}{}{}\n", prefix, iface, p));
                     }
                 }
             }
@@ -421,105 +460,142 @@ impl DependencyGraph {
 
 #[cfg(test)]
 mod tests {
+    use anyhow::Error;
+
     use super::*;
     use crate::manifest::{ExportedInterface, ImportedInterface};
 
     fn create_test_manifest() -> Manifest {
-        let mut manifest = Manifest::default();
+        let mut m = Manifest::default();
 
         // Extension A exports math/lib
-        let mut ext_a =
-            Extension::new("ext-a".to_string(), "ext-a.wasm".into(), "ext-a.bin".into());
-        ext_a.add_exported_interface(ExportedInterface::new(
-            "math/lib".to_string(),
-            vec!["add".to_string(), "subtract".to_string()],
-        ));
-        manifest.xs.push(ext_a);
+        m.xs.push(Extension {
+            name: "ext-a".to_string(),
+            wasm: "ext-a.wasm".into(),
+            pre: "ext-a.bin".into(),
+            imports: Vec::new(),
+            exports: vec![ExportedInterface {
+                name: "math/lib".to_string(),
+                funcs: vec!["add".to_string(), "subtract".to_string()],
+            }],
+        });
 
         // Extension B imports math/lib and exports calc/lib
-        let mut ext_b =
-            Extension::new("ext-b".to_string(), "ext-b.wasm".into(), "ext-b.bin".into());
-        ext_b.add_imported_interface(ImportedInterface::new(
-            "math/lib".to_string(),
-            "ext-a".to_string(),
-            vec!["add".to_string()],
-        ));
-        ext_b.add_exported_interface(ExportedInterface::new(
-            "calc/lib".to_string(),
-            vec!["calculate".to_string()],
-        ));
-        manifest.xs.push(ext_b);
+        m.xs.push(Extension {
+            name: "ext-b".to_string(),
+            wasm: "ext-b.wasm".into(),
+            pre: "ext-b.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "math/lib".to_string(),
+                provider: "ext-a".to_string(),
+                functions: vec!["add".to_string()],
+            }],
+            exports: vec![ExportedInterface {
+                name: "calc/lib".to_string(),
+                funcs: vec!["calculate".to_string()],
+            }],
+        });
 
         // Extension C imports calc/lib
-        let mut ext_c =
-            Extension::new("ext-c".to_string(), "ext-c.wasm".into(), "ext-c.bin".into());
-        ext_c.add_imported_interface(ImportedInterface::new(
-            "calc/lib".to_string(),
-            "ext-b".to_string(),
-            vec!["calculate".to_string()],
-        ));
-        manifest.xs.push(ext_c);
+        m.xs.push(Extension {
+            name: "ext-c".to_string(),
+            wasm: "ext-c.wasm".into(),
+            pre: "ext-c.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "calc/lib".to_string(),
+                provider: "ext-b".to_string(),
+                functions: vec!["calculate".to_string()],
+            }],
+            exports: Vec::new(),
+        });
 
-        manifest
+        m
     }
 
     fn create_cyclic_manifest() -> Manifest {
-        let mut manifest = Manifest::default();
+        let mut m = Manifest::default();
 
         // Extension A exports a/lib
-        let mut ext_a =
-            Extension::new("ext-a".to_string(), "ext-a.wasm".into(), "ext-a.bin".into());
-        ext_a.add_exported_interface(ExportedInterface::new(
-            "a/lib".to_string(),
-            vec!["func_a".to_string()],
-        ));
-        ext_a.add_imported_interface(ImportedInterface::new(
-            "c/lib".to_string(),
-            "ext-c".to_string(),
-            vec!["func_c".to_string()],
-        ));
-        manifest.xs.push(ext_a);
+        m.xs.push(Extension {
+            name: "ext-a".to_string(),
+            wasm: "ext-a.wasm".into(),
+            pre: "ext-a.bin".into(),
+            exports: vec![ExportedInterface {
+                name: "a/lib".to_string(),
+                funcs: vec!["func_a".to_string()],
+            }],
+            imports: vec![ImportedInterface {
+                name: "c/lib".to_string(),
+                provider: "ext-c".to_string(),
+                functions: vec!["func_c".to_string()],
+            }],
+        });
 
         // Extension B imports a/lib and exports b/lib
-        let mut ext_b =
-            Extension::new("ext-b".to_string(), "ext-b.wasm".into(), "ext-b.bin".into());
-        ext_b.add_imported_interface(ImportedInterface::new(
-            "a/lib".to_string(),
-            "ext-a".to_string(),
-            vec!["func_a".to_string()],
-        ));
-        ext_b.add_exported_interface(ExportedInterface::new(
-            "b/lib".to_string(),
-            vec!["func_b".to_string()],
-        ));
-        manifest.xs.push(ext_b);
+        m.xs.push(Extension {
+            name: "ext-b".to_string(),
+            wasm: "ext-b.wasm".into(),
+            pre: "ext-b.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "a/lib".to_string(),
+                provider: "ext-a".to_string(),
+                functions: vec!["func_a".to_string()],
+            }],
+            exports: vec![ExportedInterface {
+                name: "b/lib".to_string(),
+                funcs: vec!["func_b".to_string()],
+            }],
+        });
 
         // Extension C imports b/lib and exports c/lib
-        let mut ext_c =
-            Extension::new("ext-c".to_string(), "ext-c.wasm".into(), "ext-c.bin".into());
-        ext_c.add_imported_interface(ImportedInterface::new(
-            "b/lib".to_string(),
-            "ext-b".to_string(),
-            vec!["func_b".to_string()],
-        ));
-        ext_c.add_exported_interface(ExportedInterface::new(
-            "c/lib".to_string(),
-            vec!["func_c".to_string()],
-        ));
-        manifest.xs.push(ext_c);
+        m.xs.push(Extension {
+            name: "ext-c".to_string(),
+            wasm: "ext-c.wasm".into(),
+            pre: "ext-c.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "b/lib".to_string(),
+                provider: "ext-b".to_string(),
+                functions: vec!["func_b".to_string()],
+            }],
+            exports: vec![ExportedInterface {
+                name: "c/lib".to_string(),
+                funcs: vec!["func_c".to_string()],
+            }],
+        });
 
-        manifest
+        m
     }
 
     #[test]
-    fn test_dependency_graph_creation() {
-        let manifest = create_test_manifest();
-        let graph = DependencyGraph::new(&manifest).unwrap();
+    fn test_dependency_graph_creation() -> Result<(), Error> {
+        let g = DependencyGraph::new(&create_test_manifest())?;
 
-        assert_eq!(graph.extension_names.len(), 3);
-        assert!(graph.dependencies.contains_key("ext-a"));
-        assert!(graph.dependencies.contains_key("ext-b"));
-        assert!(graph.dependencies.contains_key("ext-c"));
+        // Test extension names
+        assert_eq!(g.extension_names.len(), 3);
+        assert!(g.extension_names.contains(&"ext-a".to_string()));
+        assert!(g.extension_names.contains(&"ext-b".to_string()));
+        assert!(g.extension_names.contains(&"ext-c".to_string()));
+
+        // Test dependencies
+        assert_eq!(g.dependencies.get("ext-a").unwrap().len(), 0);
+        assert_eq!(g.dependencies.get("ext-b").unwrap().len(), 1);
+        assert!(g
+            .dependencies
+            .get("ext-b")
+            .unwrap()
+            .contains(&"ext-a".to_string()));
+        assert_eq!(g.dependencies.get("ext-c").unwrap().len(), 1);
+        assert!(g
+            .dependencies
+            .get("ext-c")
+            .unwrap()
+            .contains(&"ext-b".to_string()));
+
+        // Test interface providers
+        assert_eq!(g.interface_providers.get("math/lib").unwrap(), "ext-a");
+        assert_eq!(g.interface_providers.get("calc/lib").unwrap(), "ext-b");
+
+        Ok(())
     }
 
     #[test]
@@ -565,13 +641,17 @@ mod tests {
 
         // Create a manifest with a missing dependency
         let mut bad_manifest = manifest.clone();
-        let mut ext_d =
-            Extension::new("ext-d".to_string(), "ext-d.wasm".into(), "ext-d.bin".into());
-        ext_d.add_imported_interface(ImportedInterface::new(
-            "missing/lib".to_string(),
-            "unknown".to_string(),
-            vec!["func".to_string()],
-        ));
+        let mut ext_d = Extension {
+            name: "ext-d".to_string(),
+            wasm: "ext-d.wasm".into(),
+            pre: "ext-d.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "missing/lib".to_string(),
+                provider: "unknown".to_string(),
+                functions: vec!["func".to_string()],
+            }],
+            exports: Vec::new(),
+        };
         bad_manifest.xs.push(ext_d);
 
         let graph = DependencyGraph::new(&bad_manifest).unwrap();
