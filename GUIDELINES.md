@@ -2,6 +2,25 @@
 
 This document outlines the working process for implementing the extension inter-communication feature for the dfx-2 project. It defines how we'll organize our work across multiple sessions and ensure continuity.
 
+## Collaborative Implementation Process
+
+Starting from Session 6, we're adopting a more collaborative implementation approach:
+
+1. **User-Driven Implementation**: The user will take a more active role in implementing changes, with Claude providing guidance, advice, and code snippets.
+
+2. **Consultation Workflow**:
+
+   - The user will ask for advice or ideas on specific implementation challenges
+   - Claude will provide recommendations, pseudocode, or implementation strategies
+   - After agreement on the approach, Claude will provide actual code snippets if requested
+   - The user will implement the changes directly
+
+3. **Documentation Responsibility**: Both parties will ensure documentation is updated to reflect the collaborative nature of the implementation.
+
+4. **Handoff Process**: The handoff document should clearly indicate which parts were implemented collaboratively and any decisions made during the process.
+
+This approach allows for more direct user involvement while leveraging Claude's expertise for guidance and code generation.
+
 ## Session Workflow
 
 ### Beginning of Session
