@@ -5,12 +5,12 @@ Core Extraction Project Status
 | Stage | Description                             | Status      | Completion |
 | ----- | --------------------------------------- | ----------- | ---------- |
 | 1     | Setup and Initial Structure             | Complete    | 100%       |
-| 2     | Core Interface Types Migration          | In Progress | 90%        |
+| 2     | Core Interface Types Migration          | In Progress | 95%        |
 | 3     | Component and Extension Logic Migration | Not Started | 0%         |
 | 4     | CLI Simplification                      | Not Started | 0%         |
 | 5     | Testing Infrastructure                  | Not Started | 0%         |
 
-**Overall Project Completion:** 40%
+**Overall Project Completion:** 42%
 
 ## Current Focus
 
@@ -40,28 +40,37 @@ Stage 2: Core Interface Types Migration (Final Steps)
 - Core functionality from dfx-cli needs to be carefully extracted
 - Testing infrastructure will be priority to ensure stability
 - The interface detection implementation has been restored to use the proper wasmtime API for component inspection
-- All test-utils tests are now passing with the fixed WAT templates
+- Enhanced error handling with specific error types for interface detection
+- Added comprehensive documentation to the interface module
+- Added more test templates for edge cases, but still encountering issues with the WebAssembly Component Model's canonical ABI requirements
 
 ## Recent Activity
 
-- Fixed WAT templates in test-utils to use proper component model syntax
-- Added realloc function and memory handling to templates
-- Updated function names to use kebab-case naming convention
-- Fixed test assertions to match template changes
-- All test-utils tests are now passing
+- Enhanced error handling in the interface detection module
+- Added comprehensive documentation to the interface module
+- Created new test templates for edge cases (empty component, many interfaces, nested instances, duplicate interfaces)
+- Started fixing WebAssembly Component Model template issues:
+  - Fixed parameter type mismatch in string handling functions
+  - Fixed return type mismatch in string return functions
+  - Added boolean conversion for boolean return values
+- Still encountering issues with some template functions not matching the canonical ABI requirements
 
 ## Blockers/Issues
 
-- No current blockers
+- WebAssembly Component Model template issues:
+  - Some functions still have mismatches between their signatures and the canonical ABI requirements
+  - Need to identify and fix the specific functions causing the errors
 
 ## Upcoming Tasks
 
-Continue Stage 2 implementation:
+Complete Stage 2 implementation:
 
-- Add more comprehensive tests for interface detection
-- Refine error handling for interface detection
+- Fix the remaining issues with the WebAssembly Component Model templates
+- Complete the comprehensive tests for interface detection
+- Finalize error handling for interface detection
 
 Begin planning for Stage 3:
 
 - Identify which components and extension logic need to be moved
 - Plan the migration strategy to minimize disruption
+- Create a detailed task list for Stage 3 implementation

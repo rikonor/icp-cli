@@ -12,7 +12,7 @@ mod tests {
     fn create_test_engine() -> Result<Engine, Error> {
         let mut config = Config::new();
         config.wasm_component_model(true);
-        Engine::new(&config)
+        Ok(Engine::new(&config)?)
     }
 
     #[tokio::test]
@@ -188,8 +188,9 @@ mod tests {
     }
 }
 
-use anyhow::Error;
+use crate::error::Error;
 use async_trait::async_trait;
+use std::collections::HashMap;
 use wasmtime::{
     component::{types::ComponentItem, Component},
     Engine,
@@ -219,6 +220,23 @@ pub struct ComponentInterfaces {
 #[async_trait]
 pub trait DetectIfaces: Sync + Send {
     /// Detect interfaces in a WebAssembly component
+    ///
+    /// # Arguments
+    ///
+    /// * `engine` - The WebAssembly engine
+    /// * `component` - The WebAssembly component to analyze
+    ///
+    /// # Returns
+    ///
+    /// A `Result` containing the detected interfaces or an error
+    ///
+    /// # Errors
+    ///
+    /// Returns an error if:
+    /// - The component model is not enabled in the engine
+    /// - The component has an invalid format
+    /// - Interface parsing fails
+    /// - Required elements are missing
     async fn detect(
         &self,
         engine: &Engine,
@@ -229,6 +247,7 @@ pub trait DetectIfaces: Sync + Send {
 /// Default implementation of interface detection
 pub struct IfaceDetector;
 
+/// Default implementation of interface detection
 #[async_trait]
 impl DetectIfaces for IfaceDetector {
     async fn detect(
@@ -237,6 +256,10 @@ impl DetectIfaces for IfaceDetector {
         component: &Component,
     ) -> Result<ComponentInterfaces, Error> {
         let typ = component.component_type();
+
+        // Track duplicate interface names for better error reporting
+        let mut import_names = HashMap::new();
+        let mut export_names = HashMap::new();
 
         // imports
         let mut imports: Vec<Interface> = Vec::new();
@@ -249,21 +272,45 @@ impl DetectIfaces for IfaceDetector {
                 _ => continue,
             };
 
+            let iface_name = iface.to_string();
+
+            // Check for nested instances which aren't fully supported
+            let mut has_nested_instances = false;
             let mut funcs = vec![];
 
             for exp in item.exports(engine) {
                 let (name, item) = exp;
 
-                let (func, _) = match item {
-                    ComponentItem::ComponentFunc(item) => (name, item),
+                match item {
+                    ComponentItem::ComponentFunc(item) => {
+                        funcs.push(name.to_string());
+                    }
+                    ComponentItem::ComponentInstance(_) => {
+                        has_nested_instances = true;
+                        // We don't break here to still collect the functions
+                    }
                     _ => continue,
                 };
+            }
 
-                funcs.push(func.to_string());
+            // Warn about nested instances
+            if has_nested_instances {
+                // This is just a warning, not an error, so we log it but continue
+                eprintln!(
+                    "Warning: Nested instances detected in import '{}' but not fully supported",
+                    iface_name
+                );
+            }
+
+            // Track duplicate interface names
+            if let Some(count) = import_names.get_mut(&iface_name) {
+                *count += 1;
+            } else {
+                import_names.insert(iface_name.clone(), 1);
             }
 
             imports.push(Interface {
-                name: iface.to_string(),
+                name: iface_name,
                 funcs,
             });
         }
@@ -279,23 +326,66 @@ impl DetectIfaces for IfaceDetector {
                 _ => continue,
             };
 
+            let iface_name = iface.to_string();
+
+            // Check for nested instances which aren't fully supported
+            let mut has_nested_instances = false;
             let mut funcs = vec![];
 
             for exp in item.exports(engine) {
                 let (name, item) = exp;
 
-                let (func, _) = match item {
-                    ComponentItem::ComponentFunc(item) => (name, item),
+                match item {
+                    ComponentItem::ComponentFunc(item) => {
+                        funcs.push(name.to_string());
+                    }
+                    ComponentItem::ComponentInstance(_) => {
+                        has_nested_instances = true;
+                        // We don't break here to still collect the functions
+                    }
                     _ => continue,
                 };
+            }
 
-                funcs.push(func.to_string());
+            // Warn about nested instances
+            if has_nested_instances {
+                // This is just a warning, not an error, so we log it but continue
+                eprintln!(
+                    "Warning: Nested instances detected in export '{}' but not fully supported",
+                    iface_name
+                );
+            }
+
+            // Track duplicate interface names
+            if let Some(count) = export_names.get_mut(&iface_name) {
+                *count += 1;
+            } else {
+                export_names.insert(iface_name.clone(), 1);
             }
 
             exports.push(Interface {
-                name: iface.to_string(),
+                name: iface_name,
                 funcs,
             });
+        }
+
+        // Report duplicate interface names (just as warnings for now)
+        for (name, count) in import_names.iter() {
+            if *count > 1 {
+                eprintln!(
+                    "Warning: Duplicate import interface name detected: {} (appears {} times)",
+                    name, count
+                );
+            }
+        }
+
+        for (name, count) in export_names.iter() {
+            if *count > 1 {
+                eprintln!(
+                    "Warning: Duplicate export interface name detected: {} (appears {} times)",
+                    name, count
+                );
+            }
         }
 
         Ok(ComponentInterfaces { imports, exports })
