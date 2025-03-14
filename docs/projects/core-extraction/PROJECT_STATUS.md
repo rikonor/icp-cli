@@ -1,4 +1,4 @@
-# Core Extraction Project Status
+Core Extraction Project Status
 
 ## Project Dashboard
 
@@ -29,6 +29,7 @@ Stage 2: Core Interface Types Migration
    - ✅ Update dfx-cli to use these from dfx-core
    - ✅ Update integration tests for interface detection
    - ✅ Implement actual interface detection in dfx-core
+   - ✅ Split the Explainer.md into smaller more focused files for easier reference
    - Add more comprehensive tests for interface detection
    - Refine error handling for interface detection
 
@@ -42,18 +43,15 @@ Stage 2: Core Interface Types Migration
 
 ## Recent Activity
 
-- Restored the proper interface detection implementation in dfx-core
-- Updated test-utils to depend on dfx-core directly
-- Verified that dfx-core tests pass with the restored implementation
-- Identified issues with test-utils tests that need to be addressed
-- Added WebAssembly Component Model Explainer document as a reference
-- Identified specific syntax issues in the WAT templates causing test failures
-- Created a plan to split the Explainer document into smaller, more manageable files
+- Split the Explainer.md into smaller, more focused files for easier reference
+- Verified that all files contain the correct content from the original Explainer.md
+- Created a handoff document for Session 6 documenting the completed work
+- Identified the next steps for fixing the WAT templates in test-utils
 
 ## Blockers/Issues
 
 - Some test-utils tests are failing due to syntax errors in the WAT templates
-- Need to update the test templates to use the correct WAT syntax for component exports
+- Need to update the test templates to use the correct syntax for component exports
 
 ## Upcoming Tasks
 
@@ -63,11 +61,6 @@ Continue Stage 2 implementation:
 - Update the failing tests to work with the corrected templates
 - Add more comprehensive tests for interface detection
 - Refine error handling for interface detection
-
-Documentation improvements:
-
-- Split the Explainer.md into smaller, more focused files for easier reference
-- Organize documentation to better support future development
 
 Begin planning for Stage 3:
 
