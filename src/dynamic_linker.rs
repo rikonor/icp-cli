@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
 
-use anyhow::anyhow;
+use anyhow::{anyhow, Context};
 use wasmtime::component::{Instance, Linker};
 use wasmtime::Store;
 
@@ -43,7 +43,6 @@ impl DynamicLinker {
     pub fn link_imports<T>(
         &mut self,
         lnk: &mut Linker<T>,
-        x: &str,
         imps: Vec<ImportedInterface>,
     ) -> Result<(), DynamicLinkingError> {
         for imp in imps {
@@ -54,7 +53,6 @@ impl DynamicLinker {
 
             for f in imp.functions {
                 let k = FunctionRegistry::create_key(
-                    x,         // extension
                     &imp.name, // interface
                     &f,        // function
                 );
@@ -78,8 +76,8 @@ impl DynamicLinker {
                             DynamicLinkingError::UnresolvedReference(fname.clone())
                         })?;
 
-                        f.call(&mut store, params, results)?;
-                        f.post_return(&mut store)?;
+                        f.call(&mut store, params, results).context("call failed")?;
+                        f.post_return(&mut store).context("post-return failed")?;
 
                         Ok(())
                     })?;
@@ -118,7 +116,6 @@ impl DynamicLinker {
 
             for fname in &exp.funcs {
                 let k = FunctionRegistry::create_key(
-                    extension, // extension
                     &exp.name, // interface
                     fname,     // function
                 );
@@ -138,8 +135,10 @@ impl DynamicLinker {
                     )
                     .ok_or(anyhow!("missing function"))?;
 
-                println!("registering {k}");
-                self.registry.resolve(&k, f);
+                self.registry.resolve(
+                    &k, // key
+                    f,  // function
+                );
             }
         }
 

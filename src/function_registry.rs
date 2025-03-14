@@ -25,10 +25,10 @@ impl FunctionRegistry {
     }
 
     /// Resolve a function reference
-    pub fn resolve(&self, key: &str, func: Func) -> bool {
-        if let Some(reference) = self.references.get(key) {
-            let mut guard = reference.lock().unwrap();
-            *guard = Some(func);
+    pub fn resolve(&self, k: &str, f: Func) -> bool {
+        if let Some(reference) = self.references.get(k) {
+            let mut g = reference.lock().unwrap();
+            *g = Some(f);
             true
         } else {
             false
@@ -36,8 +36,8 @@ impl FunctionRegistry {
     }
 
     /// Create a key for a function reference
-    pub fn create_key(extension: &str, interface: &str, function: &str) -> String {
-        format!("{}:{}:{}", extension, interface, function)
+    pub fn create_key(interface: &str, function: &str) -> String {
+        format!("{}:{}", interface, function)
     }
 
     /// Get the number of references
@@ -60,7 +60,7 @@ mod tests {
 
     #[test]
     fn test_create_key() {
-        let key = FunctionRegistry::create_key("ext-a", "math/lib", "add");
-        assert_eq!(key, "ext-a:math/lib:add");
+        let key = FunctionRegistry::create_key("math/lib", "add");
+        assert_eq!(key, "math/lib:add");
     }
 }
