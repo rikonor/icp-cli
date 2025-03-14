@@ -2,30 +2,26 @@
 
 ## Project Overview
 
-This document consolidates the progress made across multiple sessions in implementing the extension inter-communication feature for dfx-2, including recent async implementation achievements.
+This document details the progress of the extension inter-communication feature for dfx-2, including the recent workspace restructuring and plans for component testing.
 
 ## Implementation Journey
 
 ### Phase 1: Foundation Setup and WIT Interface Updates
 
-- Created detailed implementation plan and guidelines
-- Set up project structure with initial modules
-- Established core data structures for library interfaces
+- Created initial implementation plan and guidelines
+- Set up project structure with core modules
 - Status: ✓ Completed (100%)
 
 ### Phase 2: Extension Discovery and Analysis
 
 - Implemented library interface detection
 - Created manifest model for tracking interfaces
-- Added support for detecting imports/exports
 - Status: ✓ Completed (100%)
 
 ### Phase 3: Dependency Resolution and Loading Order
 
 - Created dependency graph implementation
 - Implemented cycle detection and validation
-- Added support for determining loading order
-- Added text-based visualization of dependency graphs
 - Status: ✓ Completed (100%)
 
 ### Phase 4: Dynamic Linking Implementation
@@ -35,7 +31,12 @@ This document consolidates the progress made across multiple sessions in impleme
 - Successfully tested cross-extension function calls
 - Status: ⚡ In Progress (75%)
 
-Recent Achievement: Successfully implemented async function calls between extensions, demonstrated by ext-add extension calling ext-js extension's add function (2 + 3 = 5).
+Recent Achievements:
+
+- Successfully implemented async function calls
+- Added Send trait bound to generic type T in link_imports
+- Demonstrated working cross-extension function calls (ext-add calling ext-js)
+- Restructured project as a Rust workspace for better organization
 
 ### Phase 5: Integration and Extension Commands
 
@@ -45,119 +46,74 @@ Recent Achievement: Successfully implemented async function calls between extens
 
 - Status: 🔄 Not Started (0%)
 
-## Technical Evolution
+## Current Project Structure
 
-### Initial Architecture
-
-- Started with proof-of-concept in tmp/ directory
-- Established clear separation between CLI and library interfaces
-- Implemented basic manifest model for tracking interfaces
-
-### Core Implementations
-
-1. **Library Interface Detection**
-
-   - Simplified LibraryFunction struct
-   - Made DetectLibraryInterfaces trait object-safe
-   - Used WAT for creating test components
-
-2. **Dependency Management**
-
-   - Implemented adjacency list for dependency graphs
-   - Used Kahn's algorithm for topological sorting
-   - Added dependency validation during installation
-
-3. **Dynamic Linking System**
-   - Created FunctionRegistry for managing function references
-   - Implemented proxy functions for imports
-   - Added support for async function calls
-
-### Recent Achievements
-
-- Successfully implemented async functions using wasmtime's async capabilities
-- Added Send trait bound to generic type T in link_imports
-- Demonstrated working cross-extension function calls
-- Validated functionality with ext-add calling ext-js (adding 2 + 3 successfully)
-
-## Technical Decisions & Solutions
-
-### Key Architecture Decisions
-
-1. Limited inter-extension communication to "\*/lib" interfaces
-2. Used async traits with focused methods
-3. Implemented dependency-based loading system
-4. Used Arc<Mutex<Option<Func>>> for function references
-
-### Solved Challenges
-
-1. **Function Reference Management**
-
-   - Solution: Used thread-safe references with Arc<Mutex<Option<Func>>>
-   - Enabled resolution after component instantiation
-
-2. **Async Implementation**
-
-   - Solution: Leveraged wasmtime's async capabilities
-   - Added Send trait bound for thread safety
-
-3. **Cross-Extension Communication**
-   - Solution: Successfully implemented proxy functions
-   - Demonstrated with working ext-add/ext-js integration
-
-## Current State & Next Steps
-
-### Current Status
-
-- Phases 1-3: Completed
-- Phase 4: 75% complete with working async implementation
-- Overall project: Progressing well with major milestone achieved
-
-### Next Steps
-
-1. Project Restructuring - Main Focus:
-
-   - Convert project to Rust workspace structure
-   - Set up support for multiple extensions
-   - Add starter Rust extension as example
-   - Integrate WAT-based component mocking for testing
-
-2. Ongoing Phase 4 Tasks:
-   - Document async usage patterns
-   - Add comprehensive error handling
-
-## Technical Notes for Future Sessions
-
-### Async Implementation
-
-The async support has been successfully added to the dynamic linker, allowing for asynchronous function calls between extensions. This is demonstrated by:
-
-```rust
-lnk.instance(&imp.name)?.func_new_async(
-    &f,
-    move |mut store, params, results| {
-        // Async closure implementation
-    }
-)
+```
+dfx-2/
+├── Cargo.toml          # Workspace manifest
+├── docs/              # Project documentation
+│   └── ...
+└── crates/           # All crates live here
+    ├── dfx-cli/      # Main CLI tool
+    │   ├── Cargo.toml
+    │   ├── src/
+    │   └── wit/
+    └── hello-world/  # Example extension
+        ├── Cargo.toml
+        └── src/
 ```
 
-### Cross-Extension Example
+## Recent Changes
 
-The working test case (ext-add calling ext-js):
+### Workspace Restructuring
 
-- ext-add extension invokes the add function from ext-js
-- Parameters: 2 and 3
-- Result: 5 (successfully returned)
+1. Converted project to a Rust workspace
+2. Created dedicated `crates/` directory for better organization
+3. Successfully migrated dfx-cli to the new structure
+4. Added hello-world example crate to validate workspace setup
+5. Maintained proper separation of workspace and crate-specific files
+6. Verified all functionality works in new structure
 
-### Future Considerations
+### Technical Decisions
 
-1. Consider adding more async utilities for extension developers
-2. Look into performance optimization for async calls
-3. Consider adding timeouts for async operations
-4. Document best practices for async function implementations
+1. **Workspace Organization**
+
+   - Created `crates/` directory to house all crates
+   - Kept docs at root level for better visibility
+   - Structured for scalability as we add more extensions
+
+2. **Crate Organization**
+   - Moved CLI implementation to dfx-cli crate
+   - Created simple hello-world crate for testing
+   - Set up workspace with resolver = "2"
+
+## Next Steps
+
+### Immediate Focus: WAT-Based Component Mocking
+
+1. Create WAT templates for mock components
+2. Set up testing infrastructure in new workspace structure
+3. Write initial test cases using mock components
+4. Document component mocking patterns
+
+### Upcoming Tasks
+
+1. Complete async implementation documentation
+2. Add comprehensive error handling
+3. Begin planning for Phase 5 integration
+
+## Technical Notes for Next Session
+
+To begin implementing WAT-based component mocking, we'll need to:
+
+1. Create a test utilities crate in the workspace
+2. Set up WAT template generation
+3. Implement mock component creation
+4. Write test cases that validate async functionality
 
 ## Additional Resources
 
 - Original handoff documents archived in ./archive/
-- Proof-of-concept code in tmp/ directory
 - Project plan in PLAN.md
 - Guidelines in GUIDELINES.md
+- Session handoffs in archive/HANDOFF-SESSION-\*.md

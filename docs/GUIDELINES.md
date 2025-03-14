@@ -15,8 +15,6 @@ This document outlines the working process for implementing the extension inter-
 
 ## Collaborative Implementation Process
 
-Starting from Session 6, we're adopting a more collaborative implementation approach:
-
 1. **User-Driven Implementation**: The user will take a more active role in implementing changes, with Claude providing guidance, advice, and code snippets.
 
 2. **Consultation Workflow**:
@@ -24,7 +22,7 @@ Starting from Session 6, we're adopting a more collaborative implementation appr
    - The user will ask for advice or ideas on specific implementation challenges
    - Claude will provide recommendations, pseudocode, or implementation strategies
    - After agreement on the approach, Claude will provide actual code snippets if requested
-   - The user will implement the changes directly
+   - Occasionally, the user will implement the changes directly
 
 3. **Documentation Responsibility**: Both parties will ensure documentation is updated to reflect the collaborative nature of the implementation.
 
