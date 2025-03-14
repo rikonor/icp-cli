@@ -342,7 +342,7 @@ async fn test_multi_lib_detection() -> Result<(), Error> {
     assert!(interfaces.exports.iter().any(|i| i
         == &Interface {
             name: "test:format/lib".to_string(),
-            funcs: vec!["number-to-string".to_string()],
+            funcs: vec!["number-to-double".to_string()],
         }));
 
     Ok(())

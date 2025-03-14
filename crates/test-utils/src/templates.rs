@@ -1,6 +1,26 @@
 //! WebAssembly text format (WAT) templates for testing component interfaces
+//!
+//! This file contains a collection of WebAssembly Component Model templates in WAT format
+//! that are used for testing interface detection and other component model features.
+//! Each template demonstrates different aspects of the component model and is designed
+//! to test specific functionality.
 
 /// Empty component template with no imports or exports
+///
+/// Purpose:
+/// - Tests the minimal valid component structure
+/// - Verifies that empty components are handled correctly
+///
+/// Structure:
+/// - Core module with memory and realloc function
+/// - No imports or exports at the component level
+///
+/// Key Features:
+/// - Minimal valid component structure
+/// - Memory and realloc exports from core module
+///
+/// Test Expectations:
+/// - Should detect zero imports and zero exports
 pub const EMPTY_COMPONENT_TEMPLATE: &str = r#"
 (component
   ;; Core module implementation
@@ -25,6 +45,29 @@ pub const EMPTY_COMPONENT_TEMPLATE: &str = r#"
 "#;
 
 /// Basic template with valid library interfaces for both import and export
+///
+/// Purpose:
+/// - Tests the basic functionality of importing and exporting library interfaces
+/// - Demonstrates the minimal required structure for a valid component with interfaces
+///
+/// Structure:
+/// - Imports a math library with an "add" function
+/// - Defines a core module that implements a "multiply" function
+/// - Lifts the core function to a component function
+/// - Exports a calc library with the multiply function
+///
+/// Key Features:
+/// - Function type definitions with named parameters
+/// - Canon lifting from core functions to component functions
+/// - Memory and realloc handling for the canonical ABI
+///
+/// Common Issues:
+/// - Requires proper memory and realloc exports from the core module
+/// - Function signatures must match between core and component levels
+///
+/// Test Expectations:
+/// - Should detect one import: "test:math/lib" with function "add"
+/// - Should detect one export: "test:calc/lib" with function "multiply"
 pub const BASIC_LIB_TEMPLATE: &str = r#"
 (component
   ;; Import interface type and instance
@@ -160,20 +203,18 @@ pub const MANY_INTERFACES_TEMPLATE: &str = r#"
       (memory $instance "mem")
       (realloc (func $instance "realloc"))))
 
-    ;; For boolean return values, the canonical ABI expects a different signature
+    ;; For boolean return values
     (func $is_even_lifted (type $is_even_ty)
       (canon lift
         (core func $instance "is-even")
         (memory $instance "mem")
-        (realloc (func $instance "realloc"))
-        (boolean-to-i32)))
+        (realloc (func $instance "realloc"))))
 
     (func $is_positive_lifted (type $is_positive_ty)
       (canon lift
         (core func $instance "is-positive")
         (memory $instance "mem")
-        (realloc (func $instance "realloc"))
-        (boolean-to-i32)))
+        (realloc (func $instance "realloc"))))
 
   ;; Define library instances with exports
   (instance $math_utils
@@ -210,8 +251,9 @@ pub const NESTED_INSTANCES_TEMPLATE: &str = r#"
     (export "realloc" (func $realloc))
 
     ;; Core implementations
-    (func $log_impl (param i32 i32) (result i32)
-      local.get 0)  ;; Just return the pointer, ignoring length for test purposes
+    (func $log_impl (param i32 i32) (result)
+      drop
+      drop)  ;; No return value needed for this test
     (export "log-impl" (func $log_impl))
 
     (func $multiply (param i32 i32) (result i32)
@@ -257,17 +299,37 @@ pub const NESTED_INSTANCES_TEMPLATE: &str = r#"
 )"#;
 
 /// Template with duplicate interface names
+///
+/// Purpose:
+/// - Tests handling of components with duplicate interface names
+/// - Verifies correct detection of interfaces with the same name but different functions
+///
+/// Structure:
+/// - Imports two interfaces with similar names (test:math/lib/1 and test:math/lib/2)
+/// - Exports two interfaces with the exact same name (test:calc/lib)
+///
+/// Key Features:
+/// - Duplicate interface names
+/// - Multiple imports and exports
+///
+/// Common Issues:
+/// - Some WebAssembly implementations may reject duplicate import names
+/// - Interface detection must handle duplicate names correctly
+///
+/// Test Expectations:
+/// - Should detect two imports with different functions
+/// - Should detect two exports with the same name but different functions
 pub const DUPLICATE_INTERFACE_TEMPLATE: &str = r#"
 (component
   ;; Define function types
   (type $add_ty (func (param "x" u32) (param "y" u32) (result u32)))
   (type $subtract_ty (func (param "x" u32) (param "y" u32) (result u32)))
 
-  ;; Import library interfaces with duplicate names
-  (import "test:math/lib" (instance $math1
+  ;; Import library interfaces with similar names
+  (import "test:math/lib/1" (instance $math1
     (export "add" (func (type $add_ty)))))
 
-  (import "test:math/lib" (instance $math2
+  (import "test:math/lib/2" (instance $math2
     (export "subtract" (func (type $subtract_ty)))))
 
   ;; Core module implementation
@@ -404,6 +466,26 @@ pub const MISSING_REALLOC_TEMPLATE: &str = r#"
 )"#;
 
 /// Template with non-library (invalid) interfaces
+///
+/// Purpose:
+/// - Tests handling of non-standard interface naming patterns
+/// - Verifies detection of interfaces that don't follow the "/lib" naming convention
+///
+/// Structure:
+/// - Imports an interface with a non-standard name (test:math/helper)
+/// - Exports an interface with a non-standard name (test:calc/utils)
+///
+/// Key Features:
+/// - Non-standard interface naming
+/// - String parameter handling
+///
+/// Common Issues:
+/// - Interface detection should work regardless of naming conventions
+/// - Some implementations might have special handling for "/lib" interfaces
+///
+/// Test Expectations:
+/// - Should detect one import: "test:math/helper" with function "log"
+/// - Should detect one export: "test:calc/utils" with function "square"
 pub const INVALID_INTERFACE_TEMPLATE: &str = r#"
 (component
   ;; Define log function type
@@ -478,20 +560,20 @@ pub const MULTI_LIB_TEMPLATE: &str = r#"
       local.get 0
       local.get 1
       i32.mul)
-    ;; For string return values, the canonical ABI expects a different signature
-    ;; This is a simplified version for testing purposes
-    (func $number_to_string (param i32) (result i32 i32)
-      local.get 0  ;; Return pointer
-      i32.const 1) ;; Return length
+    ;; Simple function that doubles a number
+    (func $number_to_double (param i32) (result i32)
+      local.get 0
+      i32.const 2
+      i32.mul)
     (export "multiply" (func $multiply))
-    (export "number-to-string" (func $number_to_string)))
+    (export "number-to-double" (func $number_to_double)))
 
   ;; Create the core module instance
   (core instance $instance (instantiate $impl))
 
   ;; Define result function types
   (type $multiply_ty (func (param "x" u32) (param "y" u32) (result u32)))
-  (type $number_to_string_ty (func (param "x" u32) (result i32 i32)))
+  (type $number_to_double_ty (func (param "x" u32) (result u32)))
 
   ;; Lift core functions to component functions
   (func $multiply_lifted (type $multiply_ty)
@@ -500,9 +582,10 @@ pub const MULTI_LIB_TEMPLATE: &str = r#"
       (memory $instance "mem")
       (realloc (func $instance "realloc"))))
 
-  (func $number_to_string_lifted (type $number_to_string_ty)
+  ;; Simple numeric function that doubles a number
+  (func $number_to_double_lifted (type $number_to_double_ty)
     (canon lift
-      (core func $instance "number-to-string")
+      (core func $instance "number-to-double")
       (memory $instance "mem")
       (realloc (func $instance "realloc"))))
 
@@ -511,7 +594,7 @@ pub const MULTI_LIB_TEMPLATE: &str = r#"
     (export "multiply" (func $multiply_lifted)))
 
   (instance $format
-    (export "number-to-string" (func $number_to_string_lifted)))
+    (export "number-to-double" (func $number_to_double_lifted)))
 
   ;; Export library interfaces
   (export "test:calc/lib" (instance $calc))

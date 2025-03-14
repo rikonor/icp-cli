@@ -5,12 +5,12 @@ Core Extraction Project Status
 | Stage | Description                             | Status      | Completion |
 | ----- | --------------------------------------- | ----------- | ---------- |
 | 1     | Setup and Initial Structure             | Complete    | 100%       |
-| 2     | Core Interface Types Migration          | In Progress | 95%        |
+| 2     | Core Interface Types Migration          | In Progress | 97%        |
 | 3     | Component and Extension Logic Migration | Not Started | 0%         |
 | 4     | CLI Simplification                      | Not Started | 0%         |
-| 5     | Testing Infrastructure                  | Not Started | 0%         |
+| 5     | Testing Infrastructure                  | In Progress | 5%         |
 
-**Overall Project Completion:** 42%
+**Overall Project Completion:** 45%
 
 ## Current Focus
 
@@ -49,11 +49,18 @@ Stage 2: Core Interface Types Migration (Final Steps)
 - Enhanced error handling in the interface detection module
 - Added comprehensive documentation to the interface module
 - Created new test templates for edge cases (empty component, many interfaces, nested instances, duplicate interfaces)
-- Started fixing WebAssembly Component Model template issues:
+- Fixed WebAssembly Component Model template issues:
   - Fixed parameter type mismatch in string handling functions
   - Fixed return type mismatch in string return functions
-  - Added boolean conversion for boolean return values
-- Still encountering issues with some template functions not matching the canonical ABI requirements
+  - Fixed boolean conversion for boolean return values
+  - Fixed duplicate interface naming issues
+  - Fixed log function return type in nested instances template
+- Added detailed comments to all WAT templates explaining:
+  - Purpose of each template
+  - Structure and key components
+  - Key WebAssembly Component Model features demonstrated
+  - Common issues and pitfalls
+  - Test expectations
 
 ## Blockers/Issues
 
