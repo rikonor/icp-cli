@@ -46,17 +46,30 @@ Stage 2: Core Interface Types Migration
 - Updated test-utils to depend on dfx-core directly
 - Verified that dfx-core tests pass with the restored implementation
 - Identified issues with test-utils tests that need to be addressed
+- Added WebAssembly Component Model Explainer document as a reference
+- Identified specific syntax issues in the WAT templates causing test failures
+- Created a plan to split the Explainer document into smaller, more manageable files
 
 ## Blockers/Issues
 
-- Some test-utils tests are failing and need to be fixed
-- Need to review and update the test templates to work with the current implementation
+- Some test-utils tests are failing due to syntax errors in the WAT templates
+- Need to update the test templates to use the correct WAT syntax for component exports
 
 ## Upcoming Tasks
 
 Continue Stage 2 implementation:
 
-- Fix failing test-utils tests
+- Fix the WAT templates in test-utils to use the correct syntax for component exports
+- Update the failing tests to work with the corrected templates
 - Add more comprehensive tests for interface detection
 - Refine error handling for interface detection
-- Begin planning for Stage 3: Component and Extension Logic Migration
+
+Documentation improvements:
+
+- Split the Explainer.md into smaller, more focused files for easier reference
+- Organize documentation to better support future development
+
+Begin planning for Stage 3:
+
+- Identify which components and extension logic need to be moved
+- Plan the migration strategy to minimize disruption
