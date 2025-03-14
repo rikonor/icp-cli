@@ -12,11 +12,11 @@ use wasmtime::{component::Component, Engine};
 
 use crate::{
     dependency::DependencyError,
-    iface::LIBRARY_SUFFIX,
+    dependency::DependencyGraph,
+    manifest,
     manifest::{ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store},
 };
-use crate::{dependency::DependencyGraph, iface::ComponentInterfaces};
-use crate::{iface::DetectIfaces, manifest};
+use dfx_core::interface::{ComponentInterfaces, DetectIfaces, LIBRARY_SUFFIX};
 
 enum AdditionType {
     Uri(Uri),

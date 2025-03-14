@@ -6,8 +6,8 @@ use wasmtime::component::{Instance, Linker};
 use wasmtime::Store;
 
 use crate::function_registry::FunctionRegistry;
-use crate::iface::LIBRARY_SUFFIX;
 use crate::manifest::{ExportedInterface, ImportedInterface};
+use dfx_core::interface::LIBRARY_SUFFIX;
 
 /// Error type for dynamic linking operations
 #[derive(Debug, thiserror::Error)]

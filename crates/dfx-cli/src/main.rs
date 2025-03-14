@@ -15,7 +15,7 @@ use wasmtime::{
 };
 
 // Re-exports from our own crates
-use crate::iface::{DetectIfaces, IfaceDetector};
+use dfx_core::interface::{DetectIfaces, IfaceDetector};
 
 // WIT Bindings
 use local::host::misc::{self, Host};

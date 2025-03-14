@@ -2,9 +2,15 @@
 name = "dfx-core"
 version = "0.1.0"
 edition = "2021"
+description = "Core functionality for dfx component model tools"
+license = "MIT"
 
 [dependencies]
-wasmtime = { version = "14.0", features = ["component-model"] }
-anyhow = "1.0"
+anyhow = "1.0.96"
+async-trait = "0.1.86"
+serde = { version = "1.0.218", features = ["derive"] }
+serde_json = "1.0.139"
+thiserror = "2.0.11"
+wasmtime = { version = "30.0.0", features = ["component-model"] }
 
 [dev-dependencies]

@@ -4,43 +4,25 @@
 
 All project documentation is maintained in the `docs/` directory to keep the project organized. This includes:
 
-- GUIDELINES.md (this file)
-- HANDOFF-FINAL.md (consolidated handoff document)
-- PLAN.md (project implementation plan)
-- PROJECT_STATUS.md (current project status)
-- project-summary.md
-- archive/ (historical handoff documents)
+- [Summary](SUMMARY.md)
+- [Guidelines](GUIDELINES.md)
+- [Workflow](WORKFLOW.md)
 
-This document outlines the working process for implementing the extension inter-communication feature for the dfx-2 project. It defines how we'll organize our work across multiple sessions and ensure continuity.
-
-## Collaborative Implementation Process
-
-1. **User-Driven Implementation**: The user will take a more active role in implementing changes, with Claude providing guidance, advice, and code snippets.
-
-2. **Consultation Workflow**:
-
-   - The user will ask for advice or ideas on specific implementation challenges
-   - Claude will provide recommendations, pseudocode, or implementation strategies
-   - After agreement on the approach, Claude will provide actual code snippets if requested
-   - Occasionally, the user will implement the changes directly
-
-3. **Documentation Responsibility**: Both parties will ensure documentation is updated to reflect the collaborative nature of the implementation.
-
-4. **Handoff Process**: The handoff document should clearly indicate which parts were implemented collaboratively and any decisions made during the process.
-
-This approach allows for more direct user involvement while leveraging Claude's expertise for guidance and code generation.
+This document guidelines for work. Among other things, it defines how we'll organize our work across multiple projects and sessions and ensure continuity.
 
 ## Session Workflow
 
 ### Beginning of Session
 
-1. **Review Guidelines**: Start by reviewing this GUIDELINES.md file to understand the process.
-2. **Review Plan**: Examine PLAN.md to understand the current requirements of the project.
-3. **Review Project Status**: Examine PROJECT_STATUS.md to understand the current state of the project.
-4. **Review Handoff Document**: Read the latest handoff document from the previous session.
-5. **Review Alignemt with Goal**: Ensure our work thus far has not strayed too far from our plan.
-6. **Review Code Changes**: Examine any code changes made in previous sessions to get context.
-7. **Establish Session Goals**: Identify specific tasks to be completed during the current session.
+1. **Project Assignment**: Unless one was already provided to you, start by asking the operator for your project assignment.
+1. **Review Guidelines**: Review the [guidelines](GUIDELINES.md).
+1. **Review Guidelines**: Review the [summary](SUMMARY.md).
+1. **Review Plan**: Examine project's `PLAN.md` file to understand the current requirements of the project.
+1. **Review Project Status**: Examine project's `PROJECT_STATUS.md` to understand the current state of the project.
+1. **Review Handoff Document**: Read the latest handoff document from the previous session.
+1. **Review Alignemt with Goal**: Ensure our work thus far has not strayed too far from our plan.
+1. **Review Code Changes**: Examine any code changes made in previous sessions to get context.
+1. **Establish Session Goals**: Identify specific tasks to be completed during the current session.
 
 ### During Session
 

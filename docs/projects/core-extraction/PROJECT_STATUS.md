@@ -4,24 +4,26 @@
 
 | Stage | Description                             | Status      | Completion |
 | ----- | --------------------------------------- | ----------- | ---------- |
-| 1     | Setup and Initial Structure             | Not Started | 0%         |
+| 1     | Setup and Initial Structure             | In Progress | 75%        |
 | 2     | Core Interface Types Migration          | Not Started | 0%         |
 | 3     | Component and Extension Logic Migration | Not Started | 0%         |
 | 4     | CLI Simplification                      | Not Started | 0%         |
 | 5     | Testing Infrastructure                  | Not Started | 0%         |
 
-**Overall Project Completion:** 0%
+**Overall Project Completion:** 15%
 
 ## Current Focus
 
-Preparing for Stage 1: Setup and Initial Structure
+Completing Stage 1: Setup and Initial Structure
 
 ## Next Steps
 
-1. Create dfx-core crate
-2. Update workspace Cargo.toml
-3. Set up initial module structure
-4. Create minimal public API
+1. ✅ Create dfx-core crate
+2. ✅ Update workspace Cargo.toml
+3. ✅ Set up initial module structure
+4. ✅ Create minimal public API
+5. Add unit tests for core functionality
+6. Prepare for Stage 2: Core Interface Types Migration
 
 ## Notes and Observations
 
