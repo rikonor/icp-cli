@@ -45,6 +45,7 @@ use local::host::misc::{self, Host};
 bindgen!({
     path: "wit",
     world: "extension",
+    async: true,
 });
 
 const SERVICE_NAME: &str = "dfx-2";
@@ -76,50 +77,31 @@ const ARG_LONG_PRECOMPILES: &str = "precompiles-dir";
 
 struct State;
 
-// impl Host for State {
-//     async fn print(&mut self, s: String) {
-//         println!("{s}");
-//     }
-
-//     async fn time(&mut self) -> u64 {
-//         SystemTime::now()
-//             .duration_since(UNIX_EPOCH)
-//             .expect("failed to get current time")
-//             .as_millis() as u64
-//     }
-
-//     async fn rand(&mut self) -> u8 {
-//         todo!()
-//     }
-// }
-
 impl Host for State {
-    fn print(&mut self, s: String) {
+    async fn print(&mut self, s: String) {
         println!("{s}");
     }
 
-    fn time(&mut self) -> u64 {
+    async fn time(&mut self) -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
             .expect("failed to get current time")
             .as_millis() as u64
     }
 
-    fn rand(&mut self) -> u8 {
+    async fn rand(&mut self) -> u8 {
         todo!()
     }
 }
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
-    // // WASM Configuration
-    // let mut cfg = Config::new();
-    // let cfg = cfg.async_support(true);
+    // WASM Configuration
+    let mut cfg = Config::new();
+    let cfg = cfg.async_support(true);
 
-    // // Engine
-    // let ngn = Engine::new(cfg)?;
-
-    let ngn = Engine::default();
+    // Engine
+    let ngn = Engine::new(cfg)?;
 
     // Linker
     let mut lnk = Linker::new(&ngn);
@@ -312,10 +294,12 @@ async fn main() -> Result<(), Error> {
             .ok_or_else(|| anyhow!("missing component"))?;
 
         // Component (generic)
-        let inst = lnk.instantiate(
-            &mut store,    // store
-            cmpnt.value(), // component
-        )?;
+        let inst = lnk
+            .instantiate_async(
+                &mut store,    // store
+                cmpnt.value(), // component
+            )
+            .await?;
 
         // Resolve exports for this extension
         if let Some(x) = m.xs.iter().find(|x| &x.name == name) {
@@ -354,6 +338,7 @@ async fn main() -> Result<(), Error> {
         let cspec = inst
             .local_extension_cli()
             .call_spec(&mut store)
+            .await
             .context("failed to retrieve spec")?;
 
         c = c.subcommand({
@@ -504,7 +489,10 @@ async fn main() -> Result<(), Error> {
             // Invoke extension
             match insts.get(cmd) {
                 Some(inst) => {
-                    let exit_code = inst.local_extension_cli().call_run(&mut store, &args)?;
+                    let exit_code = inst
+                        .local_extension_cli()
+                        .call_run(&mut store, &args)
+                        .await?;
 
                     println!("{exit_code}");
                 }

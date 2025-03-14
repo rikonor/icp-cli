@@ -40,7 +40,7 @@ impl DynamicLinker {
     }
 
     /// Link imports for an extension
-    pub fn link_imports<T>(
+    pub fn link_imports<T: Send>(
         &mut self,
         lnk: &mut Linker<T>,
         imps: Vec<ImportedInterface>,
@@ -68,19 +68,32 @@ impl DynamicLinker {
 
                 let fname = f.clone();
 
-                lnk.instance(&imp.name)?
-                    .func_new(&f, move |mut store, params, results| {
-                        let fref = fref.lock().unwrap();
+                lnk.instance(&imp.name)?.func_new_async(
+                    &f,
+                    move |mut store, params, results| {
+                        let fname = fname.clone();
+                        let fref = Arc::clone(&fref);
 
-                        let f = fref.as_ref().ok_or_else(|| {
-                            DynamicLinkingError::UnresolvedReference(fname.clone())
-                        })?;
+                        Box::new(async move {
+                            let f = {
+                                let g = fref.lock().unwrap();
+                                *g.as_ref().ok_or_else(|| {
+                                    DynamicLinkingError::UnresolvedReference(fname)
+                                })?
+                            };
 
-                        f.call(&mut store, params, results).context("call failed")?;
-                        f.post_return(&mut store).context("post-return failed")?;
+                            f.call_async(&mut store, params, results)
+                                .await
+                                .context("call failed")?;
 
-                        Ok(())
-                    })?;
+                            f.post_return_async(&mut store)
+                                .await
+                                .context("post-return failed")?;
+
+                            Ok(())
+                        })
+                    },
+                )?;
             }
         }
 
