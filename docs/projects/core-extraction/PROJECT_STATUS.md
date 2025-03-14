@@ -5,16 +5,16 @@ Core Extraction Project Status
 | Stage | Description                             | Status      | Completion |
 | ----- | --------------------------------------- | ----------- | ---------- |
 | 1     | Setup and Initial Structure             | Complete    | 100%       |
-| 2     | Core Interface Types Migration          | In Progress | 75%        |
+| 2     | Core Interface Types Migration          | In Progress | 90%        |
 | 3     | Component and Extension Logic Migration | Not Started | 0%         |
 | 4     | CLI Simplification                      | Not Started | 0%         |
 | 5     | Testing Infrastructure                  | Not Started | 0%         |
 
-**Overall Project Completion:** 35%
+**Overall Project Completion:** 40%
 
 ## Current Focus
 
-Stage 2: Core Interface Types Migration
+Stage 2: Core Interface Types Migration (Final Steps)
 
 ## Next Steps
 
@@ -30,6 +30,7 @@ Stage 2: Core Interface Types Migration
    - ✅ Update integration tests for interface detection
    - ✅ Implement actual interface detection in dfx-core
    - ✅ Split the Explainer.md into smaller more focused files for easier reference
+   - ✅ Fix WAT templates in test-utils with proper component model syntax
    - Add more comprehensive tests for interface detection
    - Refine error handling for interface detection
 
@@ -39,26 +40,24 @@ Stage 2: Core Interface Types Migration
 - Core functionality from dfx-cli needs to be carefully extracted
 - Testing infrastructure will be priority to ensure stability
 - The interface detection implementation has been restored to use the proper wasmtime API for component inspection
-- Some test-utils tests are failing and will need to be fixed in the next session
+- All test-utils tests are now passing with the fixed WAT templates
 
 ## Recent Activity
 
-- Split the Explainer.md into smaller, more focused files for easier reference
-- Verified that all files contain the correct content from the original Explainer.md
-- Created a handoff document for Session 6 documenting the completed work
-- Identified the next steps for fixing the WAT templates in test-utils
+- Fixed WAT templates in test-utils to use proper component model syntax
+- Added realloc function and memory handling to templates
+- Updated function names to use kebab-case naming convention
+- Fixed test assertions to match template changes
+- All test-utils tests are now passing
 
 ## Blockers/Issues
 
-- Some test-utils tests are failing due to syntax errors in the WAT templates
-- Need to update the test templates to use the correct syntax for component exports
+- No current blockers
 
 ## Upcoming Tasks
 
 Continue Stage 2 implementation:
 
-- Fix the WAT templates in test-utils to use the correct syntax for component exports
-- Update the failing tests to work with the corrected templates
 - Add more comprehensive tests for interface detection
 - Refine error handling for interface detection
 

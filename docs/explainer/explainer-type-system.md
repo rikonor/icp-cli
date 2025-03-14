@@ -838,7 +838,3 @@ isolation than otherwise achievable with a shared global namespace.
 [avoidance problem]: https://counterexamples.org/avoidance.html
 [non-parametric parametricity]: https://people.mpi-sws.org/~dreyer/papers/npp/main.pdf
 [Canonical ABI explainer]: CanonicalABI.md
-
-```
-
-```
