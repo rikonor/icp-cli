@@ -1,0 +1,10 @@
+[package]
+name = "dfx-core"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+wasmtime = { version = "14.0", features = ["component-model"] }
+anyhow = "1.0"
+
+[dev-dependencies]
