@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::{Arc, Mutex};
 
 use anyhow::anyhow;
 use wasmtime::component::{Instance, Linker};
@@ -38,16 +39,6 @@ impl DynamicLinker {
         }
     }
 
-    /// Get a reference to the function registry
-    pub fn registry(&self) -> &FunctionRegistry {
-        &self.registry
-    }
-
-    /// Get a mutable reference to the function registry
-    pub fn registry_mut(&mut self) -> &mut FunctionRegistry {
-        &mut self.registry
-    }
-
     /// Link imports for an extension
     pub fn link_imports<T>(
         &mut self,
@@ -68,8 +59,14 @@ impl DynamicLinker {
                     &f,        // function
                 );
 
+                // Create a function reference
+                let fref = Arc::new(Mutex::new(None));
+
                 // Register the function reference
-                let fref = self.registry.register(k);
+                self.registry.register(
+                    k,                 // key
+                    Arc::clone(&fref), // reference
+                );
 
                 let fname = f.clone();
 
@@ -141,6 +138,7 @@ impl DynamicLinker {
                     )
                     .ok_or(anyhow!("missing function"))?;
 
+                println!("registering {k}");
                 self.registry.resolve(&k, f);
             }
         }
@@ -165,18 +163,5 @@ impl DynamicLinker {
         for (name, resolved) in &self.resolved_exports {
             println!("  {}: {}", name, if *resolved { "Yes" } else { "No" });
         }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn test_new() {
-        let registry = FunctionRegistry::new();
-        let linker = DynamicLinker::new(registry);
-
-        assert!(linker.registry().is_empty());
     }
 }

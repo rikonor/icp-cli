@@ -226,11 +226,6 @@ impl DependencyGraph {
         !self.cycles.is_empty()
     }
 
-    /// Gets the cycles in the dependency graph
-    pub fn get_cycles(&self) -> &[Vec<String>] {
-        &self.cycles
-    }
-
     /// Gets a formatted string representation of the cycles
     pub fn format_cycles(&self) -> String {
         if self.cycles.is_empty() {
@@ -618,7 +613,6 @@ mod tests {
         let graph = DependencyGraph::new(&manifest).unwrap();
 
         assert!(graph.has_cycles());
-        assert!(!graph.get_cycles().is_empty());
 
         // Loading order should fail due to cycles
         let result = graph.resolve_loading_order();
@@ -641,7 +635,8 @@ mod tests {
 
         // Create a manifest with a missing dependency
         let mut bad_manifest = manifest.clone();
-        let mut ext_d = Extension {
+
+        bad_manifest.xs.push(Extension {
             name: "ext-d".to_string(),
             wasm: "ext-d.wasm".into(),
             pre: "ext-d.bin".into(),
@@ -651,8 +646,7 @@ mod tests {
                 functions: vec!["func".to_string()],
             }],
             exports: Vec::new(),
-        };
-        bad_manifest.xs.push(ext_d);
+        });
 
         let graph = DependencyGraph::new(&bad_manifest).unwrap();
         let result = graph.validate_dependencies(&bad_manifest);

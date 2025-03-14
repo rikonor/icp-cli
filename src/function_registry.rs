@@ -17,15 +17,11 @@ impl FunctionRegistry {
     }
 
     /// Register a function reference
-    pub fn register(&mut self, key: String) -> Arc<Mutex<Option<Func>>> {
-        let reference = Arc::new(Mutex::new(None));
-        self.references.insert(key.clone(), Arc::clone(&reference));
-        reference
-    }
-
-    /// Get a function reference
-    pub fn get(&self, key: &str) -> Option<Arc<Mutex<Option<Func>>>> {
-        self.references.get(key).cloned()
+    pub fn register(&mut self, key: String, fref: Arc<Mutex<Option<Func>>>) {
+        self.references.insert(
+            key,  // key
+            fref, // reference
+        );
     }
 
     /// Resolve a function reference
@@ -56,11 +52,6 @@ impl FunctionRegistry {
             .filter(|r| r.lock().unwrap().is_some())
             .count()
     }
-
-    /// Check if the registry is empty
-    pub fn is_empty(&self) -> bool {
-        self.references.is_empty()
-    }
 }
 
 #[cfg(test)]
@@ -71,43 +62,5 @@ mod tests {
     fn test_create_key() {
         let key = FunctionRegistry::create_key("ext-a", "math/lib", "add");
         assert_eq!(key, "ext-a:math/lib:add");
-    }
-
-    #[test]
-    fn test_register_and_get() {
-        let mut registry = FunctionRegistry::new();
-        let key = "ext-a:math/lib:add".to_string();
-
-        let reference = registry.register(key.clone());
-        assert!(registry.get(&key).is_some());
-
-        // Check that the reference is initially None
-        assert!(reference.lock().unwrap().is_none());
-    }
-
-    #[test]
-    fn test_resolve() {
-        let mut registry = FunctionRegistry::new();
-        let key = "ext-a:math/lib:add".to_string();
-
-        registry.register(key.clone());
-
-        // We can't easily create a real Func in tests, so we'll just test the logic
-        // by checking if the reference exists
-        assert!(registry.get(&key).is_some());
-    }
-
-    #[test]
-    fn test_len_and_is_empty() {
-        let mut registry = FunctionRegistry::new();
-        assert!(registry.is_empty());
-        assert_eq!(registry.len(), 0);
-
-        registry.register("ext-a:math/lib:add".to_string());
-        assert!(!registry.is_empty());
-        assert_eq!(registry.len(), 1);
-
-        registry.register("ext-a:math/lib:subtract".to_string());
-        assert_eq!(registry.len(), 2);
     }
 }
