@@ -5,6 +5,8 @@ use wasmtime::{
     Engine,
 };
 
+pub const LIBRARY_SUFFIX: &str = "/lib";
+
 #[derive(Debug, PartialEq)]
 pub struct Interface {
     /// Name of the interface (e.g., "math/lib")

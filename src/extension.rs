@@ -12,12 +12,11 @@ use wasmtime::{component::Component, Engine};
 
 use crate::{
     dependency::DependencyError,
+    iface::LIBRARY_SUFFIX,
     manifest::{ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store},
 };
 use crate::{dependency::DependencyGraph, iface::ComponentInterfaces};
 use crate::{iface::DetectIfaces, manifest};
-
-const LIBRARY_SUFFIX: &str = "/lib";
 
 enum AdditionType {
     Uri(Uri),

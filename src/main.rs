@@ -6,9 +6,10 @@ use std::{
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use anyhow::{Context, Error};
+use anyhow::{anyhow, Context, Error};
 use clap::{value_parser, Arg, ArgAction, Command};
 use dashmap::DashMap;
+use function_registry::FunctionRegistry;
 use manifest::{Load as _, LoadError, Manifest, ManifestHandle, Store as _};
 use once_cell::sync::Lazy;
 use wasmtime::{
@@ -239,19 +240,16 @@ async fn main() -> Result<(), Error> {
         eprintln!("Some extensions may not function correctly.");
     }
 
-    // Resolve loading order
-    let loading_order = dependency_graph
-        .resolve_loading_order()
-        .context("failed to resolve extension loading order")?;
-
     // Validate dependencies
     if let Err(err) = dependency_graph.validate_dependencies(&m) {
         eprintln!("Warning: Dependency validation failed: {}", err);
         eprintln!("Some extensions may not function correctly.");
     }
 
-    // Create dynamic linker
-    let mut dynamic_linker = DynamicLinker::new();
+    // Resolve loading order
+    let loading_order = dependency_graph
+        .resolve_loading_order()
+        .context("failed to resolve extension loading order")?;
 
     // Components (initialize)
     let cmpnts: DashMap<String, Component> = DashMap::new();
@@ -270,10 +268,20 @@ async fn main() -> Result<(), Error> {
         }
     }
 
+    // Create function registry
+    let registry = FunctionRegistry::new();
+
+    // Create dynamic linker
+    let mut dynlnk = DynamicLinker::new(registry);
+
     // Link imports for each extension
     for name in &loading_order {
         if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
-            dynamic_linker.link_imports(&mut lnk, &extension.name, &extension.imports)?;
+            dynlnk.link_imports(
+                &mut lnk,                  // linker
+                &extension.name,           // name
+                extension.imports.clone(), // imports
+            )?;
         }
     }
 
@@ -282,42 +290,44 @@ async fn main() -> Result<(), Error> {
 
     // Instantiate components in dependency order
     for name in &loading_order {
-        if let Some(component) = cmpnts.get(name) {
-            // Component (generic)
-            let inst = lnk
-                .instantiate_async(
-                    &mut store,        // store
-                    component.value(), // component
-                )
-                .await?;
+        let cmpnt = cmpnts
+            .get(name)
+            .ok_or_else(|| anyhow!("missing component"))?;
 
-            // Component (typed)
-            let inst = Extension::new(
+        // Component (generic)
+        let inst = lnk
+            .instantiate_async(
+                &mut store,    // store
+                cmpnt.value(), // component
+            )
+            .await?;
+
+        // Resolve exports for this extension
+        if let Some(x) = m.xs.iter().find(|x| &x.name == name) {
+            dynlnk.resolve_exports(
                 &mut store, // store
+                &x.name,    // extension
                 &inst,      // instance
+                &x.exports, // exports
             )?;
-
-            insts.insert(
-                name.to_owned(), // key
-                inst,            // value
-            );
-
-            // Resolve exports for this extension
-            if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
-                dynamic_linker.resolve_exports(
-                    &lnk,
-                    &extension.name,
-                    &extension.exports,
-                    &mut store,
-                )?;
-            }
         }
+
+        // Component (typed)
+        let inst = Extension::new(
+            &mut store, // store
+            &inst,      // instance
+        )?;
+
+        insts.insert(
+            name.to_owned(), // key
+            inst,            // value
+        );
     }
 
     // Print information about function references
     println!("\nFunction references have been registered for imports and exports.");
     println!("Dynamic linking is complete for cross-extension function calls.");
-    dynamic_linker.print_function_refs();
+    dynlnk.print_function_refs();
 
     // Extensions (hydrate)
     let mut c = c;
