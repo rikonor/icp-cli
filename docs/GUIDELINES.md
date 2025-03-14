@@ -1,5 +1,16 @@
 # Development Guidelines
 
+## Project Documentation
+
+All project documentation is maintained in the `docs/` directory to keep the project organized. This includes:
+
+- GUIDELINES.md (this file)
+- HANDOFF-FINAL.md (consolidated handoff document)
+- PLAN.md (project implementation plan)
+- PROJECT_STATUS.md (current project status)
+- project-summary.md
+- archive/ (historical handoff documents)
+
 This document outlines the working process for implementing the extension inter-communication feature for the dfx-2 project. It defines how we'll organize our work across multiple sessions and ensure continuity.
 
 ## Collaborative Implementation Process
