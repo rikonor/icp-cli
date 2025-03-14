@@ -8,6 +8,7 @@ anyhow = "1.0"
 wasmtime = { version = "30.0", features = ["component-model", "async"] }
 tokio = { version = "1.0", features = ["full"] }
 dfx-cli = { path = "../dfx-cli" }
+dfx-core = { path = "../dfx-core" }
 
 [dev-dependencies]
 tokio-test = "0.4"

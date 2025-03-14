@@ -1,10 +1,12 @@
 //! Interface detection for WebAssembly components.
+//!
+//! This module provides functionality for detecting interfaces in WebAssembly components
+//! by inspecting their structure using the wasmtime API.
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::clone::Clone;
-    use test_utils::MockComponentBuilder;
     use wasmtime::Config;
 
     fn create_test_engine() -> Result<Engine, Error> {
@@ -188,7 +190,10 @@ mod tests {
 
 use anyhow::Error;
 use async_trait::async_trait;
-use wasmtime::{component::Component, Engine};
+use wasmtime::{
+    component::{types::ComponentItem, Component},
+    Engine,
+};
 
 /// Represents a WebAssembly component interface
 #[derive(Debug, PartialEq, Clone)]
@@ -228,14 +233,71 @@ pub struct IfaceDetector;
 impl DetectIfaces for IfaceDetector {
     async fn detect(
         &self,
-        _engine: &Engine,
-        _component: &Component,
+        engine: &Engine,
+        component: &Component,
     ) -> Result<ComponentInterfaces, Error> {
-        // For initial implementation, just return empty interfaces
-        // This will be expanded in Stage 2 with actual detection logic
-        Ok(ComponentInterfaces {
-            imports: vec![],
-            exports: vec![],
-        })
+        let typ = component.component_type();
+
+        // imports
+        let mut imports: Vec<Interface> = Vec::new();
+
+        for imp in typ.imports(engine) {
+            let (name, item) = imp;
+
+            let (iface, item) = match item {
+                ComponentItem::ComponentInstance(item) => (name, item),
+                _ => continue,
+            };
+
+            let mut funcs = vec![];
+
+            for exp in item.exports(engine) {
+                let (name, item) = exp;
+
+                let (func, _) = match item {
+                    ComponentItem::ComponentFunc(item) => (name, item),
+                    _ => continue,
+                };
+
+                funcs.push(func.to_string());
+            }
+
+            imports.push(Interface {
+                name: iface.to_string(),
+                funcs,
+            });
+        }
+
+        // exports
+        let mut exports: Vec<Interface> = Vec::new();
+
+        for exp in typ.exports(engine) {
+            let (name, item) = exp;
+
+            let (iface, item) = match item {
+                ComponentItem::ComponentInstance(item) => (name, item),
+                _ => continue,
+            };
+
+            let mut funcs = vec![];
+
+            for exp in item.exports(engine) {
+                let (name, item) = exp;
+
+                let (func, _) = match item {
+                    ComponentItem::ComponentFunc(item) => (name, item),
+                    _ => continue,
+                };
+
+                funcs.push(func.to_string());
+            }
+
+            exports.push(Interface {
+                name: iface.to_string(),
+                funcs,
+            });
+        }
+
+        Ok(ComponentInterfaces { imports, exports })
     }
 }

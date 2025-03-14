@@ -145,3 +145,10 @@ At the end of each session, consider:
 4. Are there any new guidelines that should be added based on experience?
 
 Update this document with those improvements for the next session.
+
+## Verification of Assumptions
+
+1. **External APIs**: Verify assumptions about external APIs and libraries before documenting limitations or implementing workarounds.
+2. **Documentation Accuracy**: Ensure that documentation accurately reflects the current state of the code and external dependencies.
+3. **Previous Implementations**: When replacing or refactoring code, carefully examine previous implementations to understand their approach and any lessons learned.
+4. **Test Failures**: When tests fail, investigate thoroughly to understand the root cause rather than making assumptions.

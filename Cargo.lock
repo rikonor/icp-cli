@@ -1940,6 +1940,7 @@ version = "0.1.0"
 dependencies = [
  "anyhow",
  "dfx-cli",
+ "dfx-core",
  "tokio",
  "tokio-test",
  "wasmtime",
