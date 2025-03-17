@@ -1,26 +1,41 @@
 # Development Guidelines
 
-## Project Documentation
+Welcome to the dfx-2 project! This document provides essential guidance for working on the project effectively.
 
-All project documentation is maintained in the `docs/` directory to keep the project organized. This includes:
+## Project Overview
 
-- [Summary](SUMMARY.md)
-- [Guidelines](GUIDELINES.md)
-- [Workflow](WORKFLOW.md)
+dfx-2 is a command-line utility for the Internet Computer platform with WebAssembly extension support. Our development process is organized around discrete tasks within projects, enabling clear ownership and effective collaboration.
 
-This document guidelines for work. Among other things, it defines how we'll organize our work across multiple projects and sessions and ensure continuity.
+## Project Organization
 
-## Session Workflow
+All development work is organized in the `docs/projects/` directory using the following structure:
+
+```
+docs/projects/
+└── project-name/
+    ├── PROJECT.md         # Project overview and task listing
+    └── tasks/            # Task-specific documentation
+        └── task-name/
+            ├── TASK.md   # Task details and requirements
+            └── HANDOFF/  # Task-specific handoff notes
+```
+
+This structure enables:
+
+- Clear task ownership and tracking
+- Discrete units of work
+- Sequential handoff documentation
+- Progress monitoring at both task and project levels
+
+## Working Process
 
 ### Beginning of Session
 
-1. **Task Assignment**: Unless one was already provided to you, start by asking the operator for your task assignment.
-2. **Review Guidelines**: Review the [guidelines](GUIDELINES.md) and [summary](SUMMARY.md).
-3. **Review Task**: Examine task's `TASK.md` file to understand requirements and current status.
-4. **Review Handoffs**: Read the latest task handoff document to understand current progress.
-5. **Verify Alignment**: Ensure work aligns with task requirements and project goals.
-6. **Review Context**: Examine any code or documentation changes from previous work.
-7. **Set Goals**: Establish specific objectives for the current session.
+1. **Task Assignment**: Unless already provided, ask the operator for your task assignment.
+2. **Review Task**: Examine task's `TASK.md` file to understand requirements and current status.
+3. **Review Handoffs**: Read the latest task handoff document to understand current progress.
+4. **Review Context**: Examine any code or documentation changes from previous work.
+5. **Set Goals**: Establish specific objectives for the current session.
 
 ### During Session
 
@@ -34,50 +49,34 @@ This document guidelines for work. Among other things, it defines how we'll orga
 1. **Update Task Status**: Update TASK.md with current progress and status.
 2. **Create Handoff**: Create numbered handoff document (HANDOFF-XXX.md) with current state and next steps.
 3. **Update Project Status**: Update PROJECT.md with task progress if needed.
-4. **Final Commit**: Commit all changes with a descriptive message. **This is a hard requirement** - no session should end without committing all changes.
+4. **Final Commit**: Commit all changes with a descriptive message. **This is a hard requirement**.
 5. **Next Steps**: Document requirements for continuing work in the next session.
+
+## Task Lifecycle
+
+1. **Creation**
+
+   - Create task directory under project's tasks/
+   - Write initial TASK.md with requirements
+   - Create HANDOFF directory
+
+2. **Development**
+
+   - Track progress in TASK.md
+   - Document decisions and changes
+   - Create numbered handoff documents
+   - Update PROJECT.md status
+
+3. **Completion**
+   - Update final status in TASK.md
+   - Create final handoff document
+   - Update PROJECT.md task status
 
 ## Documentation Standards
 
-1. **Code Comments**: Use meaningful comments that explain why code exists, not just what it does.
-2. **Function Documentation**: All public functions should have documentation comments explaining:
-   - Purpose
-   - Parameters
-   - Return values
-   - Examples (where appropriate)
-3. **Module Documentation**: Each module should have a top-level doc comment explaining its purpose.
-4. **Status Updates**: Keep PROJECT_STATUS.md up to date with accurate completion percentages.
+### Handoff Document Template
 
-## Testing Requirements
-
-1. **Unit Tests**: Write unit tests for all new functions and methods.
-2. **Integration Tests**: Test the interaction between extensions.
-3. **Error Handling Tests**: Verify that error cases are handled properly.
-4. **Backward Compatibility**: Test with existing extensions to ensure they continue to work.
-
-## Commit Message Conventions
-
-Follow this format for commit messages:
-
-```
-[Phase X][Component]: Brief description of the change
-
-More detailed explanation if necessary
-
-- Specific change 1
-- Specific change 2
-
-Related issues or tasks: #123
-```
-
-Examples:
-
-- `[Phase 1][WIT]: Add library interface to world.wit`
-- `[Phase 2][Manifest]: Update manifest model to track dependencies`
-
-## Handoff Document Template
-
-Create a file named `HANDOFF-XXX.md` (using sequential numbering) with the following format:
+Create sequentially numbered handoff documents (HANDOFF-XXX.md) with:
 
 ```markdown
 # Task Handoff - HANDOFF-XXX
@@ -111,42 +110,78 @@ Brief description of task progress and status.
 Additional context or observations for the next session.
 ```
 
-## Code Modification Best Practices
+### Code Documentation
 
-1. **Prefer Targeted Changes**: When modifying existing files, use the `replace_in_file` tool with carefully crafted SEARCH/REPLACE blocks rather than overwriting the entire file with `write_to_file`.
+1. **Code Comments**: Explain why code exists, not just what it does.
+2. **Function Documentation**: Include for all public functions:
+   - Purpose
+   - Parameters
+   - Return values
+   - Examples (where appropriate)
+3. **Module Documentation**: Add top-level doc comments explaining module purpose.
 
-2. **Retry Diff Operations**: If you encounter issues with the `replace_in_file` tool, it's preferable to retry with adjusted SEARCH blocks rather than immediately falling back to `write_to_file`. This is because diffs are much more efficient than full file rewrites.
+## Code Quality Standards
 
-3. **Reserve `write_to_file` for New Files**: Only use `write_to_file` when creating entirely new files or when the changes are so extensive that using `replace_in_file` would be impractical.
+1. **Error Handling**: Use proper error handling with meaningful messages.
+2. **Performance**: Consider performance implications of code.
+3. **Naming**: Use clear, descriptive names.
+4. **Code Structure**: Keep functions small and focused.
+5. **Magic Numbers/Strings**: Use named constants.
+6. **Consistency**: Follow project code style.
+7. **Readability**: Prioritize clarity over cleverness.
 
-4. **Incremental Changes**: Make changes in small, logical increments that can be easily reviewed and understood.
+## Testing Requirements
 
-5. **Use WebAssembly Tools**: The `wasm-tools` binary is installed and available for examining WebAssembly components. For example, use `wasm-tools component wit <PATH>` to examine the WIT definitions of components.
+1. **Unit Tests**: Write for all new functions and methods.
+2. **Integration Tests**: Test interaction between extensions.
+3. **Error Handling**: Verify proper error case handling.
+4. **Backward Compatibility**: Test with existing extensions.
 
-## Code Quality Expectations
+## Best Practices
 
-1. **Error Handling**: All operations should have proper error handling with meaningful error messages.
-2. **Performance**: Consider the performance implications of code, especially during extension loading.
-3. **Naming**: Use clear, descriptive names for variables, functions, and modules.
-4. **Code Structure**: Keep functions small and focused on a single responsibility.
-5. **Magic Numbers/Strings**: Avoid hardcoding values; use constants with descriptive names.
-6. **Consistency**: Follow the existing code style and patterns of the project.
-7. **Readability**: Prioritize readability over clever or overly concise code.
+### Code Modification
 
-## Improvement Process
+1. **Prefer Targeted Changes**: Use `replace_in_file` with carefully crafted SEARCH/REPLACE blocks.
+2. **Retry Diff Operations**: Adjust SEARCH blocks before falling back to full rewrites.
+3. **Write New Files**: Use `write_to_file` for new files or major rewrites.
+4. **Incremental Changes**: Make changes in small, reviewable increments.
 
-At the end of each session, consider:
+### Commit Messages
 
-1. What worked well?
-2. What didn't work well?
-3. What could be improved in the workflow?
-4. Are there any new guidelines that should be added based on experience?
+Follow this format:
 
-Update this document with those improvements for the next session.
+```
+[Phase X][Component]: Brief description
 
-## Verification of Assumptions
+More detailed explanation if necessary
 
-1. **External APIs**: Verify assumptions about external APIs and libraries before documenting limitations or implementing workarounds.
-2. **Documentation Accuracy**: Ensure that documentation accurately reflects the current state of the code and external dependencies.
-3. **Previous Implementations**: When replacing or refactoring code, carefully examine previous implementations to understand their approach and any lessons learned.
-4. **Test Failures**: When tests fail, investigate thoroughly to understand the root cause rather than making assumptions.
+- Specific change 1
+- Specific change 2
+
+Task: task-name
+```
+
+### Technical Tools
+
+- Use `wasm-tools` for examining WebAssembly components
+- Example: `wasm-tools component wit <PATH>` for WIT definitions
+
+## Quality Assurance
+
+### Verification Steps
+
+1. **External APIs**: Verify assumptions about external dependencies.
+2. **Documentation**: Ensure accuracy of documentation.
+3. **Previous Work**: Review existing implementations.
+4. **Test Failures**: Investigate root causes thoroughly.
+
+### Improvement Process
+
+At the end of each session:
+
+1. Note what worked well
+2. Identify areas for improvement
+3. Suggest workflow enhancements
+4. Update guidelines as needed
+
+Remember: The goal is to maintain high quality while enabling efficient collaboration through clear documentation and communication.
