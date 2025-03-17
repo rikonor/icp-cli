@@ -16,5 +16,10 @@ Active
   - Located in: `tasks/readme/`
 
 - [In Planning] Project Conversion Task
+
   - Convert existing projects to new task-based structure
   - Located in: `tasks/project-conversion/`
+
+- [In Planning] Persona Definition Task
+  - Define key personas for project collaboration
+  - Located in: `tasks/persona-definition/`
