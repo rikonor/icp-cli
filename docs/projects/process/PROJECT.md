@@ -10,7 +10,7 @@ Active
 
 ## Tasks
 
-- [In Planning] README Creation Task
+- [Complete] README Creation Task
 
   - Create comprehensive README.md for dfx-2 project
   - Located in: `tasks/readme/`
