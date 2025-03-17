@@ -13,16 +13,15 @@ The development is organized into discrete projects, each in its own directory u
 
 ```
 docs/
-├── GUIDELINES.md     # Foundation for all development sessions
-├── WORKFLOW.md       # This file - explains project organization
-└── projects/        # All project-specific documentation
-    ├── project-1/
-    │   ├── PLAN.md             # Project goals and implementation plan
-    │   ├── PROJECT_STATUS.md   # Current status and progress
-    │   ├── COMPLETION.md       # Added when project is finished
-    │   └── HANDOFF/           # Project-specific handoff notes
-    └── project-2/
-        └── ...
+├── GUIDELINES.md    # Foundation for all development sessions
+├── WORKFLOW.md      # This file - explains project organization
+└── projects/       # All project-specific documentation
+    └── project-name/
+        ├── PROJECT.md         # Project overview and task listing
+        └── tasks/            # Task-specific documentation
+            └── task-name/
+                ├── TASK.md   # Task details and requirements
+                └── HANDOFF/  # Task-specific handoff notes
 ```
 
 ## Session Structure
@@ -30,37 +29,39 @@ docs/
 1. Each session begins by reviewing:
 
    - GUIDELINES.md for development principles
-   - Current project's documentation
+   - Current task's documentation
+   - Latest task handoff document
 
-2. Project Assignment:
+2. Task Assignment:
 
-   - Each session focuses on a specific project
-   - Project is identified at session start
-   - Progress tracked in project's PROJECT_STATUS.md
+   - Each session focuses on specific tasks
+   - Tasks are identified at session start
+   - Progress tracked in PROJECT.md and TASK.md
 
 3. Documentation Updates:
-   - Update PROJECT_STATUS.md during session
-   - Create handoff notes in project's HANDOFF directory
-   - Update COMPLETION.md when project finished
+   - Update TASK.md with current progress
+   - Create sequentially numbered handoff document
+   - Update PROJECT.md as needed
 
-## Project Lifecycle
+## Task Lifecycle
 
-1. **Planning**
+1. **Creation**
 
-   - Create project directory under docs/projects/
-   - Write initial PLAN.md
-   - Create PROJECT_STATUS.md
+   - Create task directory under project's tasks/
+   - Write initial TASK.md with requirements
+   - Create HANDOFF directory
 
 2. **Development**
 
-   - Track progress in PROJECT_STATUS.md
+   - Track progress in TASK.md
    - Document decisions and changes
-   - Maintain handoff notes
+   - Create numbered handoff documents
+   - Update PROJECT.md status
 
 3. **Completion**
-   - Create COMPLETION.md
-   - Document final state
-   - Note any items deferred to future projects
+   - Update final status in TASK.md
+   - Create final handoff document
+   - Update PROJECT.md task status
 
 ## Current Projects
 

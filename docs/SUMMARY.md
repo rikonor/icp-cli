@@ -4,6 +4,27 @@
 
 dfx-2 is a command-line utility designed for the Internet Computer platform with WebAssembly (WASM) extension support. The project leverages the WebAssembly Component Model to enable extensibility through dynamically loaded WASM components. This approach allows for powerful plugin capabilities while maintaining security and performance benefits of WebAssembly.
 
+## Project Organization
+
+The project uses a task-based organization to manage development work effectively:
+
+```
+docs/projects/
+└── project-name/
+    ├── PROJECT.md         # Project overview and task listing
+    └── tasks/            # Task-specific documentation
+        └── task-name/
+            ├── TASK.md   # Task details and requirements
+            └── HANDOFF/  # Task-specific handoff notes
+```
+
+This structure enables:
+
+- Clear task ownership and tracking
+- Discrete units of work
+- Sequential handoff documentation
+- Progress monitoring at both task and project levels
+
 ## Project Architecture
 
 The architecture of dfx-2 is modular and designed around the concept of extensions:

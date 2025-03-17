@@ -14,30 +14,28 @@ This document guidelines for work. Among other things, it defines how we'll orga
 
 ### Beginning of Session
 
-1. **Project Assignment**: Unless one was already provided to you, start by asking the operator for your project assignment.
-1. **Review Guidelines**: Review the [guidelines](GUIDELINES.md).
-1. **Review Guidelines**: Review the [summary](SUMMARY.md).
-1. **Review Plan**: Examine project's `PLAN.md` file to understand the current requirements of the project.
-1. **Review Project Status**: Examine project's `PROJECT_STATUS.md` to understand the current state of the project.
-1. **Review Handoff Document**: Read the latest handoff document from the previous session.
-1. **Review Alignemt with Goal**: Ensure our work thus far has not strayed too far from our plan.
-1. **Review Code Changes**: Examine any code changes made in previous sessions to get context.
-1. **Establish Session Goals**: Identify specific tasks to be completed during the current session.
+1. **Task Assignment**: Unless one was already provided to you, start by asking the operator for your task assignment.
+2. **Review Guidelines**: Review the [guidelines](GUIDELINES.md) and [summary](SUMMARY.md).
+3. **Review Task**: Examine task's `TASK.md` file to understand requirements and current status.
+4. **Review Handoffs**: Read the latest task handoff document to understand current progress.
+5. **Verify Alignment**: Ensure work aligns with task requirements and project goals.
+6. **Review Context**: Examine any code or documentation changes from previous work.
+7. **Set Goals**: Establish specific objectives for the current session.
 
 ### During Session
 
 1. **Incremental Changes**: Make changes in small, logical increments.
-2. **Documentation**: Update documentation as code is changed.
+2. **Documentation**: Update documentation as work progresses.
 3. **Testing**: Ensure new code is properly tested.
 4. **Commit Regularly**: Commit changes after each significant milestone.
 
 ### End of Session
 
-1. **Update PROJECT_STATUS.md**: Update the status of tasks and overall project progress.
-2. **Update GUIDELINES.md**: Make suggestions to improve workflow and update accordingly.
-3. **Create Handoff Document**: Document the current state, what was accomplished, and next steps.
-4. **Final Commit**: Commit all changes with a descriptive message. **This is a hard requirement** - no session should end without committing all changes to ensure continuity between sessions.
-5. **Provide Next Session Instructions**: Clearly communicate what the user should provide at the beginning of the next session to help resume work effectively (e.g., "Please provide X at the beginning of the next session so I can resume work").
+1. **Update Task Status**: Update TASK.md with current progress and status.
+2. **Create Handoff**: Create numbered handoff document (HANDOFF-XXX.md) with current state and next steps.
+3. **Update Project Status**: Update PROJECT.md with task progress if needed.
+4. **Final Commit**: Commit all changes with a descriptive message. **This is a hard requirement** - no session should end without committing all changes.
+5. **Next Steps**: Document requirements for continuing work in the next session.
 
 ## Documentation Standards
 
@@ -79,38 +77,38 @@ Examples:
 
 ## Handoff Document Template
 
-Create a file named `HANDOFF-SESSION-X.md` at the end of each session with the following format:
+Create a file named `HANDOFF-XXX.md` (using sequential numbering) with the following format:
 
 ```markdown
-# Session X Handoff Document
-
-## Completed in this Session
-
-- Task 1: Brief description and outcome
-- Task 2: Brief description and outcome
+# Task Handoff - HANDOFF-XXX
 
 ## Current State
 
-Description of the current state of the project and any work in progress.
+Brief description of task progress and status.
 
-## Technical Decisions Made
+## Completed Work
 
-- Decision 1: Rationale
-- Decision 2: Rationale
+- Item 1: Description and outcome
+- Item 2: Description and outcome
 
-## Challenges and Solutions
+## Technical Details
 
-- Challenge 1: How it was addressed or workaround
-- Challenge 2: How it was addressed or workaround
+- Decision 1: Rationale and implementation notes
+- Decision 2: Rationale and implementation notes
+
+## Challenges
+
+- Challenge 1: How it was addressed
+- Challenge 2: How it was addressed
 
 ## Next Steps
 
-- Immediate next task
-- Following tasks
+- Immediate next actions
+- Remaining work items
 
-## Additional Notes
+## Notes
 
-Any other relevant information or observations that might be helpful for the next session.
+Additional context or observations for the next session.
 ```
 
 ## Code Modification Best Practices
