@@ -24,5 +24,11 @@ Active
   - Located in: `tasks/project-conversion/`
 
 - [In Planning] Persona Definition Task
+
   - Define key personas for project collaboration
   - Located in: `tasks/persona-definition/`
+
+- [In Progress] Crate Organization Task
+  - Establish a clear and organized directory structure for extensions and examples
+  - Define conventions and documentation for extension development
+  - Located in: `tasks/crate-organization/`
