@@ -48,12 +48,3 @@ The functionality implemented in this project will be migrated to the new dfx-co
 2. Additional error handling cases to consider
 3. Potential for extended library interface features
 4. Documentation improvements for extension developers
-
-## Historical Documentation
-
-For historical context, the original project documentation is available at:
-
-- `docs/projects/extension-ipc/COMPLETION.md`
-- `docs/projects/extension-ipc/PLAN.md`
-- `docs/projects/extension-ipc/PROJECT_STATUS.md`
-- `docs/projects/extension-ipc/HANDOFF/`
