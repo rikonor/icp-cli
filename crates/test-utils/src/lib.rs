@@ -8,7 +8,7 @@ mod mock;
 mod templates;
 
 pub use mock::MockComponentBuilder;
-pub use templates::{BASIC_LIB_TEMPLATE, INVALID_INTERFACE_TEMPLATE, MULTI_LIB_TEMPLATE};
+pub use templates::{BASIC_LIB_TEMPLATE, MULTI_LIB_TEMPLATE};
 
 #[cfg(test)]
 mod tests {
@@ -31,7 +31,6 @@ mod tests {
 
         // Test that all builders create valid components
         MockComponentBuilder::new_basic_lib().build(&engine)?;
-        MockComponentBuilder::new_invalid_interface().build(&engine)?;
         MockComponentBuilder::new_multi_lib().build(&engine)?;
 
         // Test custom WAT
