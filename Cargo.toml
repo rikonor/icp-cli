@@ -1,8 +1,12 @@
 [workspace]
+resolver = "2"
+
 members = [
     "crates/dfx-cli",
-    "crates/hello-world",
-    "crates/test-utils",
     "crates/dfx-core",
+    "crates/extensions/identity",
+    "crates/extensions/ledger",
+    "crates/test-utils",
 ]
-resolver = "2"
+
+default-members = ["crates/dfx-cli"]
