@@ -20,7 +20,7 @@ Move core interface types to dfx-core while maintaining all functionality, ensur
 
 - Current Phase: In Progress
 - Progress: 97%
-- Last Updated: 2025-03-17
+- Last Updated: 2025-03-18
 
 ## Implementation Details
 
@@ -90,9 +90,14 @@ Split the large Explainer.md into smaller, more focused files for easier referen
 
 ## Remaining Work
 
-- Fix the remaining issues with the WebAssembly Component Model templates
+- Fix the identified issues with the WebAssembly Component Model templates:
+  - Fix DUPLICATE_INTERFACE_TEMPLATE (invalid extern name issue)
+  - Fix NESTED_INSTANCES_TEMPLATE (type mismatch issue)
+  - Review and fix other potential issues in templates
 - Complete the comprehensive tests for interface detection
 - Finalize error handling for interface detection
+
+See HANDOFF-005.md for detailed analysis and implementation plan.
 
 ## Notes
 

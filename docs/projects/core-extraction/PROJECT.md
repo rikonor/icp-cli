@@ -48,7 +48,10 @@ The current focus is on completing the Core Interface Types Migration task, whic
 
 1. Complete the Core Interface Types Migration task:
 
-   - Fix the remaining issues with the WebAssembly Component Model templates
+   - Fix the identified issues with the WebAssembly Component Model templates:
+     - Fix DUPLICATE_INTERFACE_TEMPLATE (invalid extern name issue)
+     - Fix NESTED_INSTANCES_TEMPLATE (type mismatch issue)
+     - Review and fix other potential issues in templates
    - Complete the comprehensive tests for interface detection
    - Finalize error handling for interface detection
 
@@ -70,8 +73,9 @@ This project builds upon the completed Extension Inter-Communication project, le
 ## Known Issues
 
 - WebAssembly Component Model template issues:
-  - Some functions still have mismatches between their signatures and the canonical ABI requirements
-  - Need to identify and fix the specific functions causing the errors
+  - Identified specific issues in DUPLICATE_INTERFACE_TEMPLATE and NESTED_INSTANCES_TEMPLATE
+  - Some functions have mismatches between their signatures and the canonical ABI requirements
+  - See HANDOFF-005.md in the interface-migration task for detailed analysis
 
 ## Timeline
 
