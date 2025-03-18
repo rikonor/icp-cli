@@ -10,13 +10,13 @@ use http::Uri;
 use reqwest::get;
 use wasmtime::{component::Component, Engine};
 
-use crate::{
-    dependency::DependencyError,
-    dependency::DependencyGraph,
-    manifest,
-    manifest::{ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store},
+use dfx_core::{
+    dependency::{DependencyError, DependencyGraph},
+    interface::{ComponentInterfaces, DetectIfaces, LIBRARY_SUFFIX},
+    manifest::{
+        self, ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store,
+    },
 };
-use dfx_core::interface::{ComponentInterfaces, DetectIfaces, LIBRARY_SUFFIX};
 
 enum AdditionType {
     Uri(Uri),

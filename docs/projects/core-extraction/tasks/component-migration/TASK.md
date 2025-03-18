@@ -2,42 +2,114 @@
 
 ## Overview
 
-Move core component and extension handling logic to dfx-core, ensuring that the component instantiation and extension management capabilities are properly extracted from dfx-cli.
+Move core component and extension handling logic to dfx-core while recovering and properly integrating implementation details from previous versions. This task combines the migration of component/extension management with the recovery of critical functionality from commit 3744ac4.
 
 ## Scope
 
-- Move component handling logic
-- Move extension management
-- Move dependency graph logic
+### Implementation Recovery
+
+- Recover and properly distribute core runtime functionality
+- Integrate function registry system with new architecture
+- Restore and enhance dynamic linking capabilities
+- Preserve extension management functionality
+
+### Core Migration
+
+- Move component handling logic to dfx-core
+- Move extension management to dfx-core
+- Move dependency graph logic to dfx-core
 - Create proper abstraction layers
+- Ensure clean separation of concerns
 
 ## Status
 
-- Current Phase: Not Started
+- Current Phase: Planning
 - Progress: 0%
-- Last Updated: 2025-03-17
+- Last Updated: 2025-03-18
 
 ## Implementation Details
 
-This task has not yet been started. The implementation will involve:
+### Phase 1: Implementation Recovery & Analysis
 
-### Component Handling Logic
+#### Core Runtime Recovery
 
-- Move component instantiation and management code to dfx-core
-- Create clean abstractions for component operations
-- Ensure backward compatibility with existing code
+1. Function Registry System
 
-### Extension Management
+   - Integrate existing function registry with new architecture
+   - Enhance function reference management between extensions
+   - Improve extension interoperability
 
-- Move extension registration and discovery logic
-- Move extension loading and initialization code
-- Create proper abstractions for extension lifecycle management
+2. Dynamic Linking System
 
-### Dependency Graph Logic
+   - Enhance import linking for extensions
+   - Improve export resolution
+   - Optimize function reference management
+   - Integrate with new component model
 
-- Move dependency resolution code
-- Create clean abstractions for dependency management
-- Ensure proper handling of circular dependencies
+3. Extension Management
+   - Improve extension addition/removal
+   - Integrate with moved interface detection
+   - Enhance manifest handling
+   - Optimize precompilation and storage
+
+### Phase 2: Core Component Migration
+
+#### Component Management Layer
+
+- Move to dfx-core:
+  - Component instantiation
+  - Component precompilation
+  - Component serialization/deserialization
+  - State management
+
+#### Extension System Migration
+
+- Move to dfx-core:
+  - Extension registration
+  - Extension discovery
+  - Extension loading/unloading
+  - Extension state management
+
+#### Dependency Management
+
+- Move to dfx-core:
+  - Dependency graph construction
+  - Dependency validation
+  - Circular dependency detection
+  - Version compatibility checking
+
+### Phase 3: CLI Layer Refinement
+
+#### CLI Interface
+
+- Create clean CLI abstractions
+- Implement command handlers
+- Error handling and reporting
+- Progress indication
+
+#### State Management
+
+- Extension state tracking
+- Component lifecycle management
+- Resource cleanup
+
+### Phase 4: Integration & Testing
+
+#### Integration Testing
+
+- Component instantiation
+- Extension lifecycle
+- Dependency resolution
+- Error handling
+- Resource management
+
+#### Unit Testing
+
+- Component management
+- Extension system
+- Dependency resolution
+- Function registry
+- Dynamic linking
 
 ## Dependencies
 
@@ -46,23 +118,69 @@ This task has not yet been started. The implementation will involve:
 
 ## Technical Challenges and Solutions
 
-As this task has not yet been started, specific challenges and solutions have not been identified. However, anticipated challenges include:
+### Implementation Recovery
 
-- Maintaining backward compatibility while refactoring
-- Ensuring proper abstraction boundaries
-- Handling complex dependency relationships
-- Managing state across component and extension operations
+- Challenge: Maintaining functionality while restructuring
+- Solution: Careful phasing of changes, comprehensive testing
+
+### Architecture Boundaries
+
+- Challenge: Determining proper abstraction boundaries
+- Solution: Clear interface definitions, minimal coupling
+
+### State Management
+
+- Challenge: Managing complex state across components
+- Solution: Centralized state management in dfx-core
+
+### Testing Coverage
+
+- Challenge: Ensuring comprehensive test coverage
+- Solution: Systematic testing strategy, both unit and integration
 
 ## Success Criteria
 
-- Extension management commands work
-- Dependency resolution works
-- Component instantiation works
-- Added unit tests for each migrated module
-- Integration tests verify extension lifecycle
+### Functionality
+
+- All features from commit 3744ac4 working
+- Clean separation between core and CLI
+- Proper error handling
+- Resource management
+
+### Architecture
+
+- Clear abstraction boundaries
+- Minimal coupling
+- Proper state management
+- Clean interfaces
+
+### Testing
+
+- Comprehensive test coverage
+- Integration tests passing
+- Performance benchmarks
+- Resource leak checks
+
+## Implementation Strategy
+
+### Iterative Development
+
+1. Small, focused changes
+2. Regular testing
+3. Continuous integration
+4. Documentation updates
+
+### Migration Process
+
+1. Identify component to migrate
+2. Move to dfx-core
+3. Create clean interface
+4. Update CLI layer
+5. Add comprehensive tests
+6. Update documentation
 
 ## Notes
 
-This task is part of the Core Extraction project, which aims to split dfx-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
+This task is part of the Core Extraction project, which aims to split dfx-cli into separate core library and CLI components. The implementation will build upon the interface detection functionality in dfx-core while recovering and properly integrating critical functionality from previous versions.
 
-The implementation of this task will build upon the work done in the Core Interface Types Migration task, leveraging the interface detection functionality that has been moved to dfx-core.
+The focus is on maintaining functionality while improving the overall architecture and ensuring proper separation of concerns between dfx-core and dfx-cli.

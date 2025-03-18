@@ -3,12 +3,14 @@
 //! This crate provides the core functionality used by dfx-cli and other tools
 //! for working with WebAssembly components and extensions.
 
+pub mod component;
 pub mod dependency;
 mod error;
 pub mod interface;
 pub mod manifest;
 
 // Re-export core types and traits
+pub use component::{DynamicLinker, DynamicLinkingError, FunctionRegistry, FunctionRegistryError};
 pub use dependency::{DependencyError, DependencyGraph};
 pub use error::Error;
 pub use interface::{ComponentInterfaces, DetectIfaces, Interface};

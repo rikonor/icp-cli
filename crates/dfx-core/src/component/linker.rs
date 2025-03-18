@@ -1,20 +1,27 @@
-use std::collections::HashMap;
-use std::sync::{Arc, Mutex};
+use std::{
+    collections::HashMap,
+    sync::{Arc, Mutex},
+};
 
 use anyhow::{anyhow, Context};
+use thiserror::Error;
 use wasmtime::component::{Instance, Linker};
 use wasmtime::Store;
 
-use crate::function_registry::FunctionRegistry;
+use super::function_registry::{FunctionRegistry, FunctionRegistryError};
+use crate::interface::LIBRARY_SUFFIX;
 use crate::manifest::{ExportedInterface, ImportedInterface};
-use dfx_core::interface::LIBRARY_SUFFIX;
 
-/// Error type for dynamic linking operations
-#[derive(Debug, thiserror::Error)]
+/// Errors that can occur during dynamic linking operations
+#[derive(Debug, Error)]
 pub enum DynamicLinkingError {
     /// Function reference not resolved
     #[error("function reference not resolved: {0}")]
     UnresolvedReference(String),
+
+    /// Function reference error
+    #[error(transparent)]
+    FunctionRegistryError(#[from] FunctionRegistryError),
 
     /// Unexpected error
     #[error(transparent)]
@@ -22,6 +29,9 @@ pub enum DynamicLinkingError {
 }
 
 /// Dynamic linker for WebAssembly components
+///
+/// The dynamic linker manages function references between extensions,
+/// handling both import linking and export resolution.
 pub struct DynamicLinker {
     /// Registry for function references
     registry: FunctionRegistry,
@@ -32,6 +42,10 @@ pub struct DynamicLinker {
 
 impl DynamicLinker {
     /// Create a new dynamic linker
+    ///
+    /// # Arguments
+    ///
+    /// * `registry` - Function registry to use for managing references
     pub fn new(registry: FunctionRegistry) -> Self {
         Self {
             registry,
@@ -40,6 +54,16 @@ impl DynamicLinker {
     }
 
     /// Link imports for an extension
+    ///
+    /// # Arguments
+    ///
+    /// * `lnk` - Wasmtime linker to add imports to
+    /// * `imps` - List of imported interfaces to link
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` if linking succeeded
+    /// * `Err(DynamicLinkingError)` if linking failed
     pub fn link_imports<T: Send>(
         &mut self,
         lnk: &mut Linker<T>,
@@ -61,10 +85,7 @@ impl DynamicLinker {
                 let fref = Arc::new(Mutex::new(None));
 
                 // Register the function reference
-                self.registry.register(
-                    k,                 // key
-                    Arc::clone(&fref), // reference
-                );
+                self.registry.register(k.clone(), Arc::clone(&fref))?;
 
                 let fname = f.clone();
 
@@ -101,6 +122,18 @@ impl DynamicLinker {
     }
 
     /// Resolve exports for an extension
+    ///
+    /// # Arguments
+    ///
+    /// * `store` - Wasmtime store
+    /// * `extension` - Name of the extension
+    /// * `inst` - Component instance
+    /// * `exports` - List of exported interfaces to resolve
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(())` if resolution succeeded
+    /// * `Err(DynamicLinkingError)` if resolution failed
     pub fn resolve_exports<T>(
         &mut self,
         mut store: &mut Store<T>,
@@ -148,10 +181,7 @@ impl DynamicLinker {
                     )
                     .ok_or(anyhow!("missing function"))?;
 
-                self.registry.resolve(
-                    &k, // key
-                    f,  // function
-                );
+                self.registry.resolve(&k, f)?;
             }
         }
 
@@ -161,19 +191,49 @@ impl DynamicLinker {
         Ok(())
     }
 
-    /// Print information about function references
-    pub fn print_function_refs(&self) {
-        println!("\nFunction References:");
-        println!(
-            "  Resolved: {}/{}",
-            self.registry.resolved_count(),
-            self.registry.len()
-        );
+    /// Get the number of resolved exports
+    pub fn resolved_export_count(&self) -> usize {
+        self.resolved_exports.values().filter(|&&r| r).count()
+    }
 
-        // Print resolved exports
-        println!("\nResolved Exports:");
-        for (name, resolved) in &self.resolved_exports {
-            println!("  {}: {}", name, if *resolved { "Yes" } else { "No" });
-        }
+    /// Get the total number of exports
+    pub fn export_count(&self) -> usize {
+        self.resolved_exports.len()
+    }
+
+    /// Check if an extension's exports are resolved
+    pub fn is_extension_resolved(&self, extension: &str) -> bool {
+        self.resolved_exports
+            .get(extension)
+            .copied()
+            .unwrap_or(false)
+    }
+
+    /// Get a reference to the function registry
+    pub fn registry(&self) -> &FunctionRegistry {
+        &self.registry
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_new_linker() {
+        let registry = FunctionRegistry::new();
+        let linker = DynamicLinker::new(registry);
+        assert_eq!(linker.resolved_export_count(), 0);
+        assert_eq!(linker.export_count(), 0);
+    }
+
+    #[test]
+    fn test_extension_resolution_tracking() {
+        let registry = FunctionRegistry::new();
+        let mut linker = DynamicLinker::new(registry);
+
+        assert!(!linker.is_extension_resolved("test"));
+        linker.resolved_exports.insert("test".to_string(), true);
+        assert!(linker.is_extension_resolved("test"));
     }
 }
