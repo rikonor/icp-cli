@@ -15,9 +15,11 @@ Active
   - Create comprehensive README.md for dfx-2 project
   - Located in: `tasks/readme/`
 
-- [In Planning] Project Conversion Task
+- [In Progress] Project Conversion Task
 
   - Convert existing projects to new task-based structure
+  - Extension IPC project conversion completed
+  - Core Extraction project conversion pending
   - Located in: `tasks/project-conversion/`
 
 - [In Planning] Persona Definition Task
