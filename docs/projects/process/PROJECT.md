@@ -19,7 +19,8 @@ Active
 
   - Convert existing projects to new task-based structure
   - Extension IPC project conversion completed
-  - Core Extraction project conversion pending
+  - Core Extraction project conversion completed
+  - Final cleanup and documentation pending
   - Located in: `tasks/project-conversion/`
 
 - [In Planning] Persona Definition Task

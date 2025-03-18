@@ -1,0 +1,78 @@
+# Core Extraction Project
+
+## Purpose
+
+Split dfx-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
+
+## Status
+
+In Progress (45% Complete)
+
+## Tasks
+
+- [Complete] Setup and Initial Structure Task
+
+  - Create dfx-core crate, update workspace configuration, and set up initial module structure
+  - Located in: `tasks/setup/`
+
+- [In Progress] Core Interface Types Migration Task
+
+  - Move core interface types to dfx-core while maintaining all functionality
+  - Current progress: 97%
+  - Located in: `tasks/interface-migration/`
+
+- [Not Started] Component and Extension Logic Migration Task
+
+  - Move core component and extension handling to dfx-core
+  - Located in: `tasks/component-migration/`
+
+- [Not Started] CLI Simplification Task
+
+  - Refactor dfx-cli to be a thin wrapper around dfx-core
+  - Located in: `tasks/cli-simplification/`
+
+- [In Progress] Testing Infrastructure Task
+  - Improve overall test coverage and testing tools
+  - Current progress: 5%
+  - Located in: `tasks/testing-infrastructure/`
+
+## Project Overview
+
+The Core Extraction project aims to split dfx-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability. The project is organized into five main tasks, each focusing on a specific aspect of the extraction process.
+
+## Current Focus
+
+The current focus is on completing the Core Interface Types Migration task, which is 97% complete, and advancing the Testing Infrastructure task, which is being worked on in parallel to ensure the quality of the migrated code.
+
+## Next Steps
+
+1. Complete the Core Interface Types Migration task:
+
+   - Fix the remaining issues with the WebAssembly Component Model templates
+   - Complete the comprehensive tests for interface detection
+   - Finalize error handling for interface detection
+
+2. Continue work on the Testing Infrastructure task:
+
+   - Implement the WAT validation testing utility
+   - Create test cases for various WAT scenarios
+   - Add integration tests for the validation utility
+
+3. Begin planning for the Component and Extension Logic Migration task:
+   - Identify which components and extension logic need to be moved
+   - Plan the migration strategy to minimize disruption
+   - Create a detailed task list for implementation
+
+## Dependencies
+
+This project builds upon the completed Extension Inter-Communication project, leveraging the functionality implemented there for extension communication and dependency management.
+
+## Known Issues
+
+- WebAssembly Component Model template issues:
+  - Some functions still have mismatches between their signatures and the canonical ABI requirements
+  - Need to identify and fix the specific functions causing the errors
+
+## Timeline
+
+Each task is expected to take 1-2 working sessions, with the entire project completing in 5-10 sessions.
