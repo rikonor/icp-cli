@@ -455,3 +455,222 @@ impl DependencyGraph {
         result
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use anyhow::Error;
+
+    use super::*;
+    use crate::manifest::{ExportedInterface, ImportedInterface};
+
+    fn create_test_manifest() -> Manifest {
+        let mut m = Manifest::default();
+
+        // Extension A exports math/lib
+        m.xs.push(Extension {
+            name: "ext-a".to_string(),
+            wasm: "ext-a.wasm".into(),
+            pre: "ext-a.bin".into(),
+            imports: Vec::new(),
+            exports: vec![ExportedInterface {
+                name: "math/lib".to_string(),
+                funcs: vec!["add".to_string(), "subtract".to_string()],
+            }],
+        });
+
+        // Extension B imports math/lib and exports calc/lib
+        m.xs.push(Extension {
+            name: "ext-b".to_string(),
+            wasm: "ext-b.wasm".into(),
+            pre: "ext-b.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "math/lib".to_string(),
+                provider: "ext-a".to_string(),
+                functions: vec!["add".to_string()],
+            }],
+            exports: vec![ExportedInterface {
+                name: "calc/lib".to_string(),
+                funcs: vec!["calculate".to_string()],
+            }],
+        });
+
+        // Extension C imports calc/lib
+        m.xs.push(Extension {
+            name: "ext-c".to_string(),
+            wasm: "ext-c.wasm".into(),
+            pre: "ext-c.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "calc/lib".to_string(),
+                provider: "ext-b".to_string(),
+                functions: vec!["calculate".to_string()],
+            }],
+            exports: Vec::new(),
+        });
+
+        m
+    }
+
+    fn create_cyclic_manifest() -> Manifest {
+        let mut m = Manifest::default();
+
+        // Extension A exports a/lib
+        m.xs.push(Extension {
+            name: "ext-a".to_string(),
+            wasm: "ext-a.wasm".into(),
+            pre: "ext-a.bin".into(),
+            exports: vec![ExportedInterface {
+                name: "a/lib".to_string(),
+                funcs: vec!["func_a".to_string()],
+            }],
+            imports: vec![ImportedInterface {
+                name: "c/lib".to_string(),
+                provider: "ext-c".to_string(),
+                functions: vec!["func_c".to_string()],
+            }],
+        });
+
+        // Extension B imports a/lib and exports b/lib
+        m.xs.push(Extension {
+            name: "ext-b".to_string(),
+            wasm: "ext-b.wasm".into(),
+            pre: "ext-b.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "a/lib".to_string(),
+                provider: "ext-a".to_string(),
+                functions: vec!["func_a".to_string()],
+            }],
+            exports: vec![ExportedInterface {
+                name: "b/lib".to_string(),
+                funcs: vec!["func_b".to_string()],
+            }],
+        });
+
+        // Extension C imports b/lib and exports c/lib
+        m.xs.push(Extension {
+            name: "ext-c".to_string(),
+            wasm: "ext-c.wasm".into(),
+            pre: "ext-c.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "b/lib".to_string(),
+                provider: "ext-b".to_string(),
+                functions: vec!["func_b".to_string()],
+            }],
+            exports: vec![ExportedInterface {
+                name: "c/lib".to_string(),
+                funcs: vec!["func_c".to_string()],
+            }],
+        });
+
+        m
+    }
+
+    #[test]
+    fn test_dependency_graph_creation() -> Result<(), Error> {
+        let g = DependencyGraph::new(&create_test_manifest())?;
+
+        // Test extension names
+        assert_eq!(g.extension_names.len(), 3);
+        assert!(g.extension_names.contains(&"ext-a".to_string()));
+        assert!(g.extension_names.contains(&"ext-b".to_string()));
+        assert!(g.extension_names.contains(&"ext-c".to_string()));
+
+        // Test dependencies
+        assert_eq!(g.dependencies.get("ext-a").unwrap().len(), 0);
+        assert_eq!(g.dependencies.get("ext-b").unwrap().len(), 1);
+        assert!(g
+            .dependencies
+            .get("ext-b")
+            .unwrap()
+            .contains(&"ext-a".to_string()));
+        assert_eq!(g.dependencies.get("ext-c").unwrap().len(), 1);
+        assert!(g
+            .dependencies
+            .get("ext-c")
+            .unwrap()
+            .contains(&"ext-b".to_string()));
+
+        // Test interface providers
+        assert_eq!(g.interface_providers.get("math/lib").unwrap(), "ext-a");
+        assert_eq!(g.interface_providers.get("calc/lib").unwrap(), "ext-b");
+
+        Ok(())
+    }
+
+    #[test]
+    fn test_resolve_loading_order() {
+        let manifest = create_test_manifest();
+        let graph = DependencyGraph::new(&manifest).unwrap();
+
+        let order = graph.resolve_loading_order().unwrap();
+
+        // ext-a should be loaded first, then ext-b, then ext-c
+        assert_eq!(order.len(), 3);
+        assert_eq!(order[0], "ext-a");
+        assert_eq!(order[1], "ext-b");
+        assert_eq!(order[2], "ext-c");
+    }
+
+    #[test]
+    fn test_cycle_detection() {
+        let manifest = create_cyclic_manifest();
+        let graph = DependencyGraph::new(&manifest).unwrap();
+
+        assert!(graph.has_cycles());
+
+        // Loading order should fail due to cycles
+        let result = graph.resolve_loading_order();
+        assert!(result.is_err());
+
+        if let Err(DependencyError::CircularDependency(_)) = result {
+            // Expected error
+        } else {
+            panic!("Expected CircularDependency error");
+        }
+    }
+
+    #[test]
+    fn test_validate_dependencies() {
+        let manifest = create_test_manifest();
+        let graph = DependencyGraph::new(&manifest).unwrap();
+
+        let result = graph.validate_dependencies(&manifest);
+        assert!(result.is_ok());
+
+        // Create a manifest with a missing dependency
+        let mut bad_manifest = manifest.clone();
+
+        bad_manifest.xs.push(Extension {
+            name: "ext-d".to_string(),
+            wasm: "ext-d.wasm".into(),
+            pre: "ext-d.bin".into(),
+            imports: vec![ImportedInterface {
+                name: "missing/lib".to_string(),
+                provider: "unknown".to_string(),
+                functions: vec!["func".to_string()],
+            }],
+            exports: Vec::new(),
+        });
+
+        let graph = DependencyGraph::new(&bad_manifest).unwrap();
+        let result = graph.validate_dependencies(&bad_manifest);
+        assert!(result.is_err());
+
+        if let Err(DependencyError::MissingInterface { .. }) = result {
+            // Expected error
+        } else {
+            panic!("Expected MissingInterface error");
+        }
+    }
+
+    #[test]
+    fn test_text_representation() {
+        let manifest = create_test_manifest();
+        let graph = DependencyGraph::new(&manifest).unwrap();
+
+        let text = graph.format_text_representation();
+        assert!(!text.is_empty());
+        assert!(text.contains("Extension: ext-a"));
+        assert!(text.contains("Extension: ext-b"));
+        assert!(text.contains("Extension: ext-c"));
+    }
+}

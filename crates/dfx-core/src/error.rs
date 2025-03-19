@@ -3,7 +3,6 @@
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::error::Error as StdError;
 
     #[test]
     fn test_interface_detection_error() {

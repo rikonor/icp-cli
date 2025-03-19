@@ -11,11 +11,6 @@ use std::{
 use anyhow::{anyhow, Context, Error};
 use clap::{value_parser, Arg, ArgAction, Command};
 use dashmap::DashMap;
-use dfx_cli::{CommandSpec, DynamicLinker, IfaceDetector};
-use extension::{
-    AddExtension, ExtensionAdder, ExtensionLister, ExtensionRemover, ListExtensions,
-    RemoveExtension,
-};
 use once_cell::sync::Lazy;
 
 use wasmtime::{
@@ -23,13 +18,20 @@ use wasmtime::{
     Config, Engine, Store as WasmStore,
 };
 
+use dfx_cli::{CommandSpec, DynamicLinker};
 use dfx_core::{
     dependency::DependencyGraph,
+    interface::IfaceDetector,
     manifest::{Load, LoadError, Manifest, ManifestHandle, Store as _},
     FunctionRegistry,
 };
 
 mod extension;
+
+use extension::{
+    AddExtension, ExtensionAdder, ExtensionLister, ExtensionRemover, ListExtensions,
+    RemoveExtension,
+};
 
 // Service configuration
 const SERVICE_NAME: &str = "dfx-2";
@@ -86,7 +88,11 @@ impl Host for State {
 }
 
 // Directory setup helper
-fn ensure_directories(manifest: &Path, extensions: &Path, precompiles: &Path) -> Result<(), Error> {
+fn _ensure_directories(
+    manifest: &Path,
+    extensions: &Path,
+    precompiles: &Path,
+) -> Result<(), Error> {
     if let Some(parent) = manifest.parent() {
         create_dir_all(parent).context("failed to create manifest directory")?;
     }

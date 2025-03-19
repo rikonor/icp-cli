@@ -14,14 +14,7 @@ pub use templates::{BASIC_LIB_TEMPLATE, MULTI_LIB_TEMPLATE};
 mod tests {
     use super::*;
     use anyhow::Error;
-    use wasmtime::{component::Component, Config, Engine};
-
-    /// Helper function to create a test engine with component model enabled
-    fn create_test_engine() -> Result<Engine, Error> {
-        let mut config = Config::new();
-        config.wasm_component_model(true);
-        Engine::new(&config)
-    }
+    use wasmtime::{Config, Engine};
 
     #[test]
     fn test_builders() -> Result<(), Error> {

@@ -282,7 +282,7 @@ impl DetectIfaces for IfaceDetector {
                 let (name, item) = exp;
 
                 match item {
-                    ComponentItem::ComponentFunc(item) => {
+                    ComponentItem::ComponentFunc(_) => {
                         funcs.push(name.to_string());
                     }
                     ComponentItem::ComponentInstance(_) => {
@@ -336,7 +336,7 @@ impl DetectIfaces for IfaceDetector {
                 let (name, item) = exp;
 
                 match item {
-                    ComponentItem::ComponentFunc(item) => {
+                    ComponentItem::ComponentFunc(_) => {
                         funcs.push(name.to_string());
                     }
                     ComponentItem::ComponentInstance(_) => {
