@@ -18,7 +18,6 @@ use wasmtime::{
     Config, Engine, Store as WasmStore,
 };
 
-use dfx_cli::CommandSpec;
 use dfx_core::{
     component::{DynamicLinker, FunctionRegistry},
     dependency::DependencyGraph,
@@ -27,11 +26,13 @@ use dfx_core::{
 };
 
 mod extension;
+mod spec;
 
 use extension::{
     AddExtension, ExtensionAdder, ExtensionLister, ExtensionRemover, ListExtensions,
     RemoveExtension,
 };
+use spec::CommandSpec;
 
 // Service configuration
 const SERVICE_NAME: &str = "dfx-2";
