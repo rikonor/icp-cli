@@ -4,8 +4,13 @@ resolver = "2"
 members = [
     "crates/dfx-cli",
     "crates/dfx-core",
-    "crates/extensions/identity",
+    "crates/extensions/*",
     "crates/test-utils",
 ]
 
-default-members = ["crates/dfx-cli"]
+[profile.release]
+codegen-units = 1
+opt-level = "s"
+debug = false
+strip = true
+lto = true
