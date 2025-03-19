@@ -65,33 +65,6 @@ pub mod local {
             }
         }
     }
-    pub mod js {
-        #[allow(dead_code, clippy::all)]
-        pub mod lib {
-            #[used]
-            #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
-            use super::super::super::_rt;
-            #[allow(unused_unsafe, clippy::all)]
-            /// add two numbers
-            pub fn add(a: u32, b: u32) -> u32 {
-                unsafe {
-                    #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "local:js/lib")]
-                    extern "C" {
-                        #[link_name = "add"]
-                        fn wit_import(_: i32, _: i32) -> i32;
-                    }
-                    #[cfg(not(target_arch = "wasm32"))]
-                    fn wit_import(_: i32, _: i32) -> i32 {
-                        unreachable!()
-                    }
-                    let ret = wit_import(_rt::as_i32(&a), _rt::as_i32(&b));
-                    ret as u32
-                }
-            }
-        }
-    }
 }
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
@@ -183,6 +156,26 @@ pub mod exports {
 }
 #[rustfmt::skip]
 mod _rt {
+    #[cfg(target_arch = "wasm32")]
+    pub fn run_ctors_once() {
+        wit_bindgen_rt::run_ctors_once();
+    }
+    pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
+        if size == 0 {
+            return;
+        }
+        let layout = alloc::Layout::from_size_align_unchecked(size, align);
+        alloc::dealloc(ptr, layout);
+    }
+    pub use alloc_crate::string::String;
+    pub use alloc_crate::vec::Vec;
+    pub unsafe fn string_lift(bytes: Vec<u8>) -> String {
+        if cfg!(debug_assertions) {
+            String::from_utf8(bytes).unwrap()
+        } else {
+            String::from_utf8_unchecked(bytes)
+        }
+    }
     pub fn as_i32<T: AsI32>(t: T) -> i32 {
         t.as_i32()
     }
@@ -242,26 +235,6 @@ mod _rt {
             self as i32
         }
     }
-    #[cfg(target_arch = "wasm32")]
-    pub fn run_ctors_once() {
-        wit_bindgen_rt::run_ctors_once();
-    }
-    pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
-        if size == 0 {
-            return;
-        }
-        let layout = alloc::Layout::from_size_align_unchecked(size, align);
-        alloc::dealloc(ptr, layout);
-    }
-    pub use alloc_crate::string::String;
-    pub use alloc_crate::vec::Vec;
-    pub unsafe fn string_lift(bytes: Vec<u8>) -> String {
-        if cfg!(debug_assertions) {
-            String::from_utf8(bytes).unwrap()
-        } else {
-            String::from_utf8_unchecked(bytes)
-        }
-    }
     pub use alloc_crate::alloc;
     extern crate alloc as alloc_crate;
 }
@@ -298,13 +271,12 @@ pub(crate) use __export_root_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.36.0:root:component:root:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 324] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xc9\x01\x01A\x02\x01\
-A\x06\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\
-\x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\x0flocal:host/misc\x05\0\x01B\x02\
-\x01@\x02\x01ay\x01by\0y\x04\0\x03add\x01\0\x03\0\x0clocal:js/lib\x05\x01\x01B\x05\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 285] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa2\x01\x01A\x02\x01\
+A\x04\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\
+\x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\x0flocal:host/misc\x05\0\x01B\x05\
 \x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\0\x03run\x01\x02\
-\x04\0\x13local:extension/cli\x05\x02\x04\0\x13root:component/root\x04\0\x0b\x0a\
+\x04\0\x13local:extension/cli\x05\x01\x04\0\x13root:component/root\x04\0\x0b\x0a\
 \x01\0\x04root\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x07\
 0.220.1\x10wit-bindgen-rust\x060.36.0";
 #[inline(never)]

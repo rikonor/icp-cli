@@ -18,12 +18,12 @@ use wasmtime::{
     Config, Engine, Store as WasmStore,
 };
 
-use dfx_cli::{CommandSpec, DynamicLinker};
+use dfx_cli::CommandSpec;
 use dfx_core::{
+    component::{DynamicLinker, FunctionRegistry},
     dependency::DependencyGraph,
     interface::IfaceDetector,
     manifest::{Load, LoadError, Manifest, ManifestHandle, Store as _},
-    FunctionRegistry,
 };
 
 mod extension;

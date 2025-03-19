@@ -5,7 +5,6 @@ mod spec;
 
 // Re-export core functionality
 pub use dfx_core::{
-    component::{DynamicLinker, FunctionRegistry},
     dependency::DependencyGraph,
     interface::DetectIfaces,
     manifest::{Load, LoadError, Manifest, ManifestHandle, Store},
