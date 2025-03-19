@@ -8,9 +8,4 @@ members = [
     "crates/test-utils",
 ]
 
-[profile.release]
-codegen-units = 1
-opt-level = "s"
-debug = false
-strip = true
-lto = true
+default-members = ["crates/dfx-cli", "crates/dfx-core"]
