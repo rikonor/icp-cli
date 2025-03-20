@@ -4,7 +4,6 @@ use clap::Command;
 mod bindings;
 
 // imports
-use bindings::local::add::lib::add;
 use bindings::local::host::misc::{print, time};
 
 // exports
@@ -68,7 +67,7 @@ impl lib::Guest for Component {
 fn multiply(a: u32, b: u32) -> u32 {
     let mut out = 0;
     for _ in 0..a {
-        out = add(out, b);
+        out += b;
     }
 
     print(&format!("[{}][multiply] {a} * {b} = {out}", time()));
