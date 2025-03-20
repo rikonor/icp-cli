@@ -291,6 +291,7 @@ async fn main() -> Result<(), Error> {
             dynlnk.link_imports(
                 &mut lnk,                  // linker
                 extension.imports.clone(), // imports
+                extension.exports.clone(), // exports
             )?;
         }
     }

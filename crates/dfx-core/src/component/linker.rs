@@ -68,7 +68,9 @@ impl DynamicLinker {
         &mut self,
         lnk: &mut Linker<T>,
         imps: Vec<ImportedInterface>,
+        exps: Vec<ExportedInterface>,
     ) -> Result<(), DynamicLinkingError> {
+        // Link imports
         for imp in imps {
             // Skip non-library interfaces
             if !imp.name.ends_with(LIBRARY_SUFFIX) {
@@ -90,6 +92,56 @@ impl DynamicLinker {
                 let fname = f.clone();
 
                 lnk.instance(&imp.name)?.func_new_async(
+                    &f,
+                    move |mut store, params, results| {
+                        let fname = fname.clone();
+                        let fref = Arc::clone(&fref);
+
+                        Box::new(async move {
+                            let f = {
+                                let g = fref.lock().unwrap();
+                                *g.as_ref().ok_or_else(|| {
+                                    DynamicLinkingError::UnresolvedReference(fname)
+                                })?
+                            };
+
+                            f.call_async(&mut store, params, results)
+                                .await
+                                .context("call failed")?;
+
+                            f.post_return_async(&mut store)
+                                .await
+                                .context("post-return failed")?;
+
+                            Ok(())
+                        })
+                    },
+                )?;
+            }
+        }
+
+        // Link exports
+        for exp in exps {
+            // Skip non-library interfaces
+            if !exp.name.ends_with(LIBRARY_SUFFIX) {
+                continue;
+            }
+
+            for f in exp.funcs {
+                let k = FunctionRegistry::create_key(
+                    &exp.name, // interface
+                    &f,        // function
+                );
+
+                // Create a function reference
+                let fref = Arc::new(Mutex::new(None));
+
+                // Register the function reference
+                self.registry.register(k.clone(), Arc::clone(&fref))?;
+
+                let fname = f.clone();
+
+                lnk.instance(&exp.name)?.func_new_async(
                     &f,
                     move |mut store, params, results| {
                         let fname = fname.clone();
