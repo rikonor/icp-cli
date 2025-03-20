@@ -6,14 +6,14 @@ Enable full Windows platform support for dfx-cli, including build infrastructure
 
 ## Status
 
-Not Started (0% Complete)
+In Progress (20% Complete)
 
 ## Tasks
 
-- [Not Started] Windows Build Infrastructure Task
+- [In Progress] Windows Build Infrastructure Task
 
   - Add Windows target to build system and CI pipeline
-  - Current progress: 0%
+  - Current progress: 80%
   - Located in: `tasks/build-infrastructure/`
 
 - [Not Started] Windows Compatibility Task
@@ -39,15 +39,15 @@ The Windows Support project aims to extend dfx-cli's platform support to include
 
 ## Current Focus
 
-The initial focus will be on the Windows Build Infrastructure task to establish the foundation for Windows support. This includes setting up the build pipeline and ensuring basic functionality works on Windows.
+The Windows Build Infrastructure task is nearly complete, with core CI pipeline support for Windows builds implemented. Current focus is on finalizing the build infrastructure task while preparing for the transition to Windows-specific compatibility work.
 
 ## Next Steps
 
-1. Begin Windows Build Infrastructure task:
+1. Complete remaining Build Infrastructure items:
 
-   - Add Windows target (x86_64-pc-windows-msvc) to CI matrix
-   - Configure Windows-specific build settings
-   - Set up artifact handling for Windows executables
+   - Evaluate binary signing requirements
+   - Plan basic smoke test implementation
+   - Document Windows build process
 
 2. Plan Windows Compatibility task:
 
@@ -66,7 +66,7 @@ This project builds upon the Core Extraction project, particularly the CLI Simpl
 
 ## Known Issues
 
-None identified yet - issues will be documented as they are discovered during implementation.
+1. Binary Signing: Windows executables may require code signing for enhanced security and user trust. This will be evaluated as part of the build infrastructure completion.
 
 ## Timeline
 
