@@ -185,3 +185,12 @@ At the end of each session:
 4. Update guidelines as needed
 
 Remember: The goal is to maintain high quality while enabling efficient collaboration through clear documentation and communication.
+
+## Project Creation Best Practices
+
+When creating a new project:
+
+- Review 1-2 existing projects in docs/projects/ to understand the expected level of detail and structure
+- Project.md should focus on high-level objectives, task breakdown, and timeline
+- Task.md files should be concise, focusing on clear objectives, scope, and success criteria
+- Avoid excessive detail in initial task documentation - let the implementation details emerge through handoffs
