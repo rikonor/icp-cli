@@ -38,9 +38,9 @@ jobs:
         run: |
           rustup target add ${{ matrix.platform.target }}
 
-          cargo build `
-            --package dfx-cli `
-            --target ${{ matrix.platform.target }} `
+          cargo build \
+            --package dfx-cli \
+            --target ${{ matrix.platform.target }} \
             --release
 
       - name: Build CLI (Unix)
@@ -49,10 +49,7 @@ jobs:
           rustup target add \
             ${{ matrix.platform.target }}
 
-          cargo build \
-            --package dfx-cli \
-            --target ${{ matrix.platform.target }} \
-            --release
+          cargo build --workspace --package dfx-cli --target ${{ matrix.platform.target }} --release
 
       - uses: actions/upload-artifact@v4
         with:
