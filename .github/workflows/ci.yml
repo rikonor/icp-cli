@@ -50,6 +50,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Setup Rust target
+        run: rustup target add wasm32-unknown-unknown
+
       - name: Build Identity Extension
         run: make CARGO_RELEASE=1 EXTENSION_NAME=identity
 
