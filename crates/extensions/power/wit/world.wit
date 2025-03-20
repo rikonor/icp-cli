@@ -1,0 +1,41 @@
+package root:component;
+
+package local:host {
+  interface misc {
+    print: func(s: string);
+    rand: func() -> u8;
+    time: func() -> u64;
+  }
+}
+
+package local:extension {
+  interface cli {
+    // spec provides a schema a for the cli
+    spec: func() -> string;
+
+    // run the cli portion of the extension
+    run: func(args: list<string>) -> u8;
+  }
+}
+
+package local:multiply {
+  interface lib {
+    // multiply two numbers
+    multiply: func(a: u32, b: u32) -> u32;
+  }
+}
+
+package local:power {
+  interface lib {
+    // take a power
+    power: func(a: u32, b: u32) -> u32;
+  }
+}
+
+world root {
+  import local:host/misc;
+  export local:extension/cli;
+
+  import local:multiply/lib;
+  export local:power/lib;
+}

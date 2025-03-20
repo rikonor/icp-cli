@@ -1274,6 +1274,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "multiply"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+ "wit-bindgen-rt 0.39.0",
+]
+
+[[package]]
 name = "native-tls"
 version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1421,6 +1431,16 @@ dependencies = [
  "embedded-io 0.4.0",
  "embedded-io 0.6.1",
  "serde",
+]
+
+[[package]]
+name = "power"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+ "wit-bindgen-rt 0.39.0",
 ]
 
 [[package]]
