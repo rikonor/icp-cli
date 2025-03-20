@@ -54,18 +54,18 @@ jobs:
       - name: Install wasm-tools
         run: cargo install wasm-tools
 
-      - name: Build Identity Extension
-        run: make CARGO_RELEASE=1 EXTENSION_NAME=identity
+      - name: build multiply
+        run: make CARGO_RELEASE=1 EXTENSION_NAME=multiply
 
-      - name: Build Ledger Extension
-        run: make CARGO_RELEASE=1 EXTENSION_NAME=ledger
+      - name: build power
+        run: make CARGO_RELEASE=1 EXTENSION_NAME=power
 
       - uses: actions/upload-artifact@v4
         with:
           name: extensions
           path: |
-            target/wasm32-unknown-unknown/release/identity.component.wasm
-            target/wasm32-unknown-unknown/release/ledger.component.wasm
+            target/wasm32-unknown-unknown/release/multiply.component.wasm
+            target/wasm32-unknown-unknown/release/power.component.wasm
 
   release:
     needs: [build-cli, build-extensions]
@@ -111,11 +111,11 @@ jobs:
           done
 
           # Add extension artifacts
-          mv extensions/identity.component.wasm identity.component.wasm
-          mv extensions/ledger.component.wasm ledger.component.wasm
-          ARTIFACTS+=("identity.component.wasm" "ledger.component.wasm")
-          echo "identity.component.wasm" >> $GITHUB_ENV
-          echo "ledger.component.wasm" >> $GITHUB_ENV
+          mv extensions/multiply.component.wasm multiply.component.wasm
+          mv extensions/power.component.wasm power.component.wasm
+          ARTIFACTS+=("multiply.component.wasm" "power.component.wasm")
+          echo "multiply.component.wasm" >> $GITHUB_ENV
+          echo "power.component.wasm" >> $GITHUB_ENV
 
           echo "EOF" >> $GITHUB_ENV
 
