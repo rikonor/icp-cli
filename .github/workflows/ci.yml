@@ -15,14 +15,14 @@ jobs:
     strategy:
       matrix:
         platform:
-          # - runs-on: macos-latest
-          #   target: aarch64-apple-darwin
+          - runs-on: macos-latest
+            target: aarch64-apple-darwin
 
-          # - runs-on: macos-latest
-          #   target: x86_64-apple-darwin
+          - runs-on: macos-latest
+            target: x86_64-apple-darwin
 
-          # - runs-on: ubuntu-latest
-          #   target: x86_64-unknown-linux-gnu
+          - runs-on: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
 
           - runs-on: windows-2025
             target: x86_64-pc-windows-msvc
@@ -32,129 +32,122 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build CLI (Windows)
-        if: runner.os == 'Windows'
+      - name: Build CLI
         run: |
           rustup target add ${{ matrix.platform.target }}
           cargo build --package dfx-cli --target ${{ matrix.platform.target }} --release
 
-  #     - name: Build CLI (Unix)
-  #       if: runner.os != 'Windows'
-  #       run: |
-  #         rustup target add ${{ matrix.platform.target }}
-  #         cargo build --package dfx-cli --target ${{ matrix.platform.target }} --release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.platform.target }}
+          path: target/${{ matrix.platform.target }}/release/dfx*
 
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: ${{ matrix.platform.target }}
-  #         path: target/${{ matrix.platform.target }}/release/dfx*
+  build-extensions:
+    runs-on: ubuntu-latest
 
-  # build-extensions:
-  #   runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
 
-  #   steps:
-  #     - uses: actions/checkout@v4
+      - name: Setup Rust target
+        run: rustup target add wasm32-unknown-unknown
 
-  #     - name: Setup Rust target
-  #       run: rustup target add wasm32-unknown-unknown
+      - name: Install wasm-tools
+        run: cargo install wasm-tools
 
-  #     - name: Install wasm-tools
-  #       run: cargo install wasm-tools
+      - name: Build Identity Extension
+        run: make CARGO_RELEASE=1 EXTENSION_NAME=identity
 
-  #     - name: Build Identity Extension
-  #       run: make CARGO_RELEASE=1 EXTENSION_NAME=identity
+      - name: Build Ledger Extension
+        run: make CARGO_RELEASE=1 EXTENSION_NAME=ledger
 
-  #     - name: Build Ledger Extension
-  #       run: make CARGO_RELEASE=1 EXTENSION_NAME=ledger
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extensions
+          path: |
+            target/wasm32-unknown-unknown/release/identity.component.wasm
+            target/wasm32-unknown-unknown/release/ledger.component.wasm
 
-  #     - uses: actions/upload-artifact@v4
-  #       with:
-  #         name: extensions
-  #         path: |
-  #           target/wasm32-unknown-unknown/release/identity.component.wasm
-  #           target/wasm32-unknown-unknown/release/ledger.component.wasm
+  release:
+    needs: [build-cli, build-extensions]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
 
-  # release:
-  #   needs: [build-cli, build-extensions]
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - uses: actions/checkout@v4
-  #     - uses: actions/download-artifact@v4
+      - name: Release Tag
+        run: |
+          cargo install cargo-get
+          CLI_VERSION=$(cargo get package.version --entry crates/dfx-cli)
+          RELEASE_TAG="${CLI_VERSION}"
+          echo "RELEASE_TAG=${RELEASE_TAG}" >> "${GITHUB_ENV}"
 
-  #     - name: Release Tag
-  #       run: |
-  #         cargo install cargo-get
-  #         CLI_VERSION=$(cargo get package.version --entry crates/dfx-cli)
-  #         RELEASE_TAG="${CLI_VERSION}"
-  #         echo "RELEASE_TAG=${RELEASE_TAG}" >> "${GITHUB_ENV}"
+      - name: Prepare CLI Artifacts
+        run: |
+          ARTIFACTS=()
 
-  #     - name: Prepare CLI Artifacts
-  #       run: |
-  #         ARTIFACTS=()
+          TARGETS=(
+            aarch64-apple-darwin
+            x86_64-apple-darwin
+            x86_64-unknown-linux-gnu
+            x86_64-pc-windows-msvc
+          )
 
-  #         TARGETS=(
-  #           aarch64-apple-darwin
-  #           x86_64-apple-darwin
-  #           x86_64-unknown-linux-gnu
-  #           x86_64-pc-windows-msvc
-  #         )
+          echo "ARTIFACTS<<EOF" >> $GITHUB_ENV
 
-  #         echo "ARTIFACTS<<EOF" >> $GITHUB_ENV
+          for TARGET in ${TARGETS[@]}; do
+            ARTIFACT="${CLI_NAME}-${TARGET}"
+            if [[ "${TARGET}" == *windows* ]]; then
+              mv ${TARGET}/dfx.exe ${ARTIFACT}.exe
+            else
+              mv ${TARGET}/dfx ${ARTIFACT}
+            fi
+            if [[ "${TARGET}" == *windows* ]]; then
+              ARTIFACTS+=("${ARTIFACT}.exe")
+              echo "${ARTIFACT}.exe" >> $GITHUB_ENV
+            else
+              ARTIFACTS+=("${ARTIFACT}")
+              echo "${ARTIFACT}" >> $GITHUB_ENV
+            fi
+          done
 
-  #         for TARGET in ${TARGETS[@]}; do
-  #           ARTIFACT="${CLI_NAME}-${TARGET}"
-  #           if [[ "${TARGET}" == *windows* ]]; then
-  #             mv ${TARGET}/dfx.exe ${ARTIFACT}.exe
-  #           else
-  #             mv ${TARGET}/dfx ${ARTIFACT}
-  #           fi
-  #           if [[ "${TARGET}" == *windows* ]]; then
-  #             ARTIFACTS+=("${ARTIFACT}.exe")
-  #             echo "${ARTIFACT}.exe" >> $GITHUB_ENV
-  #           else
-  #             ARTIFACTS+=("${ARTIFACT}")
-  #             echo "${ARTIFACT}" >> $GITHUB_ENV
-  #           fi
-  #         done
+          # Add extension artifacts
+          mv extensions/identity.component.wasm identity.component.wasm
+          mv extensions/ledger.component.wasm ledger.component.wasm
+          ARTIFACTS+=("identity.component.wasm" "ledger.component.wasm")
+          echo "identity.component.wasm" >> $GITHUB_ENV
+          echo "ledger.component.wasm" >> $GITHUB_ENV
 
-  #         # Add extension artifacts
-  #         mv extensions/identity.component.wasm identity.component.wasm
-  #         mv extensions/ledger.component.wasm ledger.component.wasm
-  #         ARTIFACTS+=("identity.component.wasm" "ledger.component.wasm")
-  #         echo "identity.component.wasm" >> $GITHUB_ENV
-  #         echo "ledger.component.wasm" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
 
-  #         echo "EOF" >> $GITHUB_ENV
+      - name: Generate Checksums
+        run: |
+          CHECKSUMS=$(mktemp)
 
-  #     - name: Generate Checksums
-  #       run: |
-  #         CHECKSUMS=$(mktemp)
+          for ARTIFACT in ${ARTIFACTS}; do
+            shasum -a256 ${ARTIFACT} >> ${CHECKSUMS}
+          done
 
-  #         for ARTIFACT in ${ARTIFACTS}; do
-  #           shasum -a256 ${ARTIFACT} >> ${CHECKSUMS}
-  #         done
+          echo "CHECKSUMS=${CHECKSUMS}" >> "${GITHUB_ENV}"
 
-  #         echo "CHECKSUMS=${CHECKSUMS}" >> "${GITHUB_ENV}"
+      - name: Generate Release Notes
+        run: |
+          NOTES=$(mktemp)
 
-  #     - name: Generate Release Notes
-  #       run: |
-  #         NOTES=$(mktemp)
+          CODE_BLOCK='```'
 
-  #         CODE_BLOCK='```'
+          cat > ${NOTES} <<EOF
+          ## Checksums
 
-  #         cat > ${NOTES} <<EOF
-  #         ## Checksums
+          ${CODE_BLOCK}
+          $(cat ${CHECKSUMS})
+          ${CODE_BLOCK}
+          EOF
 
-  #         ${CODE_BLOCK}
-  #         $(cat ${CHECKSUMS})
-  #         ${CODE_BLOCK}
-  #         EOF
+          echo "NOTES=${NOTES}" >> "${GITHUB_ENV}"
 
-  #         echo "NOTES=${NOTES}" >> "${GITHUB_ENV}"
-
-  #     - uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
-  #       with:
-  #         name: v${{ env.RELEASE_TAG }}
-  #         tag_name: v${{ env.RELEASE_TAG }}
-  #         body_path: ${{ env.NOTES }}
-  #         files: ${{ env.ARTIFACTS }}
+      - uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
+        with:
+          name: v${{ env.RELEASE_TAG }}
+          tag_name: v${{ env.RELEASE_TAG }}
+          body_path: ${{ env.NOTES }}
+          files: ${{ env.ARTIFACTS }}
