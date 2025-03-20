@@ -43,4 +43,4 @@ This task was part of the original Extension Inter-Communication project. For hi
 
 ## Notes
 
-The functionality implemented in this task will be migrated to the new dfx-core crate as part of the Core Extraction project, which will improve testability and make the functionality available as a reusable library.
+The functionality implemented in this task will be migrated to the new icp-core crate as part of the Core Extraction project, which will improve testability and make the functionality available as a reusable library.

@@ -2,7 +2,7 @@
 
 ## Overview
 
-Create and maintain APT and RPM packages for dfx-2, enabling native package management on major Linux distributions.
+Create and maintain APT and RPM packages for icp, enabling native package management on major Linux distributions.
 
 ## Scope
 

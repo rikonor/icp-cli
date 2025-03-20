@@ -2,7 +2,7 @@
 
 ## Overview
 
-Create comprehensive installation guides and documentation for all dfx-2 distribution methods.
+Create comprehensive installation guides and documentation for all icp distribution methods.
 
 ## Scope
 

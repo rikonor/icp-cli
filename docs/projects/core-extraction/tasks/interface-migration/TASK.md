@@ -2,15 +2,15 @@
 
 ## Overview
 
-Move core interface types to dfx-core while maintaining all functionality, ensuring that the interface detection and handling capabilities are properly extracted from dfx-cli.
+Move core interface types to icp-core while maintaining all functionality, ensuring that the interface detection and handling capabilities are properly extracted from icp-cli.
 
 ## Scope
 
-- Move Interface/ComponentInterfaces to dfx-core
+- Move Interface/ComponentInterfaces to icp-core
 - Move IfaceDetector trait and implementation
-- Update dfx-cli to use these from dfx-core
+- Update icp-cli to use these from icp-core
 - Update integration tests for interface detection
-- Implement actual interface detection in dfx-core
+- Implement actual interface detection in icp-core
 - Split the Explainer.md into smaller more focused files
 - Fix WAT templates in test-utils with proper component model syntax
 - Add comprehensive tests for interface detection
@@ -26,11 +26,11 @@ Move core interface types to dfx-core while maintaining all functionality, ensur
 
 ### Interface Types Migration
 
-- Moved Interface/ComponentInterfaces to dfx-core
+- Moved Interface/ComponentInterfaces to icp-core
 - Moved IfaceDetector trait and implementation
-- Updated dfx-cli to use these from dfx-core
+- Updated icp-cli to use these from icp-core
 - Updated integration tests for interface detection
-- Implemented actual interface detection in dfx-core
+- Implemented actual interface detection in icp-core
 
 ### Documentation Improvements
 
@@ -61,7 +61,7 @@ Move core interface types to dfx-core while maintaining all functionality, ensur
 
 ## Dependencies
 
-- Setup and Initial Structure Task: Required for the dfx-core crate to exist
+- Setup and Initial Structure Task: Required for the icp-core crate to exist
 
 ## Technical Challenges and Solutions
 
@@ -101,4 +101,4 @@ See HANDOFF-005.md for detailed analysis and implementation plan.
 
 ## Notes
 
-This task is part of the Core Extraction project, which aims to split dfx-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
+This task is part of the Core Extraction project, which aims to split icp-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.

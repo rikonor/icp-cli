@@ -45,7 +45,7 @@ Updated function names to use kebab-case (e.g., "number-to-string" instead of "n
 1. Add more comprehensive tests for interface detection
 2. Refine error handling for interface detection
 3. Begin planning for the Component and Extension Logic Migration task:
-   - Identify which components and extension logic need to be moved to dfx-core
+   - Identify which components and extension logic need to be moved to icp-core
    - Plan the migration strategy to minimize disruption
    - Create a detailed task list for implementation
 

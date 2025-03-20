@@ -2,7 +2,7 @@
 
 ## Overview
 
-Define and document key personas for the dfx-2 project to improve collaboration and effectiveness of different roles in the development process.
+Define and document key personas for the icp project to improve collaboration and effectiveness of different roles in the development process.
 
 ## Scope
 

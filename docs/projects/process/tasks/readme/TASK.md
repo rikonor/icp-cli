@@ -2,7 +2,7 @@
 
 ## Overview
 
-Create a comprehensive README.md for the dfx-2 project that effectively communicates its purpose, functionality, and usage.
+Create a comprehensive README.md for the icp project that effectively communicates its purpose, functionality, and usage.
 
 ## Scope
 

@@ -2,11 +2,11 @@
 
 ## Overview
 
-Improve overall test coverage and testing tools for the dfx-core crate, ensuring that the functionality is properly tested and documented.
+Improve overall test coverage and testing tools for the icp-core crate, ensuring that the functionality is properly tested and documented.
 
 ## Scope
 
-- Update test-utils to use dfx-core
+- Update test-utils to use icp-core
 - Add more comprehensive integration tests
 - Add benchmarks for core operations
 - Add documentation tests
@@ -22,7 +22,7 @@ Improve overall test coverage and testing tools for the dfx-core crate, ensuring
 
 ### Test-Utils Updates
 
-- Update test-utils to use dfx-core APIs
+- Update test-utils to use icp-core APIs
 - Improve WAT templates with proper component model syntax
 - Add detailed documentation to all WAT templates
 
@@ -40,7 +40,7 @@ Improve overall test coverage and testing tools for the dfx-core crate, ensuring
 
 ## Dependencies
 
-- Setup and Initial Structure Task: Required for the dfx-core crate to exist
+- Setup and Initial Structure Task: Required for the icp-core crate to exist
 - Core Interface Types Migration Task: Required for interface detection functionality
 
 ## Technical Challenges and Solutions
@@ -63,8 +63,8 @@ Some functions still have mismatches between their signatures and the canonical 
 
 ## Success Criteria
 
-- Test coverage above 80% for dfx-core
-- All test utilities use dfx-core APIs
+- Test coverage above 80% for icp-core
+- All test utilities use icp-core APIs
 - Documentation includes examples
 - Performance benchmarks established
 
@@ -79,6 +79,6 @@ Some functions still have mismatches between their signatures and the canonical 
 
 ## Notes
 
-This task is part of the Core Extraction project, which aims to split dfx-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
+This task is part of the Core Extraction project, which aims to split icp-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
 
 The implementation of this task is being done in parallel with the Core Interface Types Migration task, as improvements to the testing infrastructure help ensure the quality of the migrated code.

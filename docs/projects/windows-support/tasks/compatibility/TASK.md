@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implement Windows-specific functionality and optimizations in dfx-cli to ensure proper operation on Windows systems, including path handling, permissions, and system integration.
+Implement Windows-specific functionality and optimizations in icp-cli to ensure proper operation on Windows systems, including path handling, permissions, and system integration.
 
 ## Scope
 
@@ -75,7 +75,7 @@ Solutions will be documented as they are implemented.
 
 ## Notes
 
-This task focuses on making dfx-cli work naturally on Windows systems, ensuring that Windows users have the same quality of experience as users on other platforms.
+This task focuses on making icp-cli work naturally on Windows systems, ensuring that Windows users have the same quality of experience as users on other platforms.
 
 Key considerations:
 

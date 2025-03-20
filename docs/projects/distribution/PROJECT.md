@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Make dfx-2 easily accessible to users across all platforms through multiple distribution channels, including package managers and a quick installation method.
+Make icp easily accessible to users across all platforms through multiple distribution channels, including package managers and a quick installation method.
 
 ## Status
 
@@ -42,7 +42,7 @@ Not Started (0% Complete)
 
 ## Project Overview
 
-The Distribution project aims to make dfx-2 easily accessible to users through familiar installation methods on each platform. This includes a quick curl-based installation, native package managers, and comprehensive documentation.
+The Distribution project aims to make icp easily accessible to users through familiar installation methods on each platform. This includes a quick curl-based installation, native package managers, and comprehensive documentation.
 
 ## Current Focus
 

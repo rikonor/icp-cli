@@ -2,7 +2,7 @@
 
 ## Overview
 
-Configure and maintain dfx-2 as a cargo package on crates.io for Rust developers.
+Configure and maintain icp as a cargo package on crates.io for Rust developers.
 
 ## Scope
 

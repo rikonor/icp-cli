@@ -2,12 +2,12 @@
 
 ## Overview
 
-Refactor dfx-cli to be a thin wrapper around dfx-core, ensuring that the CLI-specific code is properly separated from the core functionality.
+Refactor icp-cli to be a thin wrapper around icp-core, ensuring that the CLI-specific code is properly separated from the core functionality.
 
 ## Scope
 
 - Refactor command handling
-- Update main.rs to use dfx-core APIs
+- Update main.rs to use icp-core APIs
 - Clean up CLI-specific code
 - Improve error handling
 
@@ -23,20 +23,20 @@ This task has not yet been started. The implementation will involve:
 
 ### Command Handling Refactoring
 
-- Refactor command handling to use dfx-core APIs
+- Refactor command handling to use icp-core APIs
 - Create clean abstractions for command operations
 - Ensure backward compatibility with existing CLI behavior
 
 ### Main.rs Updates
 
-- Update main.rs to use dfx-core APIs
+- Update main.rs to use icp-core APIs
 - Simplify the main entry point
 - Improve error handling and reporting
 
 ### CLI-Specific Code Cleanup
 
 - Identify and clean up CLI-specific code
-- Move any remaining core functionality to dfx-core
+- Move any remaining core functionality to icp-core
 - Ensure proper separation of concerns
 
 ### Error Handling Improvements
@@ -47,7 +47,7 @@ This task has not yet been started. The implementation will involve:
 
 ## Dependencies
 
-- Setup and Initial Structure Task: Required for the dfx-core crate to exist
+- Setup and Initial Structure Task: Required for the icp-core crate to exist
 - Core Interface Types Migration Task: Required for interface detection functionality
 - Component and Extension Logic Migration Task: Required for component and extension management
 
@@ -63,12 +63,12 @@ As this task has not yet been started, specific challenges and solutions have no
 ## Success Criteria
 
 - All CLI commands work as before
-- Reduced code size in dfx-cli
+- Reduced code size in icp-cli
 - Clear separation between CLI and core logic
 - End-to-end tests pass
 
 ## Notes
 
-This task is part of the Core Extraction project, which aims to split dfx-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
+This task is part of the Core Extraction project, which aims to split icp-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
 
-The implementation of this task will build upon the work done in the previous tasks, leveraging the functionality that has been moved to dfx-core.
+The implementation of this task will build upon the work done in the previous tasks, leveraging the functionality that has been moved to icp-core.

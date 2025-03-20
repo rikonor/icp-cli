@@ -2,11 +2,11 @@
 
 ## Overview
 
-Create new dfx-core crate with minimal structure without breaking existing functionality, establishing the foundation for the Core Extraction project.
+Create new icp-core crate with minimal structure without breaking existing functionality, establishing the foundation for the Core Extraction project.
 
 ## Scope
 
-- Create dfx-core crate
+- Create icp-core crate
 - Update workspace Cargo.toml
 - Set up initial module structure
 - Create minimal public API
@@ -22,14 +22,14 @@ Create new dfx-core crate with minimal structure without breaking existing funct
 
 ### Crate Creation and Workspace Configuration
 
-- Created new dfx-core crate in the workspace
+- Created new icp-core crate in the workspace
 - Updated workspace Cargo.toml to include the new crate
 - Set up appropriate dependencies and feature flags
 - Ensured build system correctly handles the new crate
 
 ### Module Structure Setup
 
-- Established initial module structure for dfx-core
+- Established initial module structure for icp-core
 - Created minimal public API surface
 - Set up documentation structure
 - Implemented basic error handling
@@ -52,15 +52,15 @@ Ensured that the creation of the new crate did not break existing functionality 
 
 ### Module Organization
 
-Designed a clean and extensible module structure that would support future migration of functionality from dfx-cli to dfx-core.
+Designed a clean and extensible module structure that would support future migration of functionality from icp-cli to icp-core.
 
 ## Success Criteria
 
 - `cargo build` succeeds for all crates
 - `cargo test` passes for existing tests
-- dfx-core crate has version and documentation
-- dfx-cli binary still functions normally
+- icp-core crate has version and documentation
+- icp-cli binary still functions normally
 
 ## Notes
 
-This task was the first stage of the Core Extraction project, which aims to split dfx-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
+This task was the first stage of the Core Extraction project, which aims to split icp-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.

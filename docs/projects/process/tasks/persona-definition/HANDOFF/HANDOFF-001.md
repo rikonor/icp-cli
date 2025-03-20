@@ -32,7 +32,7 @@ Task structure created with initial requirements and success criteria defined. D
 
 1. **Code Organization**
 
-   - Structured codebase analysis (dfx-cli, dfx-core)
+   - Structured codebase analysis (icp-cli, icp-core)
    - Identified component relationships
    - Tracked technical dependencies
    - Managed implementation sequences

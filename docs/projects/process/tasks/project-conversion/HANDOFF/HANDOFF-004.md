@@ -56,4 +56,4 @@ As this task is now complete, the following recommendations are made for future 
 
 ## Notes
 
-The Project Conversion task has successfully achieved its goal of converting existing project documentation to the new task-based structure. The new organization should improve clarity, ownership, and collaboration on the dfx-2 project.
+The Project Conversion task has successfully achieved its goal of converting existing project documentation to the new task-based structure. The new organization should improve clarity, ownership, and collaboration on the icp project.

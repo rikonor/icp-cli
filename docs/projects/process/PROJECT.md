@@ -12,7 +12,7 @@ Active
 
 - [Complete] README Creation Task
 
-  - Create comprehensive README.md for dfx-2 project
+  - Create comprehensive README.md for icp project
   - Located in: `tasks/readme/`
 
 - [Complete] Project Conversion Task

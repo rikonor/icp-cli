@@ -6,16 +6,16 @@ Fixed CLI binary artifact paths to match actual binary name.
 
 ## Completed Work
 
-- Updated artifact paths to use 'dfx' instead of 'dfx-cli'
+- Updated artifact paths to use 'icp' instead of 'icp-cli'
   - In build-cli job's artifact upload
   - In release job's artifact preparation
 
 ## Technical Details
 
-- Changed paths to match the binary name defined in dfx-cli's Cargo.toml:
+- Changed paths to match the binary name defined in icp-cli's Cargo.toml:
   ```toml
   [[bin]]
-  name = "dfx"
+  name = "icp"
   path = "src/main.rs"
   ```
 
@@ -25,4 +25,4 @@ Fixed CLI binary artifact paths to match actual binary name.
 
 ## Notes
 
-This addresses the artifact collection failure where the workflow was looking for 'dfx-cli' but the binary is actually named 'dfx'.
+This addresses the artifact collection failure where the workflow was looking for 'icp-cli' but the binary is actually named 'icp'.

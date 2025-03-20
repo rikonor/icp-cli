@@ -2,7 +2,7 @@
 
 ## Overview
 
-Implement a continuous integration workflow for the dfx-2 project to ensure code quality, test coverage, and reliable builds across all components.
+Implement a continuous integration workflow for the icp project to ensure code quality, test coverage, and reliable builds across all components.
 
 ## Status
 

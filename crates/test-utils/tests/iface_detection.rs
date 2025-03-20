@@ -1,5 +1,5 @@
 use anyhow::Error;
-use dfx_core::interface::{DetectIfaces, IfaceDetector, Interface};
+use icp_core::interface::{DetectIfaces, IfaceDetector, Interface};
 use test_utils::MockComponentBuilder;
 use wasmtime::{Config, Engine};
 

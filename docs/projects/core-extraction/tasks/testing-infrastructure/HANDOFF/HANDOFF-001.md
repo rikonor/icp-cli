@@ -2,7 +2,7 @@
 
 ## Current State
 
-The Testing Infrastructure task is in progress. We've identified specific issues with the test-utils tests that were failing in the previous session. The interface detection implementation in dfx-core is working correctly, but the test templates need to be updated to match the correct WAT syntax for component exports.
+The Testing Infrastructure task is in progress. We've identified specific issues with the test-utils tests that were failing in the previous session. The interface detection implementation in icp-core is working correctly, but the test templates need to be updated to match the correct WAT syntax for component exports.
 
 ## Completed Work
 

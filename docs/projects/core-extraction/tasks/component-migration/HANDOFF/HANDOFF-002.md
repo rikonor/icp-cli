@@ -4,15 +4,15 @@
 
 Completed Phase 1: Implementation Recovery by:
 
-1. Creating new component module in dfx-core
-2. Moving core runtime components from dfx-cli to dfx-core
-3. Updating dfx-cli to use the new implementations
+1. Creating new component module in icp-core
+2. Moving core runtime components from icp-cli to icp-core
+3. Updating icp-cli to use the new implementations
 
 ## Completed Work
 
 ### Component Module Creation
 
-- Created `component` module in dfx-core
+- Created `component` module in icp-core
 - Added function registry implementation
 - Added dynamic linker implementation
 - Added proper error handling and documentation
@@ -20,15 +20,15 @@ Completed Phase 1: Implementation Recovery by:
 
 ### Code Migration
 
-- Moved from dfx-cli to dfx-core:
+- Moved from icp-cli to icp-core:
   - Function registry system
   - Dynamic linking system
   - Associated error types and utilities
 
 ### Integration
 
-- Updated dfx-cli to use new dfx-core implementations
-- Removed old implementations from dfx-cli
+- Updated icp-cli to use new icp-core implementations
+- Removed old implementations from icp-cli
 - Updated import paths and re-exports
 - Maintained backward compatibility
 
@@ -39,14 +39,14 @@ Completed Phase 1: Implementation Recovery by:
   - dynamic_linker.rs
   - dependency.rs
   - manifest.rs
-- Updated dfx-cli's lib.rs to reflect new structure
+- Updated icp-cli's lib.rs to reflect new structure
 
 ## Technical Details
 
 ### New Module Structure
 
 ```
-dfx-core/
+icp-core/
 └── src/
     └── component/
         ├── mod.rs         # Module definition and exports
@@ -77,7 +77,7 @@ dfx-core/
 
 1. Code Organization
 
-   - Challenge: Determining proper module structure in dfx-core
+   - Challenge: Determining proper module structure in icp-core
    - Solution: Created dedicated component module for related functionality
 
 2. Dependency Management
@@ -86,7 +86,7 @@ dfx-core/
    - Solution: Proper use of re-exports in lib.rs
 
 3. Integration
-   - Challenge: Ensuring smooth transition for dfx-cli
+   - Challenge: Ensuring smooth transition for icp-cli
    - Solution: Updated imports and removed old implementations carefully
 
 ## Next Steps

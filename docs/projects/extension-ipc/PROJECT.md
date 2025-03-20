@@ -35,7 +35,7 @@ The Extension Inter-Communication project has been successfully completed, with 
 
 ## Next Steps
 
-The functionality implemented in this project will be migrated to the new dfx-core crate as part of the Core Extraction project, which will:
+The functionality implemented in this project will be migrated to the new icp-core crate as part of the Core Extraction project, which will:
 
 1. Improve testability of the implementation
 2. Make the functionality available as a reusable library

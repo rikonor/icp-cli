@@ -12,7 +12,7 @@
 //! ## Example
 //!
 //! ```rust,no_run
-//! use dfx_core::interface::{DetectIfaces, IfaceDetector};
+//! use icp_core::interface::{DetectIfaces, IfaceDetector};
 //! use wasmtime::{Config, Engine, component::Component};
 //! use anyhow::Result;
 //!
@@ -81,7 +81,7 @@ pub use detector::{ComponentInterfaces, DetectIfaces, IfaceDetector, Interface};
 /// # Example
 ///
 /// ```
-/// use dfx_core::interface::LIBRARY_SUFFIX;
+/// use icp_core::interface::LIBRARY_SUFFIX;
 ///
 /// let interface_name = "math/lib";
 /// assert!(interface_name.ends_with(LIBRARY_SUFFIX));

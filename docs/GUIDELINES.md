@@ -1,10 +1,10 @@
 # Development Guidelines
 
-Welcome to the dfx-2 project! This document provides essential guidance for working on the project effectively.
+Welcome to the icp project! This document provides essential guidance for working on the project effectively.
 
 ## Project Overview
 
-dfx-2 is a command-line utility for the Internet Computer platform with WebAssembly extension support. Our development process is organized around discrete tasks within projects, enabling clear ownership and effective collaboration.
+icp is a command-line utility for the Internet Computer platform with WebAssembly extension support. Our development process is organized around discrete tasks within projects, enabling clear ownership and effective collaboration.
 
 ## Project Organization
 
@@ -191,6 +191,7 @@ Remember: The goal is to maintain high quality while enabling efficient collabor
 When creating a new project:
 
 - Review 1-2 existing projects in docs/projects/ to understand the expected level of detail and structure
-- Project.md should focus on high-level objectives, task breakdown, and timeline
-- Task.md files should be concise, focusing on clear objectives, scope, and success criteria
+- PROJECT.md should focus on high-level objectives, task breakdown, and dependencies
+- TASK.md files should be concise, focusing on clear objectives, scope, and success criteria
+- Track progress through simple percentage completion (e.g., 0%, 25%, 50%, 75%, 100%)
 - Avoid excessive detail in initial task documentation - let the implementation details emerge through handoffs

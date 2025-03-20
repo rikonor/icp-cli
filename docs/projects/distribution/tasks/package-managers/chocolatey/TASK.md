@@ -2,7 +2,7 @@
 
 ## Overview
 
-Create and maintain a Chocolatey package for dfx-2, providing Windows users with a familiar installation method.
+Create and maintain a Chocolatey package for icp, providing Windows users with a familiar installation method.
 
 ## Scope
 

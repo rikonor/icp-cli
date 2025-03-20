@@ -1,4 +1,4 @@
-//! Data model for dfx extension manifests.
+//! Data model for icp extension manifests.
 
 use std::{
     fs::{create_dir_all, read, write},

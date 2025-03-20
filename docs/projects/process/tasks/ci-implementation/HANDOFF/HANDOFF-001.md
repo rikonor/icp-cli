@@ -28,7 +28,7 @@ Initial CI workflow implementation completed. Created GitHub Actions workflow fo
 
 - Release Process:
   - Triggered on push to main
-  - Creates GitHub release with version from dfx-cli crate
+  - Creates GitHub release with version from icp-cli crate
   - Includes checksums for all artifacts
   - Combines CLI binaries and extension components
 

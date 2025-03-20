@@ -1,4 +1,4 @@
-//! Dependency resolution for dfx extensions.
+//! Dependency resolution for icp extensions.
 
 use std::collections::{HashMap, HashSet, VecDeque};
 

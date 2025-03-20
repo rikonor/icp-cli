@@ -42,7 +42,7 @@ Convert existing project documentation to the new task-based structure, migratin
 
 1. Initial Setup and Structure
 
-   - dfx-core crate creation
+   - icp-core crate creation
    - Workspace configuration
    - Module structure setup
 

@@ -2,7 +2,7 @@
 
 ## Current State
 
-The Crate Organization task has been created and defined. The task aims to establish a clear and organized directory structure for extensions and examples in the dfx-2 codebase.
+The Crate Organization task has been created and defined. The task aims to establish a clear and organized directory structure for extensions and examples in the icp codebase.
 
 ## Completed Work
 

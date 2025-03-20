@@ -69,4 +69,4 @@ Optimized component analysis and linking to minimize startup time impact.
 
 ## Notes
 
-This task was part of the original Extension Inter-Communication project, which has been completed. The functionality will be migrated to the new dfx-core crate as part of the Core Extraction project.
+This task was part of the original Extension Inter-Communication project, which has been completed. The functionality will be migrated to the new icp-core crate as part of the Core Extraction project.

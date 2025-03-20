@@ -5,7 +5,7 @@
 The Component and Extension Logic Migration task has been updated with a comprehensive plan that combines:
 
 1. Recovery of implementation details from commit 3744ac4
-2. Migration of component and extension management to dfx-core
+2. Migration of component and extension management to icp-core
 3. Proper integration with the new architecture
 
 ## Completed Work
@@ -45,7 +45,7 @@ The Component and Extension Logic Migration task has been updated with a compreh
 
 1. State Management:
 
-   - Core state management will be centralized in dfx-core
+   - Core state management will be centralized in icp-core
    - CLI layer will maintain minimal state
    - Clear interfaces for state updates
 
@@ -63,7 +63,7 @@ The Component and Extension Logic Migration task has been updated with a compreh
    - Need to ensure proper error handling throughout
 
 2. Architecture Boundaries:
-   - Clear separation between dfx-core and dfx-cli
+   - Clear separation between icp-core and icp-cli
    - Proper abstraction layers
    - Minimal coupling
 
@@ -71,13 +71,13 @@ The Component and Extension Logic Migration task has been updated with a compreh
 
 1. Begin Phase 1: Implementation Recovery
 
-   - Set up core runtime components in dfx-core
+   - Set up core runtime components in icp-core
    - Migrate function registry system
    - Integrate with new architecture
 
 2. Prepare for Component Migration
 
-   - Create new module structure in dfx-core
+   - Create new module structure in icp-core
    - Define clear interfaces
    - Set up testing infrastructure
 

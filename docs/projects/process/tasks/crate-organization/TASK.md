@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Establish a clear and organized directory structure for extensions and examples in the dfx-2 codebase, creating a foundation for future extension development and integration.
+Establish a clear and organized directory structure for extensions and examples in the icp codebase, creating a foundation for future extension development and integration.
 
 ## Status
 
@@ -46,12 +46,12 @@ In Progress (0%)
 
 ```
 crates/
-├── dfx-cli/           # Main CLI application (existing)
-├── dfx-core/          # Core library functionality (existing)
+├── icp-cli/           # Main CLI application (existing)
+├── icp-core/          # Core library functionality (existing)
 ├── test-utils/        # Testing utilities (existing)
 ├── extensions/        # New directory for extensions
 │   ├── common/        # Common utilities shared across extensions
-│   ├── built-in/      # Extensions that ship with dfx by default
+│   ├── built-in/      # Extensions that ship with icp by default
 │   │   ├── extension1/
 │   │   ├── extension2/
 │   │   └── ...
@@ -68,7 +68,7 @@ crates/
 
 ### Implementation Considerations
 
-1. **Extension Registration**: Consider how extensions will be registered with dfx-cli. The `extensions/registry.rs` file could handle this.
+1. **Extension Registration**: Consider how extensions will be registered with icp-cli. The `extensions/registry.rs` file could handle this.
 
 2. **Dependency Management**: Ensure that extensions can depend on common utilities without creating circular dependencies.
 

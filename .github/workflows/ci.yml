@@ -8,7 +8,7 @@ permissions:
   contents: write
 
 env:
-  CLI_NAME: dfx-cli
+  CLI_NAME: icp-cli
 
 jobs:
   build-cli:
@@ -35,12 +35,12 @@ jobs:
       - name: Build CLI
         run: |
           rustup target add ${{ matrix.platform.target }}
-          cargo build --package dfx-cli --target ${{ matrix.platform.target }} --release
+          cargo build --package icp-cli --target ${{ matrix.platform.target }} --release
 
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/dfx*
+          path: target/${{ matrix.platform.target }}/release/icp*
 
   build-extensions:
     runs-on: ubuntu-latest
@@ -77,7 +77,7 @@ jobs:
       - name: Release Tag
         run: |
           cargo install cargo-get
-          CLI_VERSION=$(cargo get package.version --entry crates/dfx-cli)
+          CLI_VERSION=$(cargo get package.version --entry crates/icp-cli)
           RELEASE_TAG="${CLI_VERSION}"
           echo "RELEASE_TAG=${RELEASE_TAG}" >> "${GITHUB_ENV}"
 
@@ -97,9 +97,9 @@ jobs:
           for TARGET in ${TARGETS[@]}; do
             ARTIFACT="${CLI_NAME}-${TARGET}"
             if [[ "${TARGET}" == *windows* ]]; then
-              mv ${TARGET}/dfx.exe ${ARTIFACT}.exe
+              mv ${TARGET}/icp.exe ${ARTIFACT}.exe
             else
-              mv ${TARGET}/dfx ${ARTIFACT}
+              mv ${TARGET}/icp ${ARTIFACT}
             fi
             if [[ "${TARGET}" == *windows* ]]; then
               ARTIFACTS+=("${ARTIFACT}.exe")

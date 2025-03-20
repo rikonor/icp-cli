@@ -2,10 +2,10 @@
 resolver = "2"
 
 members = [
-    "crates/dfx-cli",
-    "crates/dfx-core",
+    "crates/icp-cli",
+    "crates/icp-core",
     "crates/extensions/*",
     "crates/test-utils",
 ]
 
-default-members = ["crates/dfx-cli", "crates/dfx-core"]
+default-members = ["crates/icp-cli", "crates/icp-core"]

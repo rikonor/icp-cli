@@ -1,4 +1,4 @@
-//! Manifest handling for dfx extensions.
+//! Manifest handling for icp extensions.
 
 mod model;
 

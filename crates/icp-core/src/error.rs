@@ -1,4 +1,4 @@
-//! Error types for the dfx-core crate.
+//! Error types for the icp-core crate.
 
 #[cfg(test)]
 mod tests {
@@ -113,7 +113,7 @@ pub enum InterfaceError {
     NestedInstance(String),
 }
 
-/// Core error type for dfx-core operations
+/// Core error type for icp-core operations
 #[derive(Debug, Error)]
 pub enum Error {
     /// An error occurred during interface detection

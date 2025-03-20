@@ -2,7 +2,7 @@
 
 ## Overview
 
-Create and maintain a Homebrew formula for dfx-2, enabling macOS and Linux users to install via Homebrew.
+Create and maintain a Homebrew formula for icp, enabling macOS and Linux users to install via Homebrew.
 
 ## Scope
 

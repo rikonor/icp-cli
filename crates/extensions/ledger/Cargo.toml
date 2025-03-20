@@ -16,10 +16,3 @@ crate-type = ["cdylib"]
 package = "component:project"
 
 [package.metadata.component.dependencies]
-
-[profile.release]
-codegen-units = 1
-opt-level = "s"
-debug = false
-strip = true
-lto = true

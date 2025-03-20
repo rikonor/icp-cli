@@ -2,7 +2,7 @@
 
 ## Overview
 
-Create a curl-based installation method for dfx-2 that works across all supported platforms, similar to popular tools that offer `curl -sL https://get.example.com | sh` installation.
+Create a curl-based installation method for icp that works across all supported platforms, similar to popular tools that offer `curl -sL https://get.example.com | sh` installation.
 
 ## Scope
 

@@ -1,6 +1,6 @@
-//! Core functionality for dfx component model tools.
+//! Core functionality for icp component model tools.
 //!
-//! This crate provides the core functionality used by dfx-cli and other tools
+//! This crate provides the core functionality used by icp-cli and other tools
 //! for working with WebAssembly components and extensions.
 
 pub mod component;
@@ -19,5 +19,5 @@ pub use manifest::{
     Store,
 };
 
-/// Version of the dfx-core crate
+/// Version of the icp-core crate
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

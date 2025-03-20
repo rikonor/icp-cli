@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Split dfx-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
+Split icp-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability.
 
 ## Status
 
@@ -12,23 +12,23 @@ In Progress (45% Complete)
 
 - [Complete] Setup and Initial Structure Task
 
-  - Create dfx-core crate, update workspace configuration, and set up initial module structure
+  - Create icp-core crate, update workspace configuration, and set up initial module structure
   - Located in: `tasks/setup/`
 
 - [In Progress] Core Interface Types Migration Task
 
-  - Move core interface types to dfx-core while maintaining all functionality
+  - Move core interface types to icp-core while maintaining all functionality
   - Current progress: 97%
   - Located in: `tasks/interface-migration/`
 
 - [Not Started] Component and Extension Logic Migration Task
 
-  - Move core component and extension handling to dfx-core
+  - Move core component and extension handling to icp-core
   - Located in: `tasks/component-migration/`
 
 - [Not Started] CLI Simplification Task
 
-  - Refactor dfx-cli to be a thin wrapper around dfx-core
+  - Refactor icp-cli to be a thin wrapper around icp-core
   - Located in: `tasks/cli-simplification/`
 
 - [In Progress] Testing Infrastructure Task
@@ -38,7 +38,7 @@ In Progress (45% Complete)
 
 ## Project Overview
 
-The Core Extraction project aims to split dfx-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability. The project is organized into five main tasks, each focusing on a specific aspect of the extraction process.
+The Core Extraction project aims to split icp-cli into separate core library and CLI components to improve maintainability, testability, and potential reusability. The project is organized into five main tasks, each focusing on a specific aspect of the extraction process.
 
 ## Current Focus
 

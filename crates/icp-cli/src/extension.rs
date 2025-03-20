@@ -10,7 +10,7 @@ use http::Uri;
 use reqwest::get;
 use wasmtime::{component::Component, Engine};
 
-use dfx_core::{
+use icp_core::{
     dependency::{DependencyError, DependencyGraph},
     interface::{ComponentInterfaces, DetectIfaces, LIBRARY_SUFFIX},
     manifest::{

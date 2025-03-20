@@ -80,7 +80,7 @@ Solutions will be documented as they are implemented.
 
 ## Notes
 
-This task ensures that Windows users and developers have access to comprehensive, accurate documentation for working with dfx-cli on Windows.
+This task ensures that Windows users and developers have access to comprehensive, accurate documentation for working with icp-cli on Windows.
 
 Key considerations:
 

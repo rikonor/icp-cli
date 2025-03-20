@@ -18,7 +18,7 @@ use wasmtime::{
     Config, Engine, Store as WasmStore,
 };
 
-use dfx_core::{
+use icp_core::{
     component::{DynamicLinker, FunctionRegistry},
     dependency::DependencyGraph,
     interface::IfaceDetector,
@@ -35,7 +35,7 @@ use extension::{
 use spec::CommandSpec;
 
 // Service configuration
-const SERVICE_NAME: &str = "dfx-2";
+const SERVICE_NAME: &str = "icp";
 const ARG_SHORT_MANIFEST: char = 'm';
 const ARG_LONG_MANIFEST: &str = "manifest";
 const ARG_LONG_EXTENSIONS: &str = "extensions-dir";

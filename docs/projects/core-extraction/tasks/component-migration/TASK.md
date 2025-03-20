@@ -2,7 +2,7 @@
 
 ## Overview
 
-Move core component and extension handling logic to dfx-core while recovering and properly integrating implementation details from previous versions. This task combines the migration of component/extension management with the recovery of critical functionality from commit 3744ac4.
+Move core component and extension handling logic to icp-core while recovering and properly integrating implementation details from previous versions. This task combines the migration of component/extension management with the recovery of critical functionality from commit 3744ac4.
 
 ## Scope
 
@@ -15,9 +15,9 @@ Move core component and extension handling logic to dfx-core while recovering an
 
 ### Core Migration
 
-- Move component handling logic to dfx-core
-- Move extension management to dfx-core
-- Move dependency graph logic to dfx-core
+- Move component handling logic to icp-core
+- Move extension management to icp-core
+- Move dependency graph logic to icp-core
 - Create proper abstraction layers
 - Ensure clean separation of concerns
 
@@ -56,7 +56,7 @@ Move core component and extension handling logic to dfx-core while recovering an
 
 #### Component Management Layer
 
-- Move to dfx-core:
+- Move to icp-core:
   - Component instantiation
   - Component precompilation
   - Component serialization/deserialization
@@ -64,7 +64,7 @@ Move core component and extension handling logic to dfx-core while recovering an
 
 #### Extension System Migration
 
-- Move to dfx-core:
+- Move to icp-core:
   - Extension registration
   - Extension discovery
   - Extension loading/unloading
@@ -72,7 +72,7 @@ Move core component and extension handling logic to dfx-core while recovering an
 
 #### Dependency Management
 
-- Move to dfx-core:
+- Move to icp-core:
   - Dependency graph construction
   - Dependency validation
   - Circular dependency detection
@@ -113,7 +113,7 @@ Move core component and extension handling logic to dfx-core while recovering an
 
 ## Dependencies
 
-- Setup and Initial Structure Task: Required for the dfx-core crate to exist
+- Setup and Initial Structure Task: Required for the icp-core crate to exist
 - Core Interface Types Migration Task: Required for interface detection functionality
 
 ## Technical Challenges and Solutions
@@ -131,7 +131,7 @@ Move core component and extension handling logic to dfx-core while recovering an
 ### State Management
 
 - Challenge: Managing complex state across components
-- Solution: Centralized state management in dfx-core
+- Solution: Centralized state management in icp-core
 
 ### Testing Coverage
 
@@ -173,7 +173,7 @@ Move core component and extension handling logic to dfx-core while recovering an
 ### Migration Process
 
 1. Identify component to migrate
-2. Move to dfx-core
+2. Move to icp-core
 3. Create clean interface
 4. Update CLI layer
 5. Add comprehensive tests
@@ -181,6 +181,6 @@ Move core component and extension handling logic to dfx-core while recovering an
 
 ## Notes
 
-This task is part of the Core Extraction project, which aims to split dfx-cli into separate core library and CLI components. The implementation will build upon the interface detection functionality in dfx-core while recovering and properly integrating critical functionality from previous versions.
+This task is part of the Core Extraction project, which aims to split icp-cli into separate core library and CLI components. The implementation will build upon the interface detection functionality in icp-core while recovering and properly integrating critical functionality from previous versions.
 
-The focus is on maintaining functionality while improving the overall architecture and ensuring proper separation of concerns between dfx-core and dfx-cli.
+The focus is on maintaining functionality while improving the overall architecture and ensuring proper separation of concerns between icp-core and icp-cli.
