@@ -288,7 +288,7 @@ async fn main() -> Result<(), Error> {
     // Link imports for each extension
     for name in &loading_order {
         if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
-            dynlnk.link_imports(
+            dynlnk.link(
                 &mut lnk,                  // linker
                 extension.imports.clone(), // imports
                 extension.exports.clone(), // exports
@@ -315,7 +315,7 @@ async fn main() -> Result<(), Error> {
 
         // Resolve exports for this extension
         if let Some(x) = m.xs.iter().find(|x| &x.name == name) {
-            dynlnk.resolve_exports(
+            dynlnk.resolve(
                 &mut store, // store
                 &x.name,    // extension
                 &inst,      // instance

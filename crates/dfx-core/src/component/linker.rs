@@ -64,7 +64,7 @@ impl DynamicLinker {
     ///
     /// * `Ok(())` if linking succeeded
     /// * `Err(DynamicLinkingError)` if linking failed
-    pub fn link_imports<T: Send>(
+    pub fn link<T: Send>(
         &mut self,
         lnk: &mut Linker<T>,
         imps: Vec<ImportedInterface>,
@@ -82,6 +82,10 @@ impl DynamicLinker {
                     &imp.name, // interface
                     &f,        // function
                 );
+
+                if self.registry.contains(k.as_str()) {
+                    continue;
+                }
 
                 // Create a function reference
                 let fref = Arc::new(Mutex::new(None));
@@ -132,6 +136,10 @@ impl DynamicLinker {
                     &exp.name, // interface
                     &f,        // function
                 );
+
+                if self.registry.contains(k.as_str()) {
+                    continue;
+                }
 
                 // Create a function reference
                 let fref = Arc::new(Mutex::new(None));
@@ -186,7 +194,7 @@ impl DynamicLinker {
     ///
     /// * `Ok(())` if resolution succeeded
     /// * `Err(DynamicLinkingError)` if resolution failed
-    pub fn resolve_exports<T>(
+    pub fn resolve<T>(
         &mut self,
         mut store: &mut Store<T>,
         extension: &str,
