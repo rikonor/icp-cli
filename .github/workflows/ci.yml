@@ -34,7 +34,6 @@ jobs:
 
       - name: Build CLI (Windows)
         if: runner.os == 'Windows'
-        shell: pwsh
         run: |
           rustup target add ${{ matrix.platform.target }}
           cargo build --package dfx-cli --target ${{ matrix.platform.target }} --release
