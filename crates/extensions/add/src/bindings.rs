@@ -70,6 +70,36 @@ pub mod local {
 #[allow(dead_code, clippy::all)]
 pub mod exports {
     pub mod local {
+        pub mod add {
+            #[allow(dead_code, clippy::all)]
+            pub mod lib {
+                #[used]
+                #[doc(hidden)]
+                static __FORCE_SECTION_REF: fn() = super::super::super::super::__link_custom_section_describing_imports;
+                use super::super::super::super::_rt;
+                #[doc(hidden)]
+                #[allow(non_snake_case)]
+                pub unsafe fn _export_add_cabi<T: Guest>(arg0: i32, arg1: i32) -> i32 {
+                    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
+                    let result0 = T::add(arg0 as u32, arg1 as u32);
+                    _rt::as_i32(result0)
+                }
+                pub trait Guest {
+                    /// add two numbers
+                    fn add(a: u32, b: u32) -> u32;
+                }
+                #[doc(hidden)]
+                macro_rules! __export_local_add_lib_cabi {
+                    ($ty:ident with_types_in $($path_to_types:tt)*) => {
+                        const _ : () = { #[export_name = "local:add/lib#add"] unsafe
+                        extern "C" fn export_add(arg0 : i32, arg1 : i32,) -> i32 {
+                        $($path_to_types)*:: _export_add_cabi::<$ty > (arg0, arg1) } };
+                    };
+                }
+                #[doc(hidden)]
+                pub(crate) use __export_local_add_lib_cabi;
+            }
+        }
         pub mod extension {
             #[allow(dead_code, clippy::all)]
             pub mod cli {
@@ -264,6 +294,9 @@ macro_rules! __export_root_impl {
         $($path_to_types_root)*::
         exports::local::extension::cli::__export_local_extension_cli_cabi!($ty
         with_types_in $($path_to_types_root)*:: exports::local::extension::cli);
+        $($path_to_types_root)*::
+        exports::local::add::lib::__export_local_add_lib_cabi!($ty with_types_in
+        $($path_to_types_root)*:: exports::local::add::lib);
     };
 }
 #[doc(inline)]
@@ -271,12 +304,13 @@ pub(crate) use __export_root_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.36.0:root:component:root:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 285] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa2\x01\x01A\x02\x01\
-A\x04\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 325] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xca\x01\x01A\x02\x01\
+A\x06\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\
 \x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\x0flocal:host/misc\x05\0\x01B\x05\
 \x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\0\x03run\x01\x02\
-\x04\0\x13local:extension/cli\x05\x01\x04\0\x13root:component/root\x04\0\x0b\x0a\
+\x04\0\x13local:extension/cli\x05\x01\x01B\x02\x01@\x02\x01ay\x01by\0y\x04\0\x03\
+add\x01\0\x04\0\x0dlocal:add/lib\x05\x02\x04\0\x13root:component/root\x04\0\x0b\x0a\
 \x01\0\x04root\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x07\
 0.220.1\x10wit-bindgen-rust\x060.36.0";
 #[inline(never)]

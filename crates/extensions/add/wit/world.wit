@@ -18,7 +18,15 @@ package local:extension {
   }
 }
 
+package local:add {
+  interface lib {
+    // add two numbers
+    add: func(a: u32, b: u32) -> u32;
+  }
+}
+
 world root {
   import local:host/misc;
   export local:extension/cli;
+  export local:add/lib;
 }

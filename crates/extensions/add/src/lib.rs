@@ -1,3 +1,4 @@
+use bindings::exports::local::add::lib;
 use clap::Command;
 
 #[allow(warnings)]
@@ -15,9 +16,9 @@ use spec::CommandSpec;
 struct Component;
 
 const CLI_SPEC: &str = r#"{
-    "name": "identity",
-    "help": "Identity extension",
-    "args": [],
+    "name": "add",
+    "help": "Add numbers",
+    "args": [{ "name": "a" }, { "name": "b" }],
     "subcommands": []
 }"#;
 
@@ -35,13 +36,38 @@ impl cli::Guest for Component {
         let c: Command = cspec.into();
 
         // Parse the command-line arguments
-        let _m = c.get_matches_from(args);
+        let m = c.get_matches_from(args);
 
-        // Print the current time
-        print(&format!("[{}] Hello from the identity extension!", time()));
+        let a: u32 = m
+            .try_get_one::<String>("a")
+            .unwrap()
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        let b: u32 = m
+            .try_get_one::<String>("b")
+            .unwrap()
+            .unwrap()
+            .parse()
+            .unwrap();
+
+        let _out = add(a, b);
 
         0
     }
+}
+
+impl lib::Guest for Component {
+    fn add(a: u32, b: u32) -> u32 {
+        add(a, b)
+    }
+}
+
+fn add(a: u32, b: u32) -> u32 {
+    let out = a + b;
+    print(&format!("[{}][add] {a} + {b} = {out}", time()));
+    out
 }
 
 bindings::export!(Component with_types_in bindings);

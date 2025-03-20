@@ -3,6 +3,16 @@
 version = 4
 
 [[package]]
+name = "add"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+ "wit-bindgen-rt 0.39.0",
+]
+
+[[package]]
 name = "addr2line"
 version = "0.24.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1060,16 +1070,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "25a2bc672d1148e28034f176e01fffebb08b35768468cc954630da77a1449005"
 
 [[package]]
-name = "identity"
-version = "0.1.0"
-dependencies = [
- "clap",
- "serde",
- "serde_json",
- "wit-bindgen-rt 0.39.0",
-]
-
-[[package]]
 name = "idna"
 version = "1.0.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1172,16 +1172,6 @@ name = "leb128fmt"
 version = "0.1.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "09edd9e8b54e49e587e4f6295a7d29c3ea94d469cb40ab8ca70b288248a81db2"
-
-[[package]]
-name = "ledger"
-version = "0.1.0"
-dependencies = [
- "clap",
- "serde",
- "serde_json",
- "wit-bindgen-rt 0.39.0",
-]
 
 [[package]]
 name = "libc"
