@@ -24,12 +24,27 @@ jobs:
           - runs-on: ubuntu-latest
             target: x86_64-unknown-linux-gnu
 
+          - runs-on: windows-latest
+            target: x86_64-pc-windows-msvc
+
     runs-on: ${{ matrix.platform.runs-on }}
 
     steps:
       - uses: actions/checkout@v4
 
-      - name: Build CLI
+      - name: Build CLI (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          rustup target add ${{ matrix.platform.target }}
+
+          cargo build `
+            --package dfx-cli `
+            --target ${{ matrix.platform.target }} `
+            --release
+
+      - name: Build CLI (Unix)
+        if: runner.os != 'Windows'
         run: |
           rustup target add \
             ${{ matrix.platform.target }}
@@ -42,7 +57,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/dfx
+          path: target/${{ matrix.platform.target }}/release/dfx*
 
   build-extensions:
     runs-on: ubuntu-latest
@@ -91,15 +106,25 @@ jobs:
             aarch64-apple-darwin
             x86_64-apple-darwin
             x86_64-unknown-linux-gnu
+            x86_64-pc-windows-msvc
           )
 
           echo "ARTIFACTS<<EOF" >> $GITHUB_ENV
 
           for TARGET in ${TARGETS[@]}; do
             ARTIFACT="${CLI_NAME}-${TARGET}"
-            mv ${TARGET}/dfx ${ARTIFACT}
-            ARTIFACTS+=("${ARTIFACT}")
-            echo ${ARTIFACT} >> $GITHUB_ENV
+            if [[ "${TARGET}" == *windows* ]]; then
+              mv ${TARGET}/dfx.exe ${ARTIFACT}.exe
+            else
+              mv ${TARGET}/dfx ${ARTIFACT}
+            fi
+            if [[ "${TARGET}" == *windows* ]]; then
+              ARTIFACTS+=("${ARTIFACT}.exe")
+              echo "${ARTIFACT}.exe" >> $GITHUB_ENV
+            else
+              ARTIFACTS+=("${ARTIFACT}")
+              echo "${ARTIFACT}" >> $GITHUB_ENV
+            fi
           done
 
           # Add extension artifacts
