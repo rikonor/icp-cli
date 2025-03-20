@@ -42,7 +42,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.platform.target }}
-          path: target/${{ matrix.platform.target }}/release/dfx-cli
+          path: target/${{ matrix.platform.target }}/release/dfx
 
   build-extensions:
     runs-on: ubuntu-latest
@@ -79,7 +79,7 @@ jobs:
       - name: Release Tag
         run: |
           cargo install cargo-get
-          CLI_VERSION=$(cargo get package.version -p dfx-cli)
+          CLI_VERSION=$(cargo get package.version --entry crates/dfx-cli)
           RELEASE_TAG="${CLI_VERSION}"
           echo "RELEASE_TAG=${RELEASE_TAG}" >> "${GITHUB_ENV}"
 
@@ -97,7 +97,7 @@ jobs:
 
           for TARGET in ${TARGETS[@]}; do
             ARTIFACT="${CLI_NAME}-${TARGET}"
-            mv ${TARGET}/dfx-cli ${ARTIFACT}
+            mv ${TARGET}/dfx ${ARTIFACT}
             ARTIFACTS+=("${ARTIFACT}")
             echo ${ARTIFACT} >> $GITHUB_ENV
           done
