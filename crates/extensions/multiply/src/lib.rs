@@ -4,7 +4,7 @@ use clap::Command;
 mod bindings;
 
 // imports
-use bindings::local::host::misc::{print, time};
+use bindings::local::host::misc::print;
 
 // exports
 use bindings::exports::local::extension::cli;
@@ -70,7 +70,7 @@ fn multiply(a: u32, b: u32) -> u32 {
         out += b;
     }
 
-    print(&format!("[{}][multiply] {a} * {b} = {out}", time()));
+    print(&format!("[multiply] {a} * {b} = {out}"));
     out
 }
 

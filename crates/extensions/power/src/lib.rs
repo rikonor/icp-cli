@@ -4,7 +4,7 @@ use clap::Command;
 mod bindings;
 
 // imports
-use bindings::local::host::misc::{print, time};
+use bindings::local::host::misc::print;
 use bindings::local::multiply::lib::multiply;
 
 // exports
@@ -71,7 +71,7 @@ fn power(a: u32, b: u32) -> u32 {
         out = multiply(out, a)
     }
 
-    print(&format!("[{}][power] {a}^{b} = {out}", time()));
+    print(&format!("[power] {a}^{b} = {out}"));
     out
 }
 
