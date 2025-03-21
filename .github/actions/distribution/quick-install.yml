@@ -1,0 +1,15 @@
+name: Quick Install Action
+description: Handles Quick Install script distribution
+
+inputs:
+  version:
+    description: Version number to distribute
+    required: true
+    type: string
+
+runs:
+  using: composite
+  steps:
+    - name: Print Quick Install Version
+      run: |
+        echo "Distributing quick-install for version ${{ inputs.version }}"
