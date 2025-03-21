@@ -46,17 +46,14 @@ jobs:
         run: |
           mkdir -p dist/binaries/icp
 
-      # Generate installation scripts with GitHub Pages URLs
+      # Generate installation scripts and landing page
       - name: Generate installation scripts
         run: |
           cd crates/icp-distribution
           cargo run --bin generate_scripts
-          cp dist/install.sh ../../dist/
-          cp dist/install.ps1 ../../dist/
-          cp ../../docs/projects/distribution/tasks/quick-install/index.html ../../dist/
 
-          # Create .nojekyll file to prevent Jekyll processing
-          touch dist/.nojekyll
+          # Copy generated files to dist directory
+          cp -r dist/* ../../dist/
 
       # Download release artifacts if running after a release
       - name: Download release artifacts
@@ -70,29 +67,122 @@ jobs:
       # Process binaries and create checksums
       - name: Process binaries and create checksums
         run: |
+          # Function to validate binary
+          validate_binary() {
+            local binary=$1
+            local expected_type=$2
+
+            if [ ! -f "$binary" ]; then
+              echo "::error::Binary not found: $binary"
+              return 1
+            }
+
+            # Check file type
+            file_type=$(file "$binary")
+            if ! echo "$file_type" | grep -q "$expected_type"; then
+              echo "::error::Invalid binary type for $binary: $file_type"
+              return 1
+            }
+
+            # Ensure file is not empty
+            if [ ! -s "$binary" ]; then
+              echo "::error::Empty binary file: $binary"
+              return 1
+            }
+
+            return 0
+          }
+
           # If release artifacts were downloaded, use them
           if [ -d "binaries" ] && [ "$(ls -A binaries)" ]; then
-            # Copy and rename binaries to the expected names for the install scripts
-            cp binaries/icp-cli-aarch64-apple-darwin dist/binaries/icp/macos-arm64 || echo "macOS ARM binary not found"
-            cp binaries/icp-cli-x86_64-apple-darwin dist/binaries/icp/macos-x86_64 || echo "macOS x86_64 binary not found"
-            cp binaries/icp-cli-x86_64-unknown-linux-gnu dist/binaries/icp/linux-x86_64 || echo "Linux x86_64 binary not found"
-            cp binaries/icp-cli-x86_64-pc-windows-msvc.exe dist/binaries/icp/windows-amd64.exe || echo "Windows binary not found"
+            echo "Processing release binaries..."
+
+            # Copy and validate binaries
+            mkdir -p dist/binaries/icp
+
+            # macOS ARM64
+            if cp binaries/icp-cli-aarch64-apple-darwin dist/binaries/icp/macos-arm64; then
+              validate_binary dist/binaries/icp/macos-arm64 "Mach-O 64-bit arm64" || exit 1
+            else
+              echo "::warning::macOS ARM binary not found"
+            fi
+
+            # macOS x86_64
+            if cp binaries/icp-cli-x86_64-apple-darwin dist/binaries/icp/macos-x86_64; then
+              validate_binary dist/binaries/icp/macos-x86_64 "Mach-O 64-bit x86_64" || exit 1
+            else
+              echo "::warning::macOS x86_64 binary not found"
+            fi
+
+            # Linux x86_64
+            if cp binaries/icp-cli-x86_64-unknown-linux-gnu dist/binaries/icp/linux-x86_64; then
+              validate_binary dist/binaries/icp/linux-x86_64 "ELF 64-bit LSB" || exit 1
+            else
+              echo "::warning::Linux x86_64 binary not found"
+            fi
+
+            # Windows x86_64
+            if cp binaries/icp-cli-x86_64-pc-windows-msvc.exe dist/binaries/icp/windows-amd64.exe; then
+              validate_binary dist/binaries/icp/windows-amd64.exe "PE32+ executable" || exit 1
+            else
+              echo "::warning::Windows binary not found"
+            fi
           else
-            # Create placeholder binaries for testing if no real binaries available
-            echo "Creating placeholder binaries for testing purposes"
+            echo "::warning::No release binaries found, creating placeholders for testing"
+            mkdir -p dist/binaries/icp
             PLATFORMS=("macos-x86_64" "macos-arm64" "linux-x86_64" "linux-aarch64" "windows-amd64.exe")
             for platform in "${PLATFORMS[@]}"; do
               echo "Placeholder binary for $platform (version: ${{ steps.version.outputs.version }})" > "dist/binaries/icp/$platform"
             done
           fi
 
-          # Generate checksums for all binaries
+          # Generate and validate checksums
           cd dist/binaries/icp/
+          echo "Generating checksums..."
           for file in *; do
             if [ -f "$file" ] && [ "$file" != "*.sha256" ]; then
+              # Generate checksum
               sha256sum "$file" | cut -d ' ' -f 1 > "$file.sha256"
+
+              # Validate checksum file
+              if [ ! -s "$file.sha256" ]; then
+                echo "::error::Failed to generate checksum for $file"
+                exit 1
+              fi
+
+              echo "Generated checksum for $file: $(cat "$file.sha256")"
             fi
           done
+
+      # Validate generated files
+      - name: Validate generated files
+        run: |
+          required_files=(
+            "dist/.nojekyll"
+            "dist/install.sh"
+            "dist/install.ps1"
+            "dist/index.html"
+          )
+
+          for file in "${required_files[@]}"; do
+            if [ ! -f "$file" ]; then
+              echo "::error::Required file not found: $file"
+              exit 1
+            fi
+
+            if [ ! -s "$file" ]; then
+              echo "::error::Required file is empty: $file"
+              exit 1
+            fi
+
+            echo "Validated $file"
+          done
+
+          # Verify install.sh is executable
+          if [ ! -x "dist/install.sh" ]; then
+            echo "::error::install.sh is not executable"
+            exit 1
+          fi
 
       # Update URLs in index.html to use GitHub Pages URL instead of custom domain
       - name: Update URLs in index.html
@@ -100,8 +190,19 @@ jobs:
           REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d '/' -f 2)
           GITHUB_PAGES_URL="https://${{ github.repository_owner }}.github.io/$REPO_NAME"
 
-          # Replace URLs in index.html
-          sed -i "s|https://get.icp-cli.com|$GITHUB_PAGES_URL|g" dist/index.html
+          # Replace URLs in index.html and verify
+          if ! sed -i "s|https://get.icp-cli.com|$GITHUB_PAGES_URL|g" dist/index.html; then
+            echo "::error::Failed to update URLs in index.html"
+            exit 1
+          fi
+
+          # Verify the replacement was successful
+          if grep -q "get.icp-cli.com" dist/index.html; then
+            echo "::error::Failed to update all URLs in index.html"
+            exit 1
+          fi
+
+          echo "Successfully updated URLs to use: $GITHUB_PAGES_URL"
 
       # Deploy to GitHub Pages
       - name: Deploy to GitHub Pages

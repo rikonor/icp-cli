@@ -29,21 +29,26 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     // Setup template values
     let version = env!("CARGO_PKG_VERSION", "0.1.0");
-    let domain = "rikonor.github.io/icp-cli";
+
+    // Get domain from environment or use default GitHub Pages URL
+    let domain = std::env::var("ICP_DISTRIBUTION_DOMAIN")
+        .unwrap_or_else(|_| "rikonor.github.io/icp-cli".to_string());
+
+    // Create .nojekyll file to prevent Jekyll processing
+    let nojekyll_path = output_dir.join(".nojekyll");
+    std::fs::write(&nojekyll_path, "")?;
+    println!("Created .nojekyll file: {:?}", nojekyll_path);
 
     // Generate Unix script
     let mut unix_values = HashMap::new();
     unix_values.insert("version".to_string(), version.to_string());
     unix_values.insert("install_dir".to_string(), "/usr/local/bin".to_string());
     unix_values.insert("binary_name".to_string(), "icp".to_string());
-    unix_values.insert(
-        "binary_url_base".to_string(),
-        format!("https://{}/binaries/icp", domain),
-    );
-    unix_values.insert(
-        "checksum_url_base".to_string(),
-        format!("https://{}/binaries/icp", domain),
-    );
+
+    // Use HTTPS for all URLs
+    let base_url = format!("https://{}/binaries/icp", domain);
+    unix_values.insert("binary_url_base".to_string(), base_url.clone());
+    unix_values.insert("checksum_url_base".to_string(), base_url.clone());
 
     let unix_template_path = template_dir.join("install.sh.tmpl");
     let unix_output_path = output_dir.join("install.sh");
@@ -98,6 +103,14 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         &windows_output_path,
         windows_values,
     )?;
+
+    // Validate generated files
+    for path in &[&unix_output_path, &windows_output_path] {
+        if !path.exists() {
+            return Err(format!("Failed to generate script: {:?}", path).into());
+        }
+        println!("Validated file exists: {:?}", path);
+    }
 
     println!("Installation scripts successfully generated!");
     Ok(())

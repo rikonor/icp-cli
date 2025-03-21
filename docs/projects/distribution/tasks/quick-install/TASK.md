@@ -32,9 +32,31 @@ Create a curl-based installation method for icp that works across all supported 
 ### Infrastructure
 
 - Domain registration and setup (get.icp-cli.com)
-- ✅ GitHub Pages configuration for hosting
+- ✅ GitHub Pages configuration for static file hosting
+  - Using .nojekyll for direct file serving
+  - No Jekyll processing required
+  - Secure, efficient distribution of binaries and scripts
 - ✅ GitHub Actions workflow for deployment
+  - Generates installation scripts and landing page from templates
+  - Processes and verifies binary artifacts
+  - Creates checksums for security
+  - Deploys to gh-pages branch
+  - Validates all generated files
 - SSL certificate configuration (via GitHub Pages)
+
+### File Organization
+
+- ✅ Templates in icp-distribution crate
+  - install.sh.tmpl and install.ps1.tmpl for installation scripts
+  - Landing page template for documentation
+- ✅ Script generation system
+  - Centralized in generate_scripts.rs
+  - Handles template rendering
+  - Creates all necessary deployment files
+- ✅ Deployment structure
+  - All files generated during deployment
+  - No static copies in documentation
+  - Single source of truth in templates
 
 ### Distribution Crate Development
 
