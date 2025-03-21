@@ -29,7 +29,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     // Setup template values
     let version = env!("CARGO_PKG_VERSION", "0.1.0");
-    let domain = "get.icp-cli.com";
+    let domain = "rikonor.github.io/icp-cli";
 
     // Generate Unix script
     let mut unix_values = HashMap::new();

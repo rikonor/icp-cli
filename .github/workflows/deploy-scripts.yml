@@ -41,22 +41,19 @@ jobs:
           fi
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
 
-      # Build the icp-distribution crate which generates scripts
-      - name: Build icp-distribution
-        run: |
-          cargo build --package icp-distribution --release
-
       # Create directory structure for GitHub Pages
       - name: Prepare directory structure
         run: |
           mkdir -p dist/binaries/icp
 
-      # Copy generated scripts and landing page
-      - name: Copy installation scripts and landing page
+      # Generate installation scripts with GitHub Pages URLs
+      - name: Generate installation scripts
         run: |
-          cp crates/icp-distribution/dist/install.sh dist/
-          cp crates/icp-distribution/dist/install.ps1 dist/
-          cp docs/projects/distribution/tasks/quick-install/index.html dist/
+          cd crates/icp-distribution
+          cargo run --bin generate_scripts
+          cp dist/install.sh ../../dist/
+          cp dist/install.ps1 ../../dist/
+          cp ../../docs/projects/distribution/tasks/quick-install/index.html ../../dist/
 
           # Create .nojekyll file to prevent Jekyll processing
           touch dist/.nojekyll

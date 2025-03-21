@@ -17,13 +17,13 @@ icp is a CLI tool for the Internet Computer platform that leverages the WebAssem
 #### Unix-like Systems (macOS, Linux)
 
 ```bash
-curl -sL https://GITHUB_OWNER.github.io/icp-cli/install.sh | bash
+curl -sL https://rikonor.github.io/icp-cli/install.sh | bash
 ```
 
 #### Windows
 
 ```powershell
-iwr -useb https://GITHUB_OWNER.github.io/icp-cli/install.ps1 | iex
+iwr -useb https://rikonor.github.io/icp-cli/install.ps1 | iex
 ```
 
 Note: The installation URL will be automatically updated with the correct GitHub Pages URL in the CI process.

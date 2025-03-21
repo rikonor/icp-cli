@@ -7,8 +7,8 @@ $ErrorActionPreference = "Stop"
 # Configuration
 $installDir = "$env:ProgramFiles\icp"
 $binaryName = "icp.exe"
-$binaryUrl = "https://get.icp-cli.com/binaries/icp/windows-amd64.exe"
-$checksumUrl = "https://get.icp-cli.com/binaries/icp/windows-amd64.sha256"
+$binaryUrl = "https://rikonor.github.io/icp-cli/binaries/icp/windows-amd64.exe"
+$checksumUrl = "https://rikonor.github.io/icp-cli/binaries/icp/windows-amd64.sha256"
 
 # Helper Functions
 function Write-Status {
