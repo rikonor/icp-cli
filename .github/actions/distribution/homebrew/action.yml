@@ -1,5 +1,5 @@
-name: Update quick-install
-description: Update quick-install
+name: Update Brew Repository
+description: Update Brew Repository
 
 inputs:
   version:

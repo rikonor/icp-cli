@@ -1,5 +1,5 @@
-name: Update quick-install
-description: Update quick-install
+name: Update APT Repository
+description: Update APT Repository
 
 inputs:
   version:
