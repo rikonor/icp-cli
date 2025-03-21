@@ -136,16 +136,49 @@ jobs:
     needs: trigger-distribution
     runs-on: ubuntu-latest
     steps:
-      - run: echo homebrew
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: `distribution/homebrew.yml`,
+              ref: context.ref,
+              inputs: {
+                version: '${{ inputs.version }}'
+              }
+            });
 
   apt:
     needs: trigger-distribution
     runs-on: ubuntu-latest
     steps:
-      - run: echo apt
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: `distribution/apt.yml`,
+              ref: context.ref,
+              inputs: {
+                version: '${{ inputs.version }}'
+              }
+            });
 
   quick-install:
     needs: trigger-distribution
     runs-on: ubuntu-latest
     steps:
-      - run: echo scripts
+      - uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: `distribution/scripts.yml`,
+              ref: context.ref,
+              inputs: {
+                version: '${{ inputs.version }}'
+              }
+            });
