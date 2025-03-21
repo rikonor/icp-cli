@@ -6,7 +6,7 @@ Make icp easily accessible to users across all platforms through multiple distri
 
 ## Status
 
-In Progress (20% Complete)
+In Progress (25% Complete)
 
 ## Tasks
 
@@ -19,7 +19,7 @@ In Progress (20% Complete)
 - [In Progress] Quick Install Task
 
   - Implement curl-based installation method
-  - Current progress: 90%
+  - Current progress: 95%
   - Located in: `tasks/quick-install/`
 
 - [Not Started] Package Manager Tasks
@@ -63,6 +63,7 @@ Implementation of the quick installation scripts and infrastructure is nearly co
    - ✅ Create `icp-distribution` crate
    - ✅ GitHub Pages configuration
    - ✅ GitHub Actions workflow setup
+   - ✅ Landing page template
    - Domain setup
    - Security measures implementation
 
