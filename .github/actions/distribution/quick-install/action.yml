@@ -9,10 +9,23 @@ inputs:
 runs:
   using: composite
   steps:
-    - shell: bash
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        profile: minimal
+        toolchain: stable
+        override: true
+
+    - name: Prepare directory structure
+      shell: bash
       run: |
-        mkdir -p dist
-        echo ${{ inputs.version }} > dist/index.html
+        mkdir -p dist/binaries/icp
+
+    - name: Generate installation scripts
+      shell: bash
+      run: |
+        cargo run --bin generate_scripts
+        cp -r crates/icp-distribution/dist/* dist/
 
     - uses: JamesIves/github-pages-deploy-action@v4
       with:
