@@ -16,7 +16,7 @@ Create a curl-based installation method for icp that works across all supported 
 ## Status
 
 - Current Phase: In Progress
-- Progress: 50%
+- Progress: 75%
 - Last Updated: 2025-03-20
 
 ## Implementation Details
@@ -37,10 +37,10 @@ Create a curl-based installation method for icp that works across all supported 
 
 ### Distribution Crate Development
 
-- Create new `icp-distribution` crate
-- Implement template system for installation scripts
-- Convert existing scripts to templates
-- Setup build integration for script generation
+- ✅ Create new `icp-distribution` crate
+- ✅ Implement template system for installation scripts
+- ✅ Convert existing scripts to templates
+- ✅ Setup build integration for script generation
 
 ## Dependencies
 
