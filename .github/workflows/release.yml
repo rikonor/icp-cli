@@ -136,6 +136,8 @@ jobs:
     needs: distribution
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v4
+
       - uses: ./.github/actions/distribution/quick-install
         with:
           version: ${{ inputs.version }}
