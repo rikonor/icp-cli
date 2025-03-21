@@ -125,3 +125,18 @@ jobs:
           tag_name: v${{ inputs.version }}
           files: release-assets/*
           draft: true
+
+  trigger-distribution:
+    needs: create-release
+
+    strategy:
+      matrix:
+        workflow: [homebrew, apt, scripts]
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Trigger Distribution Workflow
+        run: |
+          echo "Would trigger .github/workflows/distribution/${{ matrix.workflow }}.yml"
+          echo "Version: v${{ inputs.version }}"
