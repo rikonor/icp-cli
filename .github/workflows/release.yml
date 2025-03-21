@@ -127,30 +127,39 @@ jobs:
           draft: true
 
   trigger-distribution:
-    needs: create-release # Ensure this runs after release creation
+    needs: create-release # Ensure it runs after release creation
     strategy:
       matrix:
         method: [homebrew, apt, quick-install]
 
     runs-on: ubuntu-latest
-    steps:
-      - name: Call Distribution Workflow
-        uses: actions/github-script@v7
-        with:
-          script: |
-            github.rest.actions.createWorkflowDispatch({
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              workflow_id: `distribution/${{ matrix.method }}.yml`,
-              ref: context.ref,
-              inputs: {
-                version: '${{ inputs.version }}'
-              }
-            });
 
-  wait-for-distribution:
+    steps:
+      - name: Echo Distribution Details
+        run: |
+          echo "Starting distribution process for ${{ matrix.method }}"
+          echo "Version: v${{ inputs.version }}"
+
+  homebrew:
     needs: trigger-distribution
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for Distribution Jobs
-        run: echo "All distribution workflows have been triggered."
+      - name: Publish Homebrew Formula
+        run: |
+          echo "Publishing to Homebrew: v${{ inputs.version }}"
+
+  apt:
+    needs: trigger-distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish APT Package
+        run: |
+          echo "Publishing to APT: v${{ inputs.version }}"
+
+  quick-install:
+    needs: trigger-distribution
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy Quick Install Script
+        run: |
+          echo "Deploying Quick Install Script: v${{ inputs.version }}"
