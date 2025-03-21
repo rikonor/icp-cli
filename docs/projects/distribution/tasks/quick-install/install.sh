@@ -9,8 +9,8 @@ INSTALL_DIR="/usr/local/bin"
 BINARY_NAME="icp"
 PLATFORM="$(uname | tr '[:upper:]' '[:lower:]')"
 ARCH="$(uname -m)"
-BINARY_URL="https://get.icp-cli.com/binaries/icp-${PLATFORM}-${ARCH}" # Replace with actual URL
-CHECKSUM_URL="https://get.icp-cli.com/binaries/icp-${PLATFORM}-${ARCH}.sha256" # Replace with actual URL
+BINARY_URL="https://rikonor.github.io/icp-cli/binaries/icp-${PLATFORM}-${ARCH}"
+CHECKSUM_URL="https://rikonor.github.io/icp-cli/binaries/icp-${PLATFORM}-${ARCH}.sha256"
 
 # Helper Functions
 status() {
