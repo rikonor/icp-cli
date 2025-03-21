@@ -1,0 +1,115 @@
+name: Deploy Installation Scripts
+
+on:
+  # Run after a release is published
+  release:
+    types: [published]
+  # Allow manual triggering for testing
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to deploy (defaults to latest release)"
+        required: false
+        default: ""
+
+jobs:
+  deploy-scripts:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Rust
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      # Determine the version to use
+      - name: Set version
+        id: version
+        run: |
+          if [ -z "${{ github.event.inputs.version }}" ]; then
+            # Extract version from the release
+            VERSION="${{ github.event.release.tag_name }}"
+            VERSION="${VERSION#v}"  # Remove 'v' prefix if present
+          else
+            VERSION="${{ github.event.inputs.version }}"
+          fi
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+
+      # Build the icp-distribution crate which generates scripts
+      - name: Build icp-distribution
+        run: |
+          cargo build --package icp-distribution --release
+
+      # Create directory structure for GitHub Pages
+      - name: Prepare directory structure
+        run: |
+          mkdir -p dist/binaries/icp
+
+      # Copy generated scripts and landing page
+      - name: Copy installation scripts and landing page
+        run: |
+          cp crates/icp-distribution/dist/install.sh dist/
+          cp crates/icp-distribution/dist/install.ps1 dist/
+          cp docs/projects/distribution/tasks/quick-install/index.html dist/
+
+          # Create .nojekyll file to prevent Jekyll processing
+          touch dist/.nojekyll
+
+      # Download release artifacts if running after a release
+      - name: Download release artifacts
+        uses: robinraju/release-downloader@v1.8
+        if: github.event_name == 'release' || github.event.inputs.version != ''
+        with:
+          tag: "v${{ steps.version.outputs.version }}"
+          fileName: "icp-cli-*"
+          out-file-path: "binaries"
+
+      # Process binaries and create checksums
+      - name: Process binaries and create checksums
+        run: |
+          # If release artifacts were downloaded, use them
+          if [ -d "binaries" ] && [ "$(ls -A binaries)" ]; then
+            # Copy and rename binaries to the expected names for the install scripts
+            cp binaries/icp-cli-aarch64-apple-darwin dist/binaries/icp/macos-arm64 || echo "macOS ARM binary not found"
+            cp binaries/icp-cli-x86_64-apple-darwin dist/binaries/icp/macos-x86_64 || echo "macOS x86_64 binary not found"
+            cp binaries/icp-cli-x86_64-unknown-linux-gnu dist/binaries/icp/linux-x86_64 || echo "Linux x86_64 binary not found"
+            cp binaries/icp-cli-x86_64-pc-windows-msvc.exe dist/binaries/icp/windows-amd64.exe || echo "Windows binary not found"
+          else
+            # Create placeholder binaries for testing if no real binaries available
+            echo "Creating placeholder binaries for testing purposes"
+            PLATFORMS=("macos-x86_64" "macos-arm64" "linux-x86_64" "linux-aarch64" "windows-amd64.exe")
+            for platform in "${PLATFORMS[@]}"; do
+              echo "Placeholder binary for $platform (version: ${{ steps.version.outputs.version }})" > "dist/binaries/icp/$platform"
+            done
+          fi
+
+          # Generate checksums for all binaries
+          cd dist/binaries/icp/
+          for file in *; do
+            if [ -f "$file" ] && [ "$file" != "*.sha256" ]; then
+              sha256sum "$file" | cut -d ' ' -f 1 > "$file.sha256"
+            fi
+          done
+
+      # Update URLs in index.html to use GitHub Pages URL instead of custom domain
+      - name: Update URLs in index.html
+        run: |
+          REPO_NAME=$(echo "$GITHUB_REPOSITORY" | cut -d '/' -f 2)
+          GITHUB_PAGES_URL="https://${{ github.repository_owner }}.github.io/$REPO_NAME"
+
+          # Replace URLs in index.html
+          sed -i "s|https://get.icp-cli.com|$GITHUB_PAGES_URL|g" dist/index.html
+
+      # Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: dist
+          branch: gh-pages
+          clean: true

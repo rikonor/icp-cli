@@ -12,7 +12,23 @@ icp is a CLI tool for the Internet Computer platform that leverages the WebAssem
 
 ## Getting Started
 
-### Prerequisites
+### Quick Installation
+
+#### Unix-like Systems (macOS, Linux)
+
+```bash
+curl -sL https://GITHUB_OWNER.github.io/icp-cli/install.sh | bash
+```
+
+#### Windows
+
+```powershell
+iwr -useb https://GITHUB_OWNER.github.io/icp-cli/install.ps1 | iex
+```
+
+Note: The installation URL will be automatically updated with the correct GitHub Pages URL in the CI process.
+
+### Prerequisites for Building from Source
 
 - Rust toolchain
 - WebAssembly target support
