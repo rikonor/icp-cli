@@ -1,0 +1,16 @@
+name: Homebrew Distribution
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+jobs:
+  homebrew:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish Homebrew Formula
+        run: |
+          echo "Publishing Homebrew version ${{ inputs.version }}"

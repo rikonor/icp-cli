@@ -1,0 +1,16 @@
+name: APT Distribution
+
+on:
+  workflow_call:
+    inputs:
+      version:
+        required: true
+        type: string
+
+jobs:
+  apt:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Publish APT Package
+        run: |
+          echo "Publishing APT version ${{ inputs.version }}"
