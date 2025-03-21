@@ -1,0 +1,122 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to release"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+env:
+  CLI_NAME: icp-cli
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - target: aarch64-apple-darwin
+            runs-on: macos-latest
+            variant: standard
+
+          - target: x86_64-apple-darwin
+            runs-on: macos-latest
+            variant: standard
+
+          - target: x86_64-unknown-linux-gnu
+            runs-on: ubuntu-latest
+            variant: standard
+
+          - target: x86_64-pc-windows-msvc
+            runs-on: windows-2025
+            variant: standard
+
+          - target: x86_64-apple-darwin
+            runs-on: macos-latest
+            variant: homebrew
+            build_args: "--features homebrew --config prefix=/usr/local/homebrew"
+
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mock Binary Build
+        run: |
+          echo "Building ${{ env.CLI_NAME }} for ${{ matrix.target }} (variant: ${{ matrix.variant }})"
+          echo "Build args: ${{ matrix.build_args || 'none' }}"
+
+          # Create placeholder binary
+          mkdir -p dist
+          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
+            touch "dist/${{ env.CLI_NAME }}-${{ matrix.target }}-${{ matrix.variant }}.exe"
+          else
+            touch "dist/${{ env.CLI_NAME }}-${{ matrix.target }}-${{ matrix.variant }}"
+          fi
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}-${{ matrix.variant }}
+          path: dist/
+
+  extensions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Mock Extension Builds
+        run: |
+          echo "Building WASM extensions"
+          mkdir -p dist/extensions
+          touch dist/extensions/multiply.component.wasm
+          touch dist/extensions/power.component.wasm
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extensions
+          path: dist/extensions/
+
+  create-release:
+    needs: [build, extensions]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+
+      - name: Prepare Release Assets
+        run: |
+          # Move artifacts to release directory
+          mkdir -p release-assets
+
+          # Standard binaries
+          for TARGET in aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu x86_64-pc-windows-msvc; do
+            if [[ "${TARGET}" == *"windows"* ]]; then
+              mv "${TARGET}-standard"/*exe "release-assets/${CLI_NAME}-${TARGET}.exe"
+            else
+              mv "${TARGET}-standard"/* "release-assets/${CLI_NAME}-${TARGET}"
+            fi
+          done
+
+          # Homebrew binary
+          mv "x86_64-apple-darwin-homebrew"/* "release-assets/${CLI_NAME}-x86_64-apple-darwin-homebrew"
+
+          # Extensions
+          mv extensions/* release-assets/
+
+          # Create mock checksums
+          cd release-assets
+          for file in *; do
+            echo "mock-sha256-${file}" > "${file}.sha256"
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: v${{ inputs.version }}
+          tag_name: v${{ inputs.version }}
+          files: release-assets/*
+          draft: true
