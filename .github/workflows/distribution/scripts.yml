@@ -1,0 +1,18 @@
+name: Deploy Installation Scripts
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to update"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+jobs:
+  deploy-scripts:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Deploying installation scripts for version ${{ github.event.inputs.version }}"

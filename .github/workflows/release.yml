@@ -149,21 +149,3 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - run: echo scripts
-
-  homebrew-inner:
-    needs: homebrew
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo homebrew
-
-  apt-inner:
-    needs: apt
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo apt
-
-  quick-install-inner:
-    needs: quick-install
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo quick-install
