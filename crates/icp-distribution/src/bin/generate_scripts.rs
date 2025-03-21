@@ -39,6 +39,28 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     std::fs::write(&nojekyll_path, "")?;
     println!("Created .nojekyll file: {:?}", nojekyll_path);
 
+    // Generate landing page
+    let mut landing_values = HashMap::new();
+    landing_values.insert(
+        "github_pages_url".to_string(),
+        format!("https://{}", domain),
+    );
+    landing_values.insert(
+        "github_repo_url".to_string(),
+        "https://github.com/rikonor/icp-cli".to_string(),
+    );
+
+    let landing_template_path = PathBuf::from(&manifest_dir).join("templates/index.html.tmpl");
+    let landing_output_path = output_dir.join("index.html");
+
+    println!("Generating landing page: {:?}", landing_output_path);
+    render_template(
+        "index.html",
+        &landing_template_path,
+        &landing_output_path,
+        landing_values,
+    )?;
+
     // Generate Unix script
     let mut unix_values = HashMap::new();
     unix_values.insert("version".to_string(), version.to_string());
@@ -105,13 +127,17 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     )?;
 
     // Validate generated files
-    for path in &[&unix_output_path, &windows_output_path] {
+    for path in &[
+        &unix_output_path,
+        &windows_output_path,
+        &landing_output_path,
+    ] {
         if !path.exists() {
-            return Err(format!("Failed to generate script: {:?}", path).into());
+            return Err(format!("Failed to generate file: {:?}", path).into());
         }
         println!("Validated file exists: {:?}", path);
     }
 
-    println!("Installation scripts successfully generated!");
+    println!("Installation scripts and landing page successfully generated!");
     Ok(())
 }
