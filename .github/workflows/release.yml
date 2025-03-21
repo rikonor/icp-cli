@@ -127,39 +127,23 @@ jobs:
           draft: true
 
   trigger-distribution:
-    needs: create-release # Ensure it runs after release creation
-    strategy:
-      matrix:
-        method: [homebrew, apt, quick-install]
-
+    needs: create-release
     runs-on: ubuntu-latest
-
-    steps:
-      - name: Echo Distribution Details
-        run: |
-          echo "Starting distribution process for ${{ matrix.method }}"
-          echo "Version: v${{ inputs.version }}"
 
   homebrew:
     needs: trigger-distribution
     runs-on: ubuntu-latest
     steps:
-      - name: Publish Homebrew Formula
-        run: |
-          echo "Publishing to Homebrew: v${{ inputs.version }}"
+      - run: echo homebrew
 
   apt:
     needs: trigger-distribution
     runs-on: ubuntu-latest
     steps:
-      - name: Publish APT Package
-        run: |
-          echo "Publishing to APT: v${{ inputs.version }}"
+      - run: echo apt
 
   quick-install:
     needs: trigger-distribution
     runs-on: ubuntu-latest
     steps:
-      - name: Deploy Quick Install Script
-        run: |
-          echo "Deploying Quick Install Script: v${{ inputs.version }}"
+      - run: echo scripts
