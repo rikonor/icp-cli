@@ -130,6 +130,12 @@ jobs:
     needs: create-release
     runs-on: ubuntu-latest
     steps:
+      - run: echo "Triggering distribution for version ${{ inputs.version }}"
+
+  distribution-quick-install:
+    needs: distribution
+    runs-on: ubuntu-latest
+    steps:
       - uses: ./.github/actions/distribution/quick-install.yml
         with:
           version: ${{ inputs.version }}
