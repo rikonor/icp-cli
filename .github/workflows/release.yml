@@ -54,9 +54,9 @@ jobs:
           # Create placeholder binary
           mkdir -p dist
           if [[ "${{ matrix.target }}" == *"windows"* ]]; then
-            touch "dist/${{ env.CLI_NAME }}-${{ matrix.target }}-${{ matrix.variant }}.exe"
+            echo 1 >> "dist/${{ env.CLI_NAME }}-${{ matrix.target }}-${{ matrix.variant }}.exe"
           else
-            touch "dist/${{ env.CLI_NAME }}-${{ matrix.target }}-${{ matrix.variant }}"
+            echo 1 >> "dist/${{ env.CLI_NAME }}-${{ matrix.target }}-${{ matrix.variant }}"
           fi
 
       - uses: actions/upload-artifact@v4
@@ -73,8 +73,8 @@ jobs:
         run: |
           echo "Building WASM extensions"
           mkdir -p dist/extensions
-          touch dist/extensions/multiply.component.wasm
-          touch dist/extensions/power.component.wasm
+          echo 1 >> dist/extensions/multiply.component.wasm
+          echo 1 >> dist/extensions/power.component.wasm
 
       - uses: actions/upload-artifact@v4
         with:
@@ -113,6 +113,10 @@ jobs:
           for file in *; do
             echo "mock-sha256-${file}" > "${file}.sha256"
           done
+
+      - name: Check for empty files
+        run: |
+          find release-assets -type f -size 0 -print
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
