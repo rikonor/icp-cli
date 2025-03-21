@@ -35,10 +35,10 @@ jobs:
             runs-on: windows-2025
             variant: standard
 
-          - target: x86_64-apple-darwin
-            runs-on: macos-latest
-            variant: homebrew
-            build_args: "--features homebrew --config prefix=/usr/local/homebrew"
+          # - target: x86_64-apple-darwin
+          #   runs-on: macos-latest
+          #   variant: homebrew
+          #   build_args: "--features homebrew --config prefix=/usr/local/homebrew"
 
     runs-on: ${{ matrix.runs-on }}
 
