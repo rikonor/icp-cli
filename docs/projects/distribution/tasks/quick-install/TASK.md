@@ -15,24 +15,32 @@ Create a curl-based installation method for icp that works across all supported 
 
 ## Status
 
-- Current Phase: Not Started
-- Progress: 0%
-- Last Updated: 2025-03-19
+- Current Phase: In Progress
+- Progress: 50%
+- Last Updated: 2025-03-20
 
 ## Implementation Details
 
 ### Script Development
 
-- Cross-platform shell script
-- Platform detection logic
-- Binary selection and verification
-- Error handling and feedback
+- ✅ Cross-platform shell script (install.sh)
+- ✅ PowerShell script for Windows (install.ps1)
+- ✅ Platform detection logic
+- ✅ Binary selection and verification
+- ✅ Error handling and feedback
 
 ### Infrastructure
 
-- Domain registration and setup
-- SSL certificate configuration
-- CDN setup if needed
+- Domain registration and setup (get.icp-cli.com)
+- GitHub Pages configuration for hosting
+- SSL certificate configuration (via GitHub Pages)
+
+### Distribution Crate Development
+
+- Create new `icp-distribution` crate
+- Implement template system for installation scripts
+- Convert existing scripts to templates
+- Setup build integration for script generation
 
 ## Dependencies
 

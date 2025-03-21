@@ -6,7 +6,7 @@ Make icp easily accessible to users across all platforms through multiple distri
 
 ## Status
 
-Not Started (0% Complete)
+In Progress (15% Complete)
 
 ## Tasks
 
@@ -16,10 +16,10 @@ Not Started (0% Complete)
   - Current progress: 0%
   - Located in: `tasks/documentation/`
 
-- [Not Started] Quick Install Task
+- [In Progress] Quick Install Task
 
   - Implement curl-based installation method
-  - Current progress: 0%
+  - Current progress: 50%
   - Located in: `tasks/quick-install/`
 
 - [Not Started] Package Manager Tasks
@@ -46,7 +46,7 @@ The Distribution project aims to make icp easily accessible to users through fam
 
 ## Current Focus
 
-Initial focus will be on the quick installation method and documentation, followed by package manager integration. This approach ensures users have immediate access while we build out platform-specific packages.
+Initial implementation of quick installation scripts is complete. The next phase involves creating a dedicated `icp-distribution` crate to manage installation scripts and prepare for integration with multiple package managers. This approach allows for consistent version management across all distribution channels.
 
 ## Next Steps
 
@@ -58,9 +58,11 @@ Initial focus will be on the quick installation method and documentation, follow
 
 2. Quick Install implementation:
 
-   - Shell script development
+   - ✅ Shell script development
+   - ✅ PowerShell script development
+   - Create `icp-distribution` crate
    - Domain setup
-   - Security measures
+   - Security measures implementation
 
 3. Package manager setup:
    - Start with Homebrew
