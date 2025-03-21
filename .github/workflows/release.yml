@@ -129,6 +129,8 @@ jobs:
   trigger-distribution:
     needs: create-release
     runs-on: ubuntu-latest
+    steps:
+      - run: echo "Triggering distribution"
 
   homebrew:
     needs: trigger-distribution
