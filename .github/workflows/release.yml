@@ -46,6 +46,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Mock Binary Build
+        shell: bash
         run: |
           echo "Building ${{ env.CLI_NAME }} for ${{ matrix.target }} (variant: ${{ matrix.variant }})"
           echo "Build args: ${{ matrix.build_args || 'none' }}"
