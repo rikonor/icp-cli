@@ -15,7 +15,7 @@ env:
   CLI_NAME: icp-cli
 
 jobs:
-  build:
+  build-cli:
     strategy:
       matrix:
         include:
@@ -45,86 +45,110 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Mock Binary Build
-        shell: bash
+      - name: Build CLI
         run: |
-          echo "Building ${{ env.CLI_NAME }} for ${{ matrix.target }} (variant: ${{ matrix.variant }})"
-          echo "Build args: ${{ matrix.build_args || 'none' }}"
-
-          # Create placeholder binary
-          mkdir -p dist
-          if [[ "${{ matrix.target }}" == *"windows"* ]]; then
-            echo 1 >> "dist/${{ env.CLI_NAME }}-${{ matrix.target }}-${{ matrix.variant }}.exe"
-          else
-            echo 1 >> "dist/${{ env.CLI_NAME }}-${{ matrix.target }}-${{ matrix.variant }}"
-          fi
+          rustup target add ${{ matrix.target }}
+          cargo build --package icp-cli --target ${{ matrix.target }} --release
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}-${{ matrix.variant }}
-          path: dist/
+          name: ${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/icp*
 
-  extensions:
+  build-extensions:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
-      - name: Mock Extension Builds
-        run: |
-          echo "Building WASM extensions"
-          mkdir -p dist/extensions
-          echo 1 >> dist/extensions/multiply.component.wasm
-          echo 1 >> dist/extensions/power.component.wasm
+      - name: Setup Rust target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Install wasm-tools
+        run: cargo install wasm-tools
+
+      - name: build multiply
+        run: make CARGO_RELEASE=1 EXTENSION_NAME=multiply
+
+      - name: build power
+        run: make CARGO_RELEASE=1 EXTENSION_NAME=power
 
       - uses: actions/upload-artifact@v4
         with:
           name: extensions
-          path: dist/extensions/
+          path: |
+            target/wasm32-unknown-unknown/release/multiply.component.wasm
+            target/wasm32-unknown-unknown/release/power.component.wasm
 
   create-release:
-    needs: [build, extensions]
+    needs: [build-cli, build-extensions]
+
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
 
-      - name: Prepare Release Assets
-        run: |
-          # Move artifacts to release directory
-          mkdir -p release-assets
+      # - name: Prepare Release Assets
+      #   run: |
+      #     # Move artifacts to release directory
+      #     mkdir -p release-assets
 
-          # Standard binaries
-          for TARGET in aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu x86_64-pc-windows-msvc; do
-            if [[ "${TARGET}" == *"windows"* ]]; then
-              mv "${TARGET}-standard"/*exe "release-assets/${CLI_NAME}-${TARGET}.exe"
-            else
-              mv "${TARGET}-standard"/* "release-assets/${CLI_NAME}-${TARGET}"
-            fi
-          done
+      #     # Standard binaries
+      #     for TARGET in aarch64-apple-darwin x86_64-apple-darwin x86_64-unknown-linux-gnu x86_64-pc-windows-msvc; do
+      #       if [[ "${TARGET}" == *"windows"* ]]; then
+      #         mv "${TARGET}-standard"/*exe "release-assets/${CLI_NAME}-${TARGET}.exe"
+      #       else
+      #         mv "${TARGET}-standard"/* "release-assets/${CLI_NAME}-${TARGET}"
+      #       fi
+      #     done
 
-          # Homebrew binary
-          mv "x86_64-apple-darwin-homebrew"/* "release-assets/${CLI_NAME}-x86_64-apple-darwin-homebrew"
+      #     # Homebrew binary
+      #     mv "x86_64-apple-darwin-homebrew"/* "release-assets/${CLI_NAME}-x86_64-apple-darwin-homebrew"
 
-          # Extensions
-          mv extensions/* release-assets/
+      #     # Extensions
+      #     mv extensions/* release-assets/
 
-          # Create mock checksums
-          cd release-assets
-          for file in *; do
-            echo "mock-sha256-${file}" > "${file}.sha256"
-          done
+      #     # Create mock checksums
+      #     cd release-assets
+      #     for file in *; do
+      #       echo "mock-sha256-${file}" > "${file}.sha256"
+      #     done
 
-      - name: Check for empty files
-        run: |
-          find release-assets -type f -size 0 -print
+      # - name: Generate Release Notes
+      #   run: |
+      #     NOTES=$(mktemp)
 
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          name: v${{ inputs.version }}
-          tag_name: v${{ inputs.version }}
-          files: release-assets/*
-          draft: true
+      #     CODE_BLOCK='```'
+
+      #     cat > ${NOTES} <<EOF
+      #     ## Checksums
+
+      #     ${CODE_BLOCK}
+      #     $(cat ${CHECKSUMS})
+      #     ${CODE_BLOCK}
+      #     EOF
+
+      #     echo "NOTES=${NOTES}" >> "${GITHUB_ENV}"
+
+      # - name: Check for empty files
+      #   run: |
+      #     find release-assets -type f -size 0 -print
+
+      # - name: Create Release
+      #   uses: softprops/action-gh-release@v1
+      #   with:
+      #     name: v${{ inputs.version }}
+      #     tag_name: v${{ inputs.version }}
+      #     files: release-assets/*
+      #     draft: true
+
+      # - uses: softprops/action-gh-release@c95fe1489396fe8a9eb87c0abf8aa5b2ef267fda
+      #   with:
+      #     name: v${{ env.RELEASE_TAG }}
+      #     tag_name: v${{ env.RELEASE_TAG }}
+      #     body_path: ${{ env.NOTES }}
+      #     files: ${{ env.ARTIFACTS }}
 
   distribution:
     needs: create-release
@@ -137,7 +161,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: ./.github/actions/distribution/quick-install
         with:
           version: ${{ inputs.version }}
@@ -147,7 +170,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: ./.github/actions/distribution/apt
         with:
           version: ${{ inputs.version }}
@@ -157,7 +179,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: ./.github/actions/distribution/homebrew
         with:
           version: ${{ inputs.version }}
