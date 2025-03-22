@@ -104,7 +104,7 @@
         <h3>Unix-like Systems (macOS, Linux)</h3>
         <p>To install ICP CLI on macOS or Linux run this command in your terminal:</p>
         <div class="install-command">
-            curl -sL {{github_pages_url}}/install.sh | bash
+            curl -sL {{github_pages_url}}/install.sh | sh
         </div>
         <p>This script will:</p>
         <ul>
@@ -145,7 +145,7 @@
         <div class="download-card">
             <h3>{{this.target}}</h3>
             <div class="variant">Variant: {{this.variant}}</div>
-            <a href="binaries/icp/{{this.name}}" class="button" download>Download Binary</a>
+            <a href="{{this.name}}" class="button" download>Download Binary</a>
             <div class="checksum">SHA256: {{this.checksum}}</div>
         </div>
         {{/each}}
