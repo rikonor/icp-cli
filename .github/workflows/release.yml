@@ -139,10 +139,27 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - id: get-binaries
+        run: |
+          STANDARD_BINARIES=$(gh release view "v${{ inputs.version }}" --json assets \
+            | jq -r '.assets[] | select(.name) | .name' \
+            | grep -E 'icp-.*standard')
+          echo "icp_binaries=$STANDARD_BINARIES" >> $GITHUB_OUTPUT
+
+      - id: get-extensions
+        run: |
+          EXTENSIONS=$(gh release view "v${{ inputs.version }}" --json assets \
+            | jq -r '.assets[] | select(.name) | .name' \
+            | grep .wasm)
+          echo "extension_binaries=$EXTENSIONS" >> $GITHUB_OUTPUT
+
       - uses: ./.github/actions/distribution/quick-install
         with:
           version: ${{ inputs.version }}
           token: ${{ github.token }}
+          icp_binaries: ${{ steps.get-binaries.outputs.icp_binaries }}
+          extension_binaries: ${{ steps.get-extensions.outputs.extension_binaries }}
 
   distribution-apt:
     needs: distribution
