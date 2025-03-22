@@ -16,13 +16,17 @@ runs:
         toolchain: stable
         override: true
 
-    - name: Prepare directory structure
-      shell: bash
+    - shell: bash
       run: |
         mkdir -p dist/binaries/icp
 
-    - name: Generate installation scripts
-      shell: bash
+    - shell: bash
+      run: |
+        gh release download "v${{ inputs.version }}" \
+          --dir dist/binaries/icp \
+          --pattern "*"
+
+    - shell: bash
       run: |
         cargo run --bin generate_scripts
         cp -r crates/icp-distribution/dist/* dist/
