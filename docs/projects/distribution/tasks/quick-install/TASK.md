@@ -16,8 +16,8 @@ Create a curl-based installation method for icp that works across all supported 
 ## Status
 
 - Current Phase: In Progress
-- Progress: 90%
-- Last Updated: 2025-03-20
+- Progress: 95%
+- Last Updated: 2025-03-22
 
 ## Implementation Details
 
