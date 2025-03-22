@@ -7,6 +7,7 @@ authors = ["ICP Team"]
 license = "MIT"
 
 [dependencies]
+clap = { workspace = true }
 handlebars = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }

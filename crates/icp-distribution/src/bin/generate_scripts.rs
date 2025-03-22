@@ -2,63 +2,127 @@
 //!
 //! A CLI tool to generate installation scripts from templates.
 
+use clap::Parser;
 use icp_distribution::render_template;
+use serde::Serialize;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 use std::process;
 
-fn main() {
-    if let Err(err) = run() {
-        eprintln!("Error: {}", err);
-        process::exit(1);
+#[derive(Parser)]
+#[command(author, version, about)]
+struct Args {
+    /// Path to the binaries directory
+    #[arg(long, default_value = "dist/binaries/icp")]
+    binary_path: PathBuf,
+
+    /// Output directory for generated files
+    #[arg(long, default_value = "dist")]
+    output_dir: PathBuf,
+
+    /// Domain for URLs (e.g., rikonor.github.io/icp-cli)
+    #[arg(long, env = "ICP_DISTRIBUTION_DOMAIN")]
+    domain: Option<String>,
+}
+
+#[derive(Serialize)]
+struct BinaryInfo {
+    name: String,
+    target: String,
+    variant: String,
+    checksum: String,
+}
+
+#[derive(Serialize)]
+struct TemplateData {
+    github_pages_url: String,
+    github_repo_url: String,
+    binaries: Vec<BinaryInfo>,
+}
+
+fn parse_binary_info(binary_path: &PathBuf) -> Result<Vec<BinaryInfo>, Box<dyn std::error::Error>> {
+    let mut binaries = Vec::new();
+
+    // Read checksums file
+    let checksums = fs::read_to_string(binary_path.join("checksums.txt"))?;
+    let checksums_map: HashMap<String, String> = checksums
+        .lines()
+        .filter_map(|line| {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 2 {
+                Some((parts[1].to_string(), parts[0].to_string()))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    // Process each binary file
+    for entry in fs::read_dir(binary_path)? {
+        let entry = entry?;
+        let filename = entry.file_name().to_string_lossy().to_string();
+        if filename == "checksums.txt" {
+            continue;
+        }
+
+        // Parse filename like: icp-x86_64-apple-darwin-standard
+        let parts: Vec<&str> = filename.split('-').collect();
+        if parts.len() >= 4 {
+            binaries.push(BinaryInfo {
+                name: filename.clone(),
+                target: parts[1..parts.len() - 1].join("-"),
+                variant: parts.last().unwrap().to_string(),
+                checksum: checksums_map.get(&filename).cloned().unwrap_or_default(),
+            });
+        }
     }
+
+    Ok(binaries)
 }
 
 fn run() -> Result<(), Box<dyn std::error::Error>> {
-    // Get the crate root directory
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
-        .expect("Failed to get CARGO_MANIFEST_DIR environment variable");
-
-    // Define paths relative to the crate root
-    let output_dir = PathBuf::from(&manifest_dir).join("dist");
-    let template_dir = PathBuf::from(&manifest_dir).join("templates/curl-install");
+    let args = Args::parse();
 
     // Create output directory if it doesn't exist
-    fs::create_dir_all(&output_dir)?;
+    fs::create_dir_all(&args.output_dir)?;
 
     // Setup template values
     let version = env!("CARGO_PKG_VERSION", "0.1.0");
 
-    // Get domain from environment or use default GitHub Pages URL
-    let domain = std::env::var("ICP_DISTRIBUTION_DOMAIN")
-        .unwrap_or_else(|_| "rikonor.github.io/icp-cli".to_string());
+    // Get domain from args or use default GitHub Pages URL
+    let domain = args
+        .domain
+        .unwrap_or_else(|| "rikonor.github.io/icp-cli".to_string());
 
     // Create .nojekyll file to prevent Jekyll processing
-    let nojekyll_path = output_dir.join(".nojekyll");
+    let nojekyll_path = args.output_dir.join(".nojekyll");
     std::fs::write(&nojekyll_path, "")?;
     println!("Created .nojekyll file: {:?}", nojekyll_path);
 
+    // Parse binary information
+    let binaries = parse_binary_info(&args.binary_path)?;
+
     // Generate landing page
-    let mut landing_values = HashMap::new();
-    landing_values.insert(
-        "github_pages_url".to_string(),
-        format!("https://{}", domain),
-    );
-    landing_values.insert(
-        "github_repo_url".to_string(),
-        "https://github.com/rikonor/icp-cli".to_string(),
-    );
+    let template_data = TemplateData {
+        github_pages_url: format!("https://{}", domain),
+        github_repo_url: "https://github.com/rikonor/icp-cli".to_string(),
+        binaries,
+    };
+
+    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+        .expect("Failed to get CARGO_MANIFEST_DIR environment variable");
+    let template_dir = PathBuf::from(&manifest_dir).join("templates/curl-install");
 
     let landing_template_path = PathBuf::from(&manifest_dir).join("templates/index.html.tmpl");
-    let landing_output_path = output_dir.join("index.html");
+    let landing_output_path = args.output_dir.join("index.html");
 
     println!("Generating landing page: {:?}", landing_output_path);
     render_template(
         "index.html",
         &landing_template_path,
         &landing_output_path,
-        landing_values,
+        &template_data,
     )?;
 
     // Generate Unix script
@@ -73,7 +137,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     unix_values.insert("checksum_url_base".to_string(), base_url.clone());
 
     let unix_template_path = template_dir.join("install.sh.tmpl");
-    let unix_output_path = output_dir.join("install.sh");
+    let unix_output_path = args.output_dir.join("install.sh");
 
     println!(
         "Generating Unix installation script: {:?}",
@@ -83,7 +147,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         "install.sh",
         &unix_template_path,
         &unix_output_path,
-        unix_values,
+        &unix_values,
     )?;
 
     // Make the Unix script executable
@@ -113,7 +177,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let windows_template_path = template_dir.join("install.ps1.tmpl");
-    let windows_output_path = output_dir.join("install.ps1");
+    let windows_output_path = args.output_dir.join("install.ps1");
 
     println!(
         "Generating Windows installation script: {:?}",
@@ -123,7 +187,7 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
         "install.ps1",
         &windows_template_path,
         &windows_output_path,
-        windows_values,
+        &windows_values,
     )?;
 
     // Validate generated files
@@ -140,4 +204,11 @@ fn run() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("Installation scripts and landing page successfully generated!");
     Ok(())
+}
+
+fn main() {
+    if let Err(err) = run() {
+        eprintln!("Error: {}", err);
+        process::exit(1);
+    }
 }

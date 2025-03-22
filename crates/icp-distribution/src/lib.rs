@@ -4,8 +4,8 @@
 //! for the ICP CLI, including installation scripts and package
 //! manager configurations.
 
-use handlebars::Handlebars;
-use std::collections::HashMap;
+use handlebars::{no_escape, Handlebars};
+use serde::Serialize;
 use std::fs;
 use std::path::Path;
 
@@ -21,17 +21,19 @@ use std::path::Path;
 /// # Returns
 ///
 /// * `Result` - Ok(()) on success, or an error
-pub fn render_template(
+pub fn render_template<T: Serialize>(
     template_name: &str,
     template_path: &Path,
     output_path: &Path,
-    values: HashMap<String, String>,
+    values: &T,
 ) -> Result<(), Box<dyn std::error::Error>> {
     // Read the template content
     let template_content = fs::read_to_string(template_path)?;
 
-    // Initialize Handlebars and register the template
+    // Initialize Handlebars and register helpers
     let mut handlebars = Handlebars::new();
+    handlebars.set_strict_mode(true);
+    handlebars.register_escape_fn(no_escape);
     handlebars.register_template_string(template_name, template_content)?;
 
     // Render the template with provided values
@@ -51,6 +53,7 @@ pub fn render_template(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::collections::HashMap;
     use tempfile::TempDir;
 
     fn create_file(dir: &TempDir, name: &str, content: &str) -> std::path::PathBuf {
@@ -73,12 +76,12 @@ mod tests {
         let output_path = temp_dir.path().join("output.txt");
 
         // Setup template values
-        let mut values = HashMap::new();
+        let mut values: HashMap<String, String> = HashMap::new();
         values.insert("name".to_string(), "World".to_string());
         values.insert("project".to_string(), "ICP".to_string());
 
         // Render the template
-        let result = render_template("test_template", &template_path, &output_path, values);
+        let result = render_template("test_template", &template_path, &output_path, &values);
         assert!(
             result.is_ok(),
             "Template rendering failed: {:?}",
@@ -101,10 +104,10 @@ mod tests {
             .join("deep")
             .join("output.txt");
 
-        let mut values = HashMap::new();
+        let mut values: HashMap<String, String> = HashMap::new();
         values.insert("content".to_string(), "Nested File".to_string());
 
-        let result = render_template("nested_template", &template_path, &output_path, values);
+        let result = render_template("nested_template", &template_path, &output_path, &values);
         assert!(
             result.is_ok(),
             "Failed to create nested output: {:?}",
@@ -128,7 +131,7 @@ mod tests {
             "invalid_template",
             &invalid_template_path,
             &output_path,
-            values,
+            &values,
         );
         assert!(
             result.is_err(),
@@ -141,7 +144,7 @@ mod tests {
             "missing_template",
             &non_existent_path,
             &output_path,
-            HashMap::new(),
+            &HashMap::<String, String>::new(),
         );
         assert!(result.is_err(), "Expected error for missing template file");
     }

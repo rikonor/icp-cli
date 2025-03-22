@@ -13,6 +13,38 @@
             margin: 0 auto;
             padding: 20px;
         }
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .download-card {
+            border: 1px solid #eee;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .download-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .download-card .variant {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 1rem;
+        }
+        .checksum {
+            font-family: monospace;
+            font-size: 0.8em;
+            word-break: break-all;
+            color: #666;
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
         h1, h2, h3 {
             color: #2c3e50;
         }
@@ -106,14 +138,18 @@
     </div>
 
     <h2>Manual Installation</h2>
-    <p>If you prefer to manually install ICP CLI you can download the binaries directly:</p>
-    <ul>
-        <li><a href="binaries/icp/macos-x86_64">macOS (Intel)</a></li>
-        <li><a href="binaries/icp/macos-arm64">macOS (Apple Silicon)</a></li>
-        <li><a href="binaries/icp/linux-x86_64">Linux (x86_64)</a></li>
-        <li><a href="binaries/icp/linux-aarch64">Linux (ARM64)</a></li>
-        <li><a href="binaries/icp/windows-amd64.exe">Windows (x86_64)</a></li>
-    </ul>
+    <p>If you prefer to manually install ICP CLI, you can download the binaries directly:</p>
+
+    <div class="download-grid">
+        {{#each binaries}}
+        <div class="download-card">
+            <h3>{{this.target}}</h3>
+            <div class="variant">Variant: {{this.variant}}</div>
+            <a href="binaries/icp/{{this.name}}" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: {{this.checksum}}</div>
+        </div>
+        {{/each}}
+    </div>
 
     <footer>
         <p>ICP CLI is an open source project. <a href="{{github_repo_url}}">View on GitHub</a></p>

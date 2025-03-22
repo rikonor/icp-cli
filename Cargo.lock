@@ -953,6 +953,7 @@ dependencies = [
 name = "icp-distribution"
 version = "0.1.0"
 dependencies = [
+ "clap",
  "handlebars",
  "serde",
  "serde_json",
