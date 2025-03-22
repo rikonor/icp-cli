@@ -5,6 +5,9 @@ inputs:
   version:
     description: Version number to distribute
     required: true
+  token:
+    description: GitHub token for authentication
+    required: true
 
 runs:
   using: composite
@@ -21,6 +24,8 @@ runs:
         mkdir -p dist/binaries/icp
 
     - shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.token }}
       run: |
         gh release download "v${{ inputs.version }}" \
           --dir dist/binaries/icp \
@@ -28,8 +33,20 @@ runs:
 
     - shell: bash
       run: |
-        cargo run --bin generate_scripts
-        cp -r crates/icp-distribution/dist/* dist/
+        cargo run --bin generate_scripts -- \
+          --binary-path dist/binaries/icp \
+          --output-dir dist \
+          --domain "${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}"
+
+    - shell: bash
+      run: |
+        required_files=("install.sh" "install.ps1" "index.html" ".nojekyll")
+        for file in "${required_files[@]}"; do
+          if [ ! -f "dist/$file" ]; then
+            echo "Error: Required file $file not found"
+            exit 1
+          fi
+        done
 
     - uses: JamesIves/github-pages-deploy-action@v4
       with:

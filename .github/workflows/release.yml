@@ -117,6 +117,11 @@ jobs:
 
           mv extensions/* release-assets/
 
+      - name: Generate checksums
+        run: |
+          cd release-assets
+          sha256sum * > checksums.txt
+
       - uses: softprops/action-gh-release@v1
         with:
           name: v${{ inputs.version }}
@@ -137,6 +142,7 @@ jobs:
       - uses: ./.github/actions/distribution/quick-install
         with:
           version: ${{ inputs.version }}
+          token: ${{ github.token }}
 
   distribution-apt:
     needs: distribution
