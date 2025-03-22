@@ -26,6 +26,10 @@ struct Args {
     /// Domain for URLs (e.g., rikonor.github.io/icp-cli)
     #[arg(long, env = "ICP_DISTRIBUTION_DOMAIN")]
     domain: Option<String>,
+
+    /// GitHub repository URL (e.g., https://github.com/rikonor/icp-cli)
+    #[arg(long, default_value = "https://github.com/rikonor/icp-cli")]
+    repo_url: String,
 }
 
 #[derive(Serialize)]
@@ -61,14 +65,16 @@ fn run() -> Result<()> {
     println!("Found {} valid binaries", binaries.len());
 
     // Setup URL builder
-    let url_builder = UrlBuilder::new(&domain);
+    let url_builder = UrlBuilder::new(&domain, &args.repo_url);
     let binary_url_base = url_builder.binary_url()?;
     let checksum_url_base = url_builder.checksum_url()?;
 
+    // Ensure binary_url_base and checksum_url_base are used for scripts
+
     // Generate landing page
     let template_data = TemplateData {
-        github_pages_url: binary_url_base.clone(),
-        github_repo_url: "https://github.com/rikonor/icp-cli".to_string(),
+        github_pages_url: url_builder.pages_url()?,
+        github_repo_url: url_builder.repo_url()?,
         binaries,
     };
 
