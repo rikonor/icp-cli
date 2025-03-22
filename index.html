@@ -13,6 +13,38 @@
             margin: 0 auto;
             padding: 20px;
         }
+        .download-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 2rem 0;
+        }
+        .download-card {
+            border: 1px solid #eee;
+            padding: 1.5rem;
+            border-radius: 8px;
+            background: #fff;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .download-card h3 {
+            margin-top: 0;
+            color: #2c3e50;
+        }
+        .download-card .variant {
+            color: #666;
+            font-size: 0.9em;
+            margin-bottom: 1rem;
+        }
+        .checksum {
+            font-family: monospace;
+            font-size: 0.8em;
+            word-break: break-all;
+            color: #666;
+            background: #f8f9fa;
+            padding: 0.5rem;
+            border-radius: 4px;
+            margin-top: 1rem;
+        }
         h1, h2, h3 {
             color: #2c3e50;
         }
@@ -72,7 +104,7 @@
         <h3>Unix-like Systems (macOS, Linux)</h3>
         <p>To install ICP CLI on macOS or Linux run this command in your terminal:</p>
         <div class="install-command">
-            curl -sL https://rikonor.github.io/icp-cli/install.sh | bash
+            curl -sL https://rikonor.github.io/icp-cli/binaries/icp/install.sh | bash
         </div>
         <p>This script will:</p>
         <ul>
@@ -88,7 +120,7 @@
         <h3>Windows</h3>
         <p>To install ICP CLI on Windows run this command in PowerShell (as Administrator):</p>
         <div class="install-command">
-            iwr -useb https://rikonor.github.io/icp-cli/install.ps1 | iex
+            iwr -useb https://rikonor.github.io/icp-cli/binaries/icp/install.ps1 | iex
         </div>
         <p>This script will:</p>
         <ul>
@@ -106,14 +138,46 @@
     </div>
 
     <h2>Manual Installation</h2>
-    <p>If you prefer to manually install ICP CLI you can download the binaries directly:</p>
-    <ul>
-        <li><a href="binaries/icp/macos-x86_64">macOS (Intel)</a></li>
-        <li><a href="binaries/icp/macos-arm64">macOS (Apple Silicon)</a></li>
-        <li><a href="binaries/icp/linux-x86_64">Linux (x86_64)</a></li>
-        <li><a href="binaries/icp/linux-aarch64">Linux (ARM64)</a></li>
-        <li><a href="binaries/icp/windows-amd64.exe">Windows (x86_64)</a></li>
-    </ul>
+    <p>If you prefer to manually install ICP CLI, you can download the binaries directly:</p>
+
+    <div class="download-grid">
+        <div class="download-card">
+            <h3>x86_64-apple-darwin</h3>
+            <div class="variant">Variant: standard</div>
+            <a href="binaries/icp/icp-x86_64-apple-darwin-standard" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: 2714dcd5606aa3a46b8a2e2ae679c5e02d14f3f4c829809d69c3165bec777247</div>
+        </div>
+        <div class="download-card">
+            <h3>x86_64-pc-windows-msvc</h3>
+            <div class="variant">Variant: standard.exe</div>
+            <a href="binaries/icp/icp-x86_64-pc-windows-msvc-standard.exe" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: c4601958d933af764fa164acc41533856042762797e5e7858404f6380af38433</div>
+        </div>
+        <div class="download-card">
+            <h3>aarch64-apple-darwin</h3>
+            <div class="variant">Variant: standard</div>
+            <a href="binaries/icp/icp-aarch64-apple-darwin-standard" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: 5af8fe64a84ded245f2925b5b83cfee07a47d65a47387f4c532ad6a2d3789ce0</div>
+        </div>
+        <div class="download-card">
+            <h3>x86_64-unknown-linux-gnu</h3>
+            <div class="variant">Variant: standard</div>
+            <a href="binaries/icp/icp-x86_64-unknown-linux-gnu-standard" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: d050be7d260bc2938267f44720f253cf114d7afd082951f5ea3cbeba80ed880a</div>
+        </div>
+        <div class="download-card">
+            <h3>aarch64-apple-darwin</h3>
+            <div class="variant">Variant: homebrew</div>
+            <a href="binaries/icp/icp-aarch64-apple-darwin-homebrew" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: 5af8fe64a84ded245f2925b5b83cfee07a47d65a47387f4c532ad6a2d3789ce0</div>
+        </div>
+        <div class="download-card">
+            <h3>x86_64-apple-darwin</h3>
+            <div class="variant">Variant: homebrew</div>
+            <a href="binaries/icp/icp-x86_64-apple-darwin-homebrew" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: 2714dcd5606aa3a46b8a2e2ae679c5e02d14f3f4c829809d69c3165bec777247</div>
+        </div>
+    </div>
 
     <footer>
         <p>ICP CLI is an open source project. <a href="https://github.com/rikonor/icp-cli">View on GitHub</a></p>
