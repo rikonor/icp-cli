@@ -31,8 +31,13 @@ test-quick-install:
 	@echo "test content" > dist/binaries/extensions/power.component.wasm
 	@echo "test content" | sha256sum | cut -d' ' -f1 > dist/checksums.txt
 	@echo "$$(cat dist/checksums.txt) icp-x86_64-apple-darwin-standard" > dist/checksums.txt
-	@echo "$$(cat dist/checksums.txt | head -n1) multiply.component.wasm" >> dist/checksums.txt
-	@echo "$$(cat dist/checksums.txt | head -n1) power.component.wasm" >> dist/checksums.txt
+	@echo "test content" | sha256sum | cut -d' ' -f1 | tr -d '\n' > dist/checksums.tmp
+	@echo " multiply.component.wasm" >> dist/checksums.tmp
+	@cat dist/checksums.tmp >> dist/checksums.txt
+	@echo "test content" | sha256sum | cut -d' ' -f1 | tr -d '\n' > dist/checksums.tmp
+	@echo " power.component.wasm" >> dist/checksums.tmp
+	@cat dist/checksums.tmp >> dist/checksums.txt
+	@rm dist/checksums.tmp
 	@cargo run --bin generate_scripts -- \
 		--binary-path dist/binaries/icp \
 		--extensions-path dist/binaries/extensions \

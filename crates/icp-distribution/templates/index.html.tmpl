@@ -15,12 +15,13 @@
         }
         .download-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 1rem;
-            margin: 2rem 0;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            max-width: 800px;
+            margin: 2rem auto;
         }
         .download-card {
-            border: 1px solid #eee;
+            border: 1px solid #e0e0e0;
             padding: 1.5rem;
             border-radius: 8px;
             background: #fff;
@@ -36,43 +37,57 @@
             margin-bottom: 1rem;
         }
         .command-box {
-            background: #f5f5f5;
-            border-radius: 4px;
-            padding: 12px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin: 8px 0;
+            position: relative;
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 12px 0;
         }
         .command-box pre {
             margin: 0;
-            font-family: monospace;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 14px;
+            line-height: 1.4;
+            white-space: pre-wrap;
+            padding-right: 40px;
         }
         .copy-button {
-            background: #007bff;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            width: 32px;
+            height: 32px;
+            background: #4a5568;
             color: white;
             border: none;
-            padding: 6px 12px;
             border-radius: 4px;
             cursor: pointer;
-            margin-left: 12px;
-            white-space: nowrap;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
         }
         .copy-button:hover {
-            background: #0056b3;
+            background: #2d3748;
         }
         .copy-button.copied {
-            background: #28a745;
+            background: #48bb78;
+        }
+        .copy-button svg {
+            width: 16px;
+            height: 16px;
+            fill: currentColor;
         }
         .checksum {
-            font-family: monospace;
-            font-size: 0.8em;
+            font-family: 'Monaco', 'Consolas', monospace;
+            font-size: 12px;
             word-break: break-all;
-            color: #666;
-            background: #f8f9fa;
-            padding: 0.5rem;
-            border-radius: 4px;
-            margin-top: 1rem;
+            color: #718096;
+            background: #f7fafc;
+            padding: 8px;
+            border-radius: 6px;
+            margin-top: 12px;
         }
         h1, h2, h3 {
             color: #2c3e50;
@@ -191,9 +206,13 @@
         <div class="download-card">
             <h3>{{this.name}}</h3>
             <div class="command-box">
-                <pre><code>icp extension add --name {{this.name}} {{../github_pages_url}}/binaries/extensions/{{this.file}}</code></pre>
+                <pre><code>icp extension add \
+  --name {{this.name}} \
+  {{../github_pages_url}}/binaries/extensions/{{this.file}}</code></pre>
                 <button class="copy-button" onclick="copyCommand(this)" data-command="icp extension add --name {{this.name}} {{../github_pages_url}}/binaries/extensions/{{this.file}}">
-                    <span class="copy-text">Copy</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
                 </button>
             </div>
             <div class="checksum">SHA256: {{this.checksum}}</div>
@@ -205,13 +224,10 @@
         function copyCommand(button) {
             const command = button.dataset.command;
             navigator.clipboard.writeText(command).then(() => {
-                const span = button.querySelector('.copy-text');
-                span.textContent = 'Copied!';
-                button.classList.add('copied');
-                setTimeout(() => {
-                    span.textContent = 'Copy';
-                    button.classList.remove('copied');
-                }, 2000);
+            button.classList.add('copied');
+            setTimeout(() => {
+                button.classList.remove('copied');
+            }, 2000);
             });
         }
     </script>

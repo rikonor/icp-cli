@@ -16,7 +16,7 @@ Create a curl-based installation method for icp that works across all supported 
 ## Status
 
 - Current Phase: In Progress
-- Progress: 95%
+- Progress: 97%
 - Last Updated: 2025-03-22
 
 ## Implementation Details
@@ -99,10 +99,13 @@ Create a curl-based installation method for icp that works across all supported 
 ### Phase 2 (In Progress)
 
 - Enhanced extension management
-  - Display installation commands with copy functionality
-  - Improve checksum handling and verification
-  - Refactor checksums file location
+  - ✅ Display installation commands with copy functionality
+  - ✅ Improve checksum handling and verification
+  - ✅ Refactor checksums file location
   - Add visual indicators for security features
+    - Success/failure icons
+    - Color coding for verification state
+    - Tooltips for verification details
 
 ### Future Phases
 

@@ -57,7 +57,7 @@ runs:
       run: |
         for ext in ${{ inputs.extension_binaries }}; do
           gh release download "v${{ inputs.version }}" \
-            --dir dist/binaries/icp \
+            --dir dist/binaries/extensions \
             --pattern "$ext"
         done
 

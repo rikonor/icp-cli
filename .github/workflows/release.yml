@@ -28,9 +28,9 @@ jobs:
             variant: standard
             runs-on: macos-latest
 
-          # - target: x86_64-pc-windows-msvc
-          #   variant: standard
-          #   runs-on: windows-2025
+          - target: x86_64-pc-windows-msvc
+            variant: standard
+            runs-on: windows-2025
 
           - target: aarch64-apple-darwin
             variant: homebrew
