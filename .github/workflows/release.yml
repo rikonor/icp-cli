@@ -56,6 +56,7 @@ jobs:
           cargo build --package icp-cli --target ${{ matrix.target }} --release
 
       - name: Rename to add variant
+        shell: bash
         run: |
           BIN="target/${{ matrix.target }}/release/icp"
           NAME="${BIN%.*}"
