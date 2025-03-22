@@ -112,7 +112,7 @@ jobs:
           mkdir -p release-assets
 
           for d in icp-cli-*; do
-            mv $d/* release-assets/
+            mv $d/icp-* release-assets/
           done
 
           mv extensions/* release-assets/
