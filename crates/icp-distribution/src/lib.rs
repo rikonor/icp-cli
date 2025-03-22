@@ -7,7 +7,7 @@ mod binary;
 mod error;
 mod url;
 
-pub use binary::{BinaryInfo, BinaryProcessor};
+pub use binary::{BinaryInfo, BinaryProcessor, ExtensionInfo};
 pub use error::{DistributionError, Result};
 pub use url::UrlBuilder;
 

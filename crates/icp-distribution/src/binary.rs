@@ -2,6 +2,7 @@ use crate::error::{DistributionError, Result};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::PathBuf;
@@ -14,8 +15,16 @@ pub struct BinaryInfo {
     pub checksum: String,
 }
 
+#[derive(Debug, Serialize, Clone)]
+pub struct ExtensionInfo {
+    pub name: String,
+    pub file: String,
+    pub checksum: String,
+}
+
 pub struct BinaryProcessor {
     path: PathBuf,
+    extensions_path: Option<PathBuf>,
     checksums: HashMap<String, String>,
 }
 
@@ -43,7 +52,20 @@ impl BinaryProcessor {
             })
             .collect();
 
-        Ok(Self { path, checksums })
+        Ok(Self {
+            path,
+            extensions_path: None,
+            checksums,
+        })
+    }
+
+    /// Sets the path for WebAssembly component extensions
+    pub fn with_extensions_path(mut self, extensions_path: PathBuf) -> Result<Self> {
+        if !extensions_path.exists() {
+            fs::create_dir_all(&extensions_path)?;
+        }
+        self.extensions_path = Some(extensions_path);
+        Ok(self)
     }
 
     /// Validates a binary file's format and checksum
@@ -81,6 +103,11 @@ impl BinaryProcessor {
 
     /// Parses and validates all binary files in the directory
     pub fn parse_binary_info(&self) -> Result<Vec<BinaryInfo>> {
+        self.parse_binaries()
+    }
+
+    /// Parse just the binaries, excluding extensions
+    fn parse_binaries(&self) -> Result<Vec<BinaryInfo>> {
         let mut binaries = Vec::new();
 
         for entry in fs::read_dir(&self.path)? {
@@ -110,6 +137,42 @@ impl BinaryProcessor {
         }
 
         Ok(binaries)
+    }
+
+    /// Parse WebAssembly component extensions
+    pub fn parse_extensions(&self) -> Result<Vec<ExtensionInfo>> {
+        let Some(extensions_dir) = &self.extensions_path else {
+            return Ok(Vec::new());
+        };
+
+        let mut extensions = Vec::new();
+        for entry in fs::read_dir(extensions_dir)? {
+            let entry = entry?;
+            let path = entry.path();
+
+            // Only process .wasm files
+            if path.extension() == Some(OsStr::new("wasm")) {
+                let filename = path.file_name().unwrap().to_string_lossy().to_string();
+
+                // Extract name by removing .component.wasm or .wasm extension
+                let name = filename
+                    .strip_suffix(".component.wasm")
+                    .or_else(|| filename.strip_suffix(".wasm"))
+                    .unwrap_or(&filename)
+                    .to_string();
+
+                // Get checksum if available
+                let checksum = self.checksums.get(&filename).cloned().unwrap_or_default();
+
+                extensions.push(ExtensionInfo {
+                    name,
+                    file: filename,
+                    checksum,
+                });
+            }
+        }
+
+        Ok(extensions)
     }
 }
 

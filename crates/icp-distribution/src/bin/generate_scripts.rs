@@ -4,7 +4,8 @@
 
 use clap::Parser;
 use icp_distribution::{
-    render_template, BinaryInfo, BinaryProcessor, DistributionError, Result, UrlBuilder,
+    render_template, BinaryInfo, BinaryProcessor, DistributionError, ExtensionInfo, Result,
+    UrlBuilder,
 };
 use serde::Serialize;
 use std::collections::HashMap;
@@ -18,6 +19,10 @@ struct Args {
     /// Path to the binaries directory
     #[arg(long, default_value = "dist/binaries/icp")]
     binary_path: PathBuf,
+
+    /// Path to the extensions directory
+    #[arg(long, default_value = "dist/binaries/extensions")]
+    extensions_path: PathBuf,
 
     /// Output directory for generated files
     #[arg(long, default_value = "dist")]
@@ -37,6 +42,7 @@ struct TemplateData {
     github_pages_url: String,
     github_repo_url: String,
     binaries: Vec<BinaryInfo>,
+    extensions: Vec<ExtensionInfo>,
 }
 
 fn run() -> Result<()> {
@@ -58,9 +64,10 @@ fn run() -> Result<()> {
     std::fs::write(&nojekyll_path, "")?;
     println!("Created .nojekyll file: {:?}", nojekyll_path);
 
-    // Process binaries
+    // Process binaries and extensions
     println!("Validating binaries in: {:?}", args.binary_path);
-    let processor = BinaryProcessor::new(args.binary_path)?;
+    let processor =
+        BinaryProcessor::new(args.binary_path)?.with_extensions_path(args.extensions_path)?;
     let binaries = processor.parse_binary_info()?;
     println!("Found {} valid binaries", binaries.len());
 
@@ -72,10 +79,15 @@ fn run() -> Result<()> {
     // Ensure binary_url_base and checksum_url_base are used for scripts
 
     // Generate landing page
+    // Get extensions
+    let extensions = processor.parse_extensions()?;
+    println!("Found {} extensions", extensions.len());
+
     let template_data = TemplateData {
         github_pages_url: url_builder.pages_url()?,
         github_repo_url: url_builder.repo_url()?,
         binaries,
+        extensions,
     };
 
     let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")

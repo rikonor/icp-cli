@@ -151,6 +151,27 @@
         {{/each}}
     </div>
 
+    <h2>Extensions</h2>
+    <p>
+        ICP CLI supports WebAssembly component model extensions. These extensions add additional functionality to the CLI.
+        To install an extension:
+    </p>
+    <ol>
+        <li>Download the extension file</li>
+        <li>Place it in your extensions directory (usually <code>~/.icp/extensions/</code>)</li>
+        <li>The extension will be automatically loaded when you run ICP CLI commands</li>
+    </ol>
+
+    <div class="download-grid">
+        {{#each extensions}}
+        <div class="download-card">
+            <h3>{{this.name}}</h3>
+            <a href="binaries/extensions/{{this.file}}" class="button" download>Download Extension</a>
+            <div class="checksum">SHA256: {{this.checksum}}</div>
+        </div>
+        {{/each}}
+    </div>
+
     <footer>
         <p>ICP CLI is an open source project. <a href="{{github_repo_url}}">View on GitHub</a></p>
     </footer>

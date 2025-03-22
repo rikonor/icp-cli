@@ -86,22 +86,23 @@ Create a curl-based installation method for icp that works across all supported 
 - User-friendly experience
 - Extensions are discoverable and easy to install
 
-## Extension Support - Phase 1
+## Extension Support
 
-### Goals
+### Phase 1 (✅ Completed)
 
 - Basic extension listing on landing page
-  - Display extension names from filenames
-  - Provide download links and checksums
-  - Simple installation instructions
-- Foundation for future metadata support
+  - ✅ Display extension names from filenames
+  - ✅ Provide download links
+  - ✅ Simple installation instructions
+  - ✅ Foundation for future metadata support
 
-### Implementation Plan
+### Phase 2 (In Progress)
 
-- Workflow enhancements for extension data collection
-- Landing page extension section with download cards
-- Basic extension info structure in distribution crate
-- Extension checksum verification
+- Enhanced extension management
+  - Display installation commands with copy functionality
+  - Improve checksum handling and verification
+  - Refactor checksums file location
+  - Add visual indicators for security features
 
 ### Future Phases
 
