@@ -19,6 +19,10 @@ jobs:
     strategy:
       matrix:
         include:
+          - target: x86_64-unknown-linux-gnu
+            runs-on: ubuntu-latest
+            variant: standard
+
           - target: aarch64-apple-darwin
             runs-on: macos-latest
             variant: standard
@@ -27,18 +31,19 @@ jobs:
             runs-on: macos-latest
             variant: standard
 
-          - target: x86_64-unknown-linux-gnu
-            runs-on: ubuntu-latest
-            variant: standard
-
           - target: x86_64-pc-windows-msvc
             runs-on: windows-2025
             variant: standard
 
-          # - target: x86_64-apple-darwin
-          #   runs-on: macos-latest
-          #   variant: homebrew
-          #   build_args: "--features homebrew --config prefix=/usr/local/homebrew"
+          - target: aarch64-apple-darwin
+            runs-on: macos-latest
+            variant: homebrew
+            build_args: "--features homebrew --config prefix=/usr/local/homebrew"
+
+          - target: x86_64-apple-darwin
+            runs-on: macos-latest
+            variant: homebrew
+            build_args: "--features homebrew --config prefix=/usr/local/homebrew"
 
     runs-on: ${{ matrix.runs-on }}
 
@@ -50,9 +55,21 @@ jobs:
           rustup target add ${{ matrix.target }}
           cargo build --package icp-cli --target ${{ matrix.target }} --release
 
+      - name: Rename to add variant
+        run: |
+          BIN="target/${{ matrix.target }}/release/icp"
+          NAME="${BIN%.*}"
+          EXT="${BIN##*.}"
+
+          if [ ! -z "${EXT}" ]; then
+            EXT=".${EXT}"
+          fi
+
+          mv ${BIN} ${NAME}-${{ matrix.variant }}${EXT}
+
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.target }}
+          name: ${{ matrix.target }}-${{ matrix.variant }}
           path: target/${{ matrix.target }}/release/icp*
 
   build-extensions:
