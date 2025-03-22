@@ -20,30 +20,30 @@ jobs:
       matrix:
         include:
           - target: x86_64-unknown-linux-gnu
-            runs-on: ubuntu-latest
             variant: standard
+            runs-on: ubuntu-latest
 
           - target: aarch64-apple-darwin
-            runs-on: macos-latest
             variant: standard
+            runs-on: macos-latest
 
           - target: x86_64-apple-darwin
-            runs-on: macos-latest
             variant: standard
+            runs-on: macos-latest
 
           - target: x86_64-pc-windows-msvc
-            runs-on: windows-2025
             variant: standard
+            runs-on: windows-2025
 
           - target: aarch64-apple-darwin
-            runs-on: macos-latest
             variant: homebrew
             build_args: "--features homebrew --config prefix=/usr/local/homebrew"
+            runs-on: macos-latest
 
           - target: x86_64-apple-darwin
-            runs-on: macos-latest
             variant: homebrew
             build_args: "--features homebrew --config prefix=/usr/local/homebrew"
+            runs-on: macos-latest
 
     runs-on: ${{ matrix.runs-on }}
 
@@ -59,7 +59,7 @@ jobs:
         run: |
           BIN="target/${{ matrix.target }}/release/icp"
           NAME="${BIN%.*}"
-          EXT="${BIN##*.}"
+          EXT=$(basename -- "${BIN}" | awk -F. 'NF>1 {print $NF}')
 
           if [ ! -z "${EXT}" ]; then
             EXT=".${EXT}"
