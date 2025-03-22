@@ -14,6 +14,3 @@ serde_json = { workspace = true }
 
 [dev-dependencies]
 tempfile = { workspace = true }
-
-[build-dependencies]
-handlebars = { workspace = true }
