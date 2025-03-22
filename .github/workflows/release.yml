@@ -66,7 +66,7 @@ jobs:
             EXT=".${EXT}"
           fi
 
-          mv ${BIN} ${NAME}-${{ matrix.variant }}${EXT}
+          mv ${BIN} ${NAME}-${{ matrix.target }}-${{ matrix.variant }}${EXT}
 
       - uses: actions/upload-artifact@v4
         with:
