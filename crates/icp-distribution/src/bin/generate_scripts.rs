@@ -24,6 +24,10 @@ struct Args {
     #[arg(long, default_value = "dist/binaries/extensions")]
     extensions_path: PathBuf,
 
+    /// Path to the checksums
+    #[arg(long, default_value = "dist/checksums.txt")]
+    checksums_path: PathBuf,
+
     /// Output directory for generated files
     #[arg(long, default_value = "dist")]
     output_dir: PathBuf,
@@ -67,7 +71,7 @@ fn run() -> Result<()> {
     // Process binaries and extensions
     println!("Validating binaries in: {:?}", args.binary_path);
     let processor =
-        BinaryProcessor::new(args.binary_path)?.with_extensions_path(args.extensions_path)?;
+        BinaryProcessor::new(args.binary_path, args.extensions_path, args.checksums_path)?;
     let binaries = processor.parse_binary_info()?;
     println!("Found {} valid binaries", binaries.len());
 

@@ -29,15 +29,17 @@ runs:
       run: |
         mkdir -p dist/binaries/icp
 
-    - shell: bash
+    - name: Download checksums
+      shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
         gh release download "v${{ inputs.version }}" \
-          --dir dist/binaries/icp \
+          --dir dist \
           --pattern "checksums.txt"
 
-    - shell: bash
+    - name: Download icp binaries
+      shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
@@ -48,7 +50,8 @@ runs:
         done
 
 
-    - shell: bash
+    - name: Download extension binaries
+      shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
@@ -58,10 +61,13 @@ runs:
             --pattern "$ext"
         done
 
-    - shell: bash
+    - name: Generate scripts
+      shell: bash
       run: |
         cargo run --bin generate_scripts -- \
           --binary-path dist/binaries/icp \
+          --extensions-path dist/binaries/extensions \
+          --checksums-path dist/checksums.txt \
           --output-dir dist \
           --domain "${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}" \
           --repo-url "https://github.com/${GITHUB_REPOSITORY}"

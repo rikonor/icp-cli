@@ -23,19 +23,26 @@ pub struct ExtensionInfo {
 }
 
 pub struct BinaryProcessor {
-    path: PathBuf,
-    extensions_path: Option<PathBuf>,
+    binaries_dir: PathBuf,
+    extensions_dir: PathBuf,
     checksums: HashMap<String, String>,
 }
 
 impl BinaryProcessor {
     /// Creates a new BinaryProcessor for the given directory
-    pub fn new(path: PathBuf) -> Result<Self> {
-        if !path.exists() {
-            return Err(DistributionError::BinaryNotFound(path));
+    pub fn new(
+        binaries_dir: PathBuf,
+        extensions_dir: PathBuf,
+        checksums_path: PathBuf,
+    ) -> Result<Self> {
+        if !binaries_dir.exists() {
+            return Err(DistributionError::BinaryNotFound(binaries_dir));
         }
 
-        let checksums_path = path.join("checksums.txt");
+        if !extensions_dir.exists() {
+            return Err(DistributionError::ExtensionNotFound(extensions_dir));
+        }
+
         if !checksums_path.exists() {
             return Err(DistributionError::MissingFile(checksums_path));
         }
@@ -53,24 +60,15 @@ impl BinaryProcessor {
             .collect();
 
         Ok(Self {
-            path,
-            extensions_path: None,
+            binaries_dir,
+            extensions_dir,
             checksums,
         })
     }
 
-    /// Sets the path for WebAssembly component extensions
-    pub fn with_extensions_path(mut self, extensions_path: PathBuf) -> Result<Self> {
-        if !extensions_path.exists() {
-            fs::create_dir_all(&extensions_path)?;
-        }
-        self.extensions_path = Some(extensions_path);
-        Ok(self)
-    }
-
     /// Validates a binary file's format and checksum
     pub fn validate_binary(&self, filename: &str) -> Result<()> {
-        let file_path = self.path.join(filename);
+        let file_path = self.binaries_dir.join(filename);
         if !file_path.exists() {
             return Err(DistributionError::BinaryNotFound(file_path));
         }
@@ -110,7 +108,7 @@ impl BinaryProcessor {
     fn parse_binaries(&self) -> Result<Vec<BinaryInfo>> {
         let mut binaries = Vec::new();
 
-        for entry in fs::read_dir(&self.path)? {
+        for entry in fs::read_dir(&self.binaries_dir)? {
             let entry = entry?;
             let filename = entry.file_name().to_string_lossy().to_string();
             if filename == "checksums.txt" {
@@ -133,7 +131,7 @@ impl BinaryProcessor {
         }
 
         if binaries.is_empty() {
-            return Err(DistributionError::BinaryNotFound(self.path.clone()));
+            return Err(DistributionError::BinaryNotFound(self.binaries_dir.clone()));
         }
 
         Ok(binaries)
@@ -141,12 +139,8 @@ impl BinaryProcessor {
 
     /// Parse WebAssembly component extensions
     pub fn parse_extensions(&self) -> Result<Vec<ExtensionInfo>> {
-        let Some(extensions_dir) = &self.extensions_path else {
-            return Ok(Vec::new());
-        };
-
         let mut extensions = Vec::new();
-        for entry in fs::read_dir(extensions_dir)? {
+        for entry in fs::read_dir(&self.extensions_dir)? {
             let entry = entry?;
             let path = entry.path();
 
@@ -183,8 +177,20 @@ mod tests {
     use std::io::Write;
     use tempfile::TempDir;
 
-    fn create_test_binary(dir: &TempDir, name: &str, content: &[u8]) -> PathBuf {
-        let path = dir.path().join(name);
+    fn setup_test_dirs() -> (TempDir, PathBuf, PathBuf, PathBuf) {
+        let temp_dir = TempDir::new().unwrap();
+        let binaries_dir = temp_dir.path().join("binaries");
+        let extensions_dir = temp_dir.path().join("extensions");
+        let checksums_path = temp_dir.path().join("checksums.txt");
+
+        fs::create_dir(&binaries_dir).unwrap();
+        fs::create_dir(&extensions_dir).unwrap();
+
+        (temp_dir, binaries_dir, extensions_dir, checksums_path)
+    }
+
+    fn create_test_binary(dir: PathBuf, name: &str, content: &[u8]) -> PathBuf {
+        let path = dir.join(name);
         let mut file = File::create(&path).unwrap();
         file.write_all(content).unwrap();
         path
@@ -192,12 +198,12 @@ mod tests {
 
     #[test]
     fn test_binary_validation() {
-        let temp_dir = TempDir::new().unwrap();
+        let (_temp_dir, binaries_dir, extensions_dir, checksums_path) = setup_test_dirs();
 
         // Create test binary
         let binary_name = "icp-x86_64-apple-darwin-standard";
         let binary_content = b"test binary content";
-        create_test_binary(&temp_dir, binary_name, binary_content);
+        create_test_binary(binaries_dir.clone(), binary_name, binary_content);
 
         // Create checksums file
         let mut hasher = Sha256::new();
@@ -205,26 +211,25 @@ mod tests {
         let checksum = format!("{:x}", hasher.finalize());
 
         let checksums_content = format!("{} {}", checksum, binary_name);
-        let checksums_path = temp_dir.path().join("checksums.txt");
         fs::write(&checksums_path, checksums_content).unwrap();
 
         // Test validation
-        let processor = BinaryProcessor::new(temp_dir.path().to_path_buf()).unwrap();
+        let processor = BinaryProcessor::new(binaries_dir, extensions_dir, checksums_path).unwrap();
         assert!(processor.validate_binary(binary_name).is_ok());
     }
 
     #[test]
     fn test_invalid_binary_format() {
-        let temp_dir = TempDir::new().unwrap();
+        let (_temp_dir, binaries_dir, extensions_dir, checksums_path) = setup_test_dirs();
 
         // Create invalid binary name
         let binary_name = "invalid-name";
-        create_test_binary(&temp_dir, binary_name, b"test content");
+        create_test_binary(binaries_dir.clone(), binary_name, b"test content");
 
         // Create empty checksums file
-        fs::write(temp_dir.path().join("checksums.txt"), "").unwrap();
+        fs::write(&checksums_path, "").unwrap();
 
-        let processor = BinaryProcessor::new(temp_dir.path().to_path_buf()).unwrap();
+        let processor = BinaryProcessor::new(binaries_dir, extensions_dir, checksums_path).unwrap();
         assert!(matches!(
             processor.validate_binary(binary_name),
             Err(DistributionError::InvalidFormat(_))
@@ -233,20 +238,16 @@ mod tests {
 
     #[test]
     fn test_checksum_mismatch() {
-        let temp_dir = TempDir::new().unwrap();
+        let (_temp_dir, binaries_dir, extensions_dir, checksums_path) = setup_test_dirs();
 
         // Create test binary
         let binary_name = "icp-x86_64-apple-darwin-standard";
-        create_test_binary(&temp_dir, binary_name, b"test content");
+        create_test_binary(binaries_dir.clone(), binary_name, b"test content");
 
         // Create checksums file with wrong checksum
-        fs::write(
-            temp_dir.path().join("checksums.txt"),
-            format!("wrong_checksum {}", binary_name),
-        )
-        .unwrap();
+        fs::write(&checksums_path, format!("wrong_checksum {}", binary_name)).unwrap();
 
-        let processor = BinaryProcessor::new(temp_dir.path().to_path_buf()).unwrap();
+        let processor = BinaryProcessor::new(binaries_dir, extensions_dir, checksums_path).unwrap();
         assert!(matches!(
             processor.validate_binary(binary_name),
             Err(DistributionError::ChecksumMismatch(_))

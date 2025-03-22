@@ -3,8 +3,11 @@ use thiserror::Error;
 
 #[derive(Error, Debug)]
 pub enum DistributionError {
-    #[error("Binary file not found: {0}")]
+    #[error("Binaries dir not found: {0}")]
     BinaryNotFound(PathBuf),
+
+    #[error("Extensions dir not found: {0}")]
+    ExtensionNotFound(PathBuf),
 
     #[error("Invalid binary format: {0}")]
     InvalidFormat(String),
