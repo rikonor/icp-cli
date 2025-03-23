@@ -6,6 +6,18 @@ Welcome to the icp project! This document provides essential guidance for workin
 
 icp is a command-line utility for the Internet Computer platform with WebAssembly extension support. Our development process is organized around discrete tasks within projects, enabling clear ownership and effective collaboration.
 
+## Role-Based Development
+
+This project uses defined personas to ensure clear responsibilities and consistent work patterns. Each role has specific guidelines in the `docs/personas/` directory:
+
+- PROJECT_MANAGER: Coordinates progress and ensures clear paths forward
+- ARCHITECT: Makes technical decisions and evaluates scope changes
+- IMPLEMENTER: Builds functionality within defined scope
+- QA_TESTER: Verifies quality and finds edge cases
+- CONCEPT_PROVER: Validates approaches through experimentation
+
+See individual role guidelines for specific responsibilities and requirements.
+
 ## Project Organization
 
 All development work is organized in the `docs/projects/` directory using the following structure:
@@ -75,11 +87,12 @@ Each subtask includes:
 
 ### Beginning of Session
 
-1. **Task Assignment**: Unless already provided, ask the operator for your task assignment.
-2. **Review Task**: Examine task's `TASK.md` file to understand requirements and current status.
-3. **Review Handoffs**: Read the latest task handoff document to understand current progress.
-4. **Review Context**: Examine any code or documentation changes from previous work.
-5. **Set Goals**: Establish specific objectives for the current session.
+1. **Task Assignment**: Unless already provided, ask the operator for your task assignment and identify appropriate role.
+2. **Review Guidelines**: Read role-specific guidelines in docs/personas/ for your assigned role.
+3. **Review Task**: Examine task's `TASK.md` file to understand requirements and current status.
+4. **Review Handoffs**: Read the latest task handoff document to understand current progress.
+5. **Review Context**: Examine any code or documentation changes from previous work.
+6. **Set Goals**: Establish specific objectives for the current session within role boundaries.
 
 ### During Session
 
