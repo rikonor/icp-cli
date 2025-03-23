@@ -1,0 +1,14 @@
+name: Update Docker Repository
+description: Update Docker Repository
+
+inputs:
+  version:
+    description: Version number to distribute
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        echo ${{ inputs.version }}
