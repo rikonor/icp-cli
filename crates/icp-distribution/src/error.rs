@@ -29,6 +29,9 @@ pub enum DistributionError {
 
     #[error("URL construction error: {0}")]
     UrlError(String),
+
+    #[error("Invalid distribution value: {0}")]
+    InvalidDistribution(String),
 }
 
 pub type Result<T> = std::result::Result<T, DistributionError>;

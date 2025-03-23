@@ -24,6 +24,7 @@ use icp_core::{
     interface::IfaceDetector,
     manifest::{Load, LoadError, Manifest, ManifestHandle, Store as _},
 };
+use icp_distribution::Distribution;
 
 mod extension;
 mod spec;
@@ -41,23 +42,54 @@ const ARG_LONG_MANIFEST: &str = "manifest";
 const ARG_LONG_EXTENSIONS: &str = "extensions-dir";
 const ARG_LONG_PRECOMPILES: &str = "precompiles-dir";
 
+// Distribution configuration
+static DISTRIBUTION: Lazy<Distribution> = Lazy::new(|| {
+    match option_env!("DISTRIBUTION")
+        .map(Distribution::try_from)
+        .transpose()
+    {
+        Ok(Some(distribution)) => distribution,
+        Err(e) => {
+            eprintln!("⚠️ Warning: {}. Falling back to Standard.", e);
+            Distribution::Standard
+        }
+        _ => Distribution::Standard,
+    }
+});
+
 // Default paths
-static DEFAULT_PATH_MANIFEST: Lazy<PathBuf> = Lazy::new(|| {
-    dirs::home_dir()
+static DEFAULT_PATH_MANIFEST: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION {
+    Distribution::Standard => dirs::home_dir()
         .expect("no home dir found")
-        .join(format!(".{SERVICE_NAME}/manifest.json"))
+        .join(format!(".{SERVICE_NAME}/manifest.json")),
+    Distribution::Homebrew => {
+        let output = std::process::Command::new("brew")
+            .arg("--prefix")
+            .output()
+            .expect("failed to execute brew --prefix");
+        let prefix = String::from_utf8_lossy(&output.stdout).trim().to_string();
+        PathBuf::from(prefix).join("var/icp/manifest.json")
+    }
+    Distribution::NuGet => unimplemented!("nuget paths not yet implemented"),
+    Distribution::Apt => PathBuf::from("/var/lib/icp/manifest.json"),
 });
 
-static DEFAULT_DIR_EXTENSIONS: Lazy<PathBuf> = Lazy::new(|| {
-    dirs::cache_dir()
+static DEFAULT_DIR_EXTENSIONS: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION {
+    Distribution::Standard => dirs::cache_dir()
         .expect("no cache dir found")
-        .join(format!("{SERVICE_NAME}/extensions-dir"))
+        .join(format!("{SERVICE_NAME}/extensions-dir")),
+    Distribution::Homebrew => DEFAULT_PATH_MANIFEST.parent().unwrap().join("extensions"),
+    Distribution::NuGet => unimplemented!("nuget paths not yet implemented"),
+    Distribution::Apt => PathBuf::from("/var/lib/icp/extensions"),
 });
 
-static DEFAULT_DIR_PRECOMPILES: Lazy<PathBuf> = Lazy::new(|| {
-    dirs::cache_dir()
+static DEFAULT_DIR_PRECOMPILES: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION {
+    Distribution::Standard => dirs::cache_dir()
         .expect("no cache dir found")
-        .join(format!("{SERVICE_NAME}/precompiles-dir"))
+        .join(format!("{SERVICE_NAME}/precompiles-dir")),
+    Distribution::Homebrew => DEFAULT_PATH_MANIFEST.parent().unwrap().join("precompiles"),
+    Distribution::NuGet => unimplemented!("nuget paths not yet implemented"),
+    Distribution::Apt => PathBuf::from("/var/lib/icp/precompiles"),
 });
 
 // WIT Bindings
