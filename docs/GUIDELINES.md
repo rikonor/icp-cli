@@ -25,7 +25,51 @@ This structure enables:
 - Clear task ownership and tracking
 - Discrete units of work
 - Sequential handoff documentation
-- Progress monitoring at both task and project levels
+- Progress monitoring through completed subtasks
+
+### Task Structure
+
+Tasks are organized as sequences of dependent subtasks that must be completed in order. This structure reflects how AI assistants process and execute work:
+
+1. Each subtask builds on previous subtasks' completion
+2. Scope expansion happens by adding subtasks in the appropriate sequence
+3. Progress is tracked by completed subtasks rather than percentages
+4. Dependencies between subtasks are explicitly documented
+
+Example Task Structure:
+
+```markdown
+## Subtasks
+
+1. [ ] Initial Setup
+
+   - Success: Repository structure ready
+   - Next: Component Implementation
+
+2. [ ] Component Implementation
+
+   - Dependencies: Initial Setup
+   - Success: Core functionality working
+   - Next: Integration
+
+3. [ ] Integration
+
+   - Dependencies: Component Implementation
+   - Success: System fully integrated
+   - Next: Testing
+
+4. [ ] Testing
+   - Dependencies: Integration
+   - Success: All tests passing
+   - Next: Documentation
+```
+
+Each subtask includes:
+
+- Clear success criteria
+- Dependencies on previous subtasks
+- Next steps or handoff points
+- Checkbox for completion tracking
 
 ## Working Process
 
@@ -57,18 +101,20 @@ This structure enables:
 1. **Creation**
 
    - Create task directory under project's tasks/
-   - Write initial TASK.md with requirements
+   - Write initial TASK.md with subtask sequence
    - Create HANDOFF directory
+   - Define initial success criteria for each subtask
 
 2. **Development**
 
-   - Track progress in TASK.md
+   - Complete subtasks in sequence
    - Document decisions and changes
    - Create numbered handoff documents
-   - Update PROJECT.md status
+   - Update subtask completion status
+   - Add new subtasks as scope expands
 
 3. **Completion**
-   - Update final status in TASK.md
+   - Verify all subtasks are complete
    - Create final handoff document
    - Update PROJECT.md task status
 
@@ -108,6 +154,24 @@ Brief description of task progress and status.
 ## Notes
 
 Additional context or observations for the next session.
+
+## Guidelines Audit
+
+Guidelines followed in this session:
+
+- [Guideline Category] Specific guideline followed
+  - How it was applied
+  - Impact on the work
+
+Guidelines that could have been better applied:
+
+- [Guideline Category] Specific guideline
+  - Why it was challenging
+  - Suggested improvements
+
+New guideline suggestions:
+
+- Any patterns or practices that emerged that could become guidelines
 ```
 
 ### Code Documentation
@@ -193,5 +257,5 @@ When creating a new project:
 - Review 1-2 existing projects in docs/projects/ to understand the expected level of detail and structure
 - PROJECT.md should focus on high-level objectives, task breakdown, and dependencies
 - TASK.md files should be concise, focusing on clear objectives, scope, and success criteria
-- Track progress through simple percentage completion (e.g., 0%, 25%, 50%, 75%, 100%)
+- Track progress through ordered subtasks with clear success criteria
 - Avoid excessive detail in initial task documentation - let the implementation details emerge through handoffs
