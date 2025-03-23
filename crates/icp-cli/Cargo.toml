@@ -9,8 +9,12 @@ license = "MIT"
 name = "icp"
 path = "src/main.rs"
 
+[build-dependencies]
+icp-distribution = { path = "../icp-distribution" }
+
 [dependencies]
 anyhow = { workspace = true }
+icp-distribution = { path = "../icp-distribution" }
 async-trait = { workspace = true }
 clap = { workspace = true }
 dashmap = { workspace = true }

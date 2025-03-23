@@ -4,10 +4,12 @@
 //! including binary validation, URL management, and template rendering.
 
 mod binary;
+mod distribution;
 mod error;
 mod url;
 
 pub use binary::{BinaryInfo, BinaryProcessor, ExtensionInfo};
+pub use distribution::Distribution;
 pub use error::{DistributionError, Result};
 pub use url::UrlBuilder;
 

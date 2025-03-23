@@ -926,6 +926,7 @@ dependencies = [
  "dirs",
  "http",
  "icp-core",
+ "icp-distribution",
  "once_cell",
  "reqwest",
  "serde",
