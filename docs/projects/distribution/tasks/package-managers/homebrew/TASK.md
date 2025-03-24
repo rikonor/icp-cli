@@ -93,7 +93,7 @@ static DEFAULT_PATH_MANIFEST: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION {
 
 ## Subtasks
 
-1. [ ] Distribution Framework Implementation
+1. [x] Distribution Framework Implementation
 
    - Add Distribution enum to icp-distribution crate
    - Implement TryFrom for distribution parsing
@@ -102,7 +102,7 @@ static DEFAULT_PATH_MANIFEST: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION {
    - Success: Distribution framework compiles and validates input
    - Next: Path Configuration
 
-2. [ ] Path Configuration
+2. [x] Path Configuration
 
    - Dependencies: Distribution Framework
    - Implement Homebrew path resolution using `brew --prefix`
@@ -111,7 +111,7 @@ static DEFAULT_PATH_MANIFEST: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION {
    - Success: Paths correctly resolve in Homebrew context
    - Next: Build Integration
 
-3. [ ] Build Integration
+3. [x] Build Integration
 
    - Dependencies: Path Configuration
    - Add DISTRIBUTION environment variable support to build process
@@ -120,14 +120,15 @@ static DEFAULT_PATH_MANIFEST: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION {
    - Success: CLI builds with correct distribution settings
    - Next: Formula Creation
 
-4. [ ] Formula Creation
+4. [x] Formula Creation
 
    - Dependencies: Build Integration
-   - Create initial Homebrew formula template
-   - Add extension installation commands
-   - Configure multi-architecture support
-   - Test installation flow
-   - Success: Formula installs CLI and extensions
+   - Create initial Homebrew formula template ✓
+   - Configure multi-architecture support ✓
+   - Add extension installation commands ✓
+   - Implement post_install hook for extension management ✓
+   - Test installation flow ✓
+   - Success: Formula installs CLI and extensions ✓
    - Next: CI Integration
 
 5. [ ] CI Integration
