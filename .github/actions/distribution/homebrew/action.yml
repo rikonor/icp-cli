@@ -1,14 +1,91 @@
 name: Update Brew Repository
-description: Update Brew Repository
+description: Updates the Homebrew tap repository with new release information
 
 inputs:
   version:
     description: Version number to distribute
     required: true
+  token:
+    description: GitHub token for repository access
+    required: true
+  tap_repo:
+    description: Homebrew tap repository name
+    default: rikonor/icp-cli
+    required: false
 
 runs:
   using: composite
   steps:
-    - shell: bash
+    - name: Setup GitHub CLI
+      shell: bash
       run: |
-        echo ${{ inputs.version }}
+        # Ensure gh CLI is authenticated
+        echo "${{ inputs.token }}" > gh_token.txt
+        gh auth login --with-token < gh_token.txt
+        rm gh_token.txt
+
+    - name: Get Release Info
+      id: release
+      shell: bash
+      run: |
+        # Get release info with URLs
+        gh release view "v${{ inputs.version }}" --json assets > release.json
+
+        # Get x86_64 binary info
+        INTEL_URL=$(jq -r '.assets[] | select(.name | contains("x86_64-apple-darwin-homebrew")) | .browser_download_url' release.json)
+        INTEL_NAME=$(basename "$INTEL_URL")
+        echo "intel_url=$INTEL_URL" >> $GITHUB_OUTPUT
+
+        # Get ARM binary info
+        ARM_URL=$(jq -r '.assets[] | select(.name | contains("aarch64-apple-darwin-homebrew")) | .browser_download_url' release.json)
+        ARM_NAME=$(basename "$ARM_URL")
+        echo "arm_url=$ARM_URL" >> $GITHUB_OUTPUT
+
+        # Get extension info
+        jq -r '.assets[] | select(.name | endswith(".wasm")) | {
+          name: (.name | sub(".component.wasm$"; "")),
+          url: .browser_download_url
+        }' release.json > extensions.json
+
+        # Download checksums
+        gh release download "v${{ inputs.version }}" -p "checksums.txt"
+
+    - name: Clone Tap Repository
+      shell: bash
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        git clone "https://x-access-token:${{ inputs.token }}@github.com/${{ inputs.tap_repo }}.git" tap-repo
+
+    - name: Generate Formula
+      shell: bash
+      run: |
+        # Create template data
+        jq -n \
+          --arg version "${{ inputs.version }}" \
+          --arg intel_url "${{ steps.release.outputs.intel_url }}" \
+          --arg intel_sha "$(grep x86_64-apple-darwin-homebrew checksums.txt | cut -d' ' -f1)" \
+          --arg arm_url "${{ steps.release.outputs.arm_url }}" \
+          --arg arm_sha "$(grep aarch64-apple-darwin-homebrew checksums.txt | cut -d' ' -f1)" \
+          --slurpfile extensions extensions.json \
+          '{
+            version: $version,
+            intel_binary: {url: $intel_url, sha256: $intel_sha},
+            arm_binary: {url: $arm_url, sha256: $arm_sha},
+            extensions: ($extensions | map(. + {
+              sha256: (input | match($url + "\\s+([a-f0-9]+)"; "m").captures[0].string)
+            }))
+          }' > context.json
+
+        # Generate formula using our tool
+        cargo run --package icp-distribution --bin generate_formula -- \
+          --context context.json \
+          --output tap-repo/Formula/icp-cli.rb
+
+    - name: Commit and Push Changes
+      shell: bash
+      working-directory: tap-repo
+      run: |
+        git add Formula/icp-cli.rb
+        git commit -m "Update icp-cli to version ${{ inputs.version }}"
+        git push

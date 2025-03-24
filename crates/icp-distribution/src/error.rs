@@ -32,6 +32,9 @@ pub enum DistributionError {
 
     #[error("Invalid distribution value: {0}")]
     InvalidDistribution(String),
+
+    #[error("JSON error: {0}")]
+    JsonError(#[from] serde_json::Error),
 }
 
 pub type Result<T> = std::result::Result<T, DistributionError>;
