@@ -465,12 +465,11 @@ mod tests {
 
     fn create_test_manifest() -> Manifest {
         let mut m = Manifest::default();
-
-        // Extension A exports math/lib
         m.xs.push(Extension {
             name: "ext-a".to_string(),
             wasm: "ext-a.wasm".into(),
             pre: "ext-a.bin".into(),
+            checksum: None,
             imports: Vec::new(),
             exports: vec![ExportedInterface {
                 name: "math/lib".to_string(),
@@ -483,6 +482,7 @@ mod tests {
             name: "ext-b".to_string(),
             wasm: "ext-b.wasm".into(),
             pre: "ext-b.bin".into(),
+            checksum: None,
             imports: vec![ImportedInterface {
                 name: "math/lib".to_string(),
                 provider: "ext-a".to_string(),
@@ -499,6 +499,7 @@ mod tests {
             name: "ext-c".to_string(),
             wasm: "ext-c.wasm".into(),
             pre: "ext-c.bin".into(),
+            checksum: None,
             imports: vec![ImportedInterface {
                 name: "calc/lib".to_string(),
                 provider: "ext-b".to_string(),
@@ -512,12 +513,11 @@ mod tests {
 
     fn create_cyclic_manifest() -> Manifest {
         let mut m = Manifest::default();
-
-        // Extension A exports a/lib
         m.xs.push(Extension {
             name: "ext-a".to_string(),
             wasm: "ext-a.wasm".into(),
             pre: "ext-a.bin".into(),
+            checksum: None,
             exports: vec![ExportedInterface {
                 name: "a/lib".to_string(),
                 funcs: vec!["func_a".to_string()],
@@ -534,6 +534,7 @@ mod tests {
             name: "ext-b".to_string(),
             wasm: "ext-b.wasm".into(),
             pre: "ext-b.bin".into(),
+            checksum: None,
             imports: vec![ImportedInterface {
                 name: "a/lib".to_string(),
                 provider: "ext-a".to_string(),
@@ -550,6 +551,7 @@ mod tests {
             name: "ext-c".to_string(),
             wasm: "ext-c.wasm".into(),
             pre: "ext-c.bin".into(),
+            checksum: None,
             imports: vec![ImportedInterface {
                 name: "b/lib".to_string(),
                 provider: "ext-b".to_string(),
@@ -638,11 +640,11 @@ mod tests {
 
         // Create a manifest with a missing dependency
         let mut bad_manifest = manifest.clone();
-
         bad_manifest.xs.push(Extension {
             name: "ext-d".to_string(),
             wasm: "ext-d.wasm".into(),
             pre: "ext-d.bin".into(),
+            checksum: None,
             imports: vec![ImportedInterface {
                 name: "missing/lib".to_string(),
                 provider: "unknown".to_string(),

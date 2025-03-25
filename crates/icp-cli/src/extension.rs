@@ -8,6 +8,7 @@ use anyhow::{Context as _, Error};
 use async_trait::async_trait;
 use http::Uri;
 use reqwest::get;
+use sha2::{Digest, Sha256};
 use wasmtime::{component::Component, Engine};
 
 use icp_core::{
@@ -55,7 +56,12 @@ pub enum AddExtensionError {
 
 #[async_trait]
 pub trait AddExtension: Sync + Send {
-    async fn add(&self, name: &str, p: &str) -> Result<(), AddExtensionError>;
+    async fn add(
+        &self,
+        name: &str,
+        p: &str,
+        checksum: Option<&str>,
+    ) -> Result<(), AddExtensionError>;
 }
 
 pub struct ExtensionAdder {
@@ -92,7 +98,12 @@ impl ExtensionAdder {
 
 #[async_trait]
 impl AddExtension for ExtensionAdder {
-    async fn add(&self, name: &str, p: &str) -> Result<(), AddExtensionError> {
+    async fn add(
+        &self,
+        name: &str,
+        p: &str,
+        checksum: Option<&str>,
+    ) -> Result<(), AddExtensionError> {
         let m = self.mh.load().context("failed to load manifest")?;
 
         if m.xs.iter().any(|x| x.name == name) {
@@ -114,6 +125,18 @@ impl AddExtension for ExtensionAdder {
                 .context("failed to read body")?
                 .to_vec(),
         };
+
+        // Calculate and validate checksum if provided
+        let calculated = format!("{:x}", Sha256::digest(&ext));
+        if let Some(expected) = checksum {
+            if expected != calculated {
+                return Err(AddExtensionError::UnexpectedError(anyhow::anyhow!(
+                    "Checksum validation failed\nExpected: {}\nActual: {}",
+                    expected,
+                    calculated
+                )));
+            }
+        }
 
         // Precompile
         let pre = self
@@ -176,6 +199,7 @@ impl AddExtension for ExtensionAdder {
             pre: pre_path.clone(),
             imports,
             exports,
+            checksum: checksum.map(|s| s.to_string()).or(Some(calculated)),
         };
 
         // Validate dependencies

@@ -52,6 +52,10 @@ pub struct Extension {
     /// Interfaces exported by this extension
     #[serde(default)]
     pub exports: Vec<ExportedInterface>,
+
+    /// Expected SHA256 checksum for verification
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub checksum: Option<String>,
 }
 
 /// Represents the manifest of installed extensions

@@ -214,7 +214,13 @@ async fn main() -> Result<(), Error> {
             .subcommand(
                 Command::new("add")
                     .arg(Arg::new("name").long("name").required(true))
-                    .arg(Arg::new("uri").help("Local path or Uri").required(true)),
+                    .arg(Arg::new("uri").help("Local path or Uri").required(true))
+                    .arg(
+                        Arg::new("checksum")
+                            .long("checksum")
+                            .value_name("SHA256")
+                            .help("Expected SHA256 checksum for verification"),
+                    ),
             )
             .subcommand(
                 Command::new("rm")
@@ -437,6 +443,7 @@ async fn main() -> Result<(), Error> {
                 add.add(
                     ms.try_get_one::<String>("name")?.expect("missing name"), // name
                     ms.try_get_one::<String>("uri")?.expect("missing uri"),   // uri
+                    ms.get_one::<String>("checksum").map(|s| s.as_str()),     // checksum
                 )
                 .await
                 .context("failed to add extension")?;
