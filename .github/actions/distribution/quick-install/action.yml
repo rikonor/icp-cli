@@ -49,7 +49,6 @@ runs:
             --pattern "$binary"
         done
 
-
     - name: Download extension binaries
       shell: bash
       env:

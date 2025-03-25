@@ -100,7 +100,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Cache cargo registry and build artifacts for wasm builds
+      # Cache cargo registry, build artifacts, and installed tools for wasm builds
       # Uses a separate cache key prefix to avoid conflicts with native builds
       # Still maintains fallback to base wasm cache if Cargo.lock changes
       - uses: actions/cache@v3
@@ -108,15 +108,29 @@ jobs:
           path: |
             ~/.cargo/registry
             ~/.cargo/git
+            ~/.cargo/bin
             target
-          key: wasm-cargo-${{ hashFiles('**/Cargo.lock') }}
+          key: wasm-cargo-${{ hashFiles('**/Cargo.lock') }}-with-tools
           restore-keys: |
+            wasm-cargo-${{ hashFiles('**/Cargo.lock') }}-
             wasm-cargo-
 
       - name: Setup Rust target
         run: rustup target add wasm32-unknown-unknown
 
+      - name: Check wasm-tools
+        id: check-wasm-tools
+        shell: bash
+        run: |
+          if command -v wasm-tools &> /dev/null; then
+            echo "wasm-tools already installed"
+            echo "skip_install=true" >> $GITHUB_OUTPUT
+          else
+            echo "skip_install=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Install wasm-tools
+        if: steps.check-wasm-tools.outputs.skip_install == 'false'
         run: cargo install wasm-tools
 
       - name: build multiply
@@ -194,12 +208,12 @@ jobs:
             | tr '\n' ' ')
           echo "extension_binaries=$EXTENSIONS" >> $GITHUB_OUTPUT
 
-      - uses: ./.github/actions/distribution/quick-install
-        with:
-          version: ${{ inputs.version }}
-          token: ${{ github.token }}
-          icp_binaries: ${{ steps.get-binaries.outputs.icp_binaries }}
-          extension_binaries: ${{ steps.get-extensions.outputs.extension_binaries }}
+      # - uses: ./.github/actions/distribution/quick-install
+      #   with:
+      #     version: ${{ inputs.version }}
+      #     token: ${{ github.token }}
+      #     icp_binaries: ${{ steps.get-binaries.outputs.icp_binaries }}
+      #     extension_binaries: ${{ steps.get-extensions.outputs.extension_binaries }}
 
   distribution-apt:
     needs: distribution
