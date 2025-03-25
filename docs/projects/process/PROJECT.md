@@ -35,6 +35,11 @@ Active
   - Located in: `tasks/crate-organization/`
 
 - [Complete] CI Implementation Task
+
   - Implement continuous integration workflow for the project
   - Ensure code quality, testing, and reliable builds
   - Located in: `tasks/ci-implementation/`
+
+- [Not Started] Project Management CLI Task
+  - Create CLI tool for managing projects and tasks programmatically
+  - Located in: `tasks/project-management-cli/`

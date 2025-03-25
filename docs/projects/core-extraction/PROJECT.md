@@ -30,6 +30,9 @@ In Progress (45% Complete)
 
   - Refactor icp-cli to be a thin wrapper around icp-core
   - Located in: `tasks/cli-simplification/`
+  - Subtasks:
+    - [ ] Add argument validation to prevent extension panics
+    - [ ] Implement required parameter checks for CLI commands
 
 - [In Progress] Testing Infrastructure Task
   - Improve overall test coverage and testing tools

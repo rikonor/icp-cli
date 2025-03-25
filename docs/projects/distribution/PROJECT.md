@@ -43,6 +43,9 @@ We are transitioning from the quick-install implementation to package manager in
 - Current subtask: Distribution Framework Implementation
 - Next: Path Configuration
 - See task file for detailed subtask sequence
+- Security Enhancements:
+  - [ ] Add --force flag for extension overwrites
+  - [ ] Implement checksum validation for installed extensions
 
 #### Cargo [Not Started]
 
