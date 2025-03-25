@@ -26,19 +26,17 @@ runs:
 
         # Get x86_64 binary info
         INTEL_URL=$(jq -r '.assets[] | select(.name | contains("x86_64-apple-darwin-homebrew")) | .url' release.json)
-        INTEL_NAME=$(basename "$INTEL_URL")
         echo "intel_url=$INTEL_URL" >> $GITHUB_OUTPUT
 
         # Get ARM binary info
         ARM_URL=$(jq -r '.assets[] | select(.name | contains("aarch64-apple-darwin-homebrew")) | .url' release.json)
-        ARM_NAME=$(basename "$ARM_URL")
         echo "arm_url=$ARM_URL" >> $GITHUB_OUTPUT
 
         # Get extension info
-        jq -r '.assets[] | select(.name | endswith(".wasm")) | {
+        jq -r '[.assets[] | select(.name | endswith(".wasm")) | {
           name: (.name | sub(".component.wasm$"; "")),
           url: .url
-        }' release.json > extensions.json
+        }]' release.json > extensions.json
 
         # Download checksums
         gh release download "v${{ inputs.version }}" -p "checksums.txt"
@@ -53,26 +51,13 @@ runs:
     - name: Generate Formula
       shell: bash
       run: |
-        # Create template data
-        jq -n \
-          --arg version "${{ inputs.version }}" \
-          --arg intel_url "${{ steps.release.outputs.intel_url }}" \
-          --arg intel_sha "$(grep x86_64-apple-darwin-homebrew checksums.txt | cut -d' ' -f1)" \
-          --arg arm_url "${{ steps.release.outputs.arm_url }}" \
-          --arg arm_sha "$(grep aarch64-apple-darwin-homebrew checksums.txt | cut -d' ' -f1)" \
-          --slurpfile extensions extensions.json \
-          '{
-            version: $version,
-            intel_binary: {url: $intel_url, sha256: $intel_sha},
-            arm_binary: {url: $arm_url, sha256: $arm_sha},
-            extensions: ($extensions | map(. + {
-              sha256: (input | match($url + "\\s+([a-f0-9]+)"; "m").captures[0].string)
-            }))
-          }' > context.json
-
-        # Generate formula using our tool
+        # Generate formula using our tool with direct inputs
         cargo run --package icp-distribution --bin generate_formula -- \
-          --context context.json \
+          --version "${{ inputs.version }}" \
+          --checksums checksums.txt \
+          --extensions extensions.json \
+          --intel-url "${{ steps.release.outputs.intel_url }}" \
+          --arm-url "${{ steps.release.outputs.arm_url }}" \
           --output tap-repo/Formula/icp-cli.rb
 
     - name: Commit and Push Changes
