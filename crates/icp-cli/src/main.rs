@@ -220,6 +220,12 @@ async fn main() -> Result<(), Error> {
                             .long("checksum")
                             .value_name("SHA256")
                             .help("Expected SHA256 checksum for verification"),
+                    )
+                    .arg(
+                        Arg::new("force")
+                            .long("force")
+                            .action(ArgAction::SetTrue)
+                            .help("Overwrite existing extension"),
                     ),
             )
             .subcommand(
@@ -444,6 +450,7 @@ async fn main() -> Result<(), Error> {
                     ms.try_get_one::<String>("name")?.expect("missing name"), // name
                     ms.try_get_one::<String>("uri")?.expect("missing uri"),   // uri
                     ms.get_one::<String>("checksum").map(|s| s.as_str()),     // checksum
+                    ms.get_flag("force"),                                     // force
                 )
                 .await
                 .context("failed to add extension")?;

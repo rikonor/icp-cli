@@ -1,22 +1,52 @@
 # Force Install Task
 
-## Objective
+## Purpose
 
-Allow overwriting existing extensions via --force flag
+Add --force flag to overwrite existing extensions during installation
 
-## Success Criteria
+## Subtasks
 
-- [ ] --force flag added to extension add command
-- [ ] Existing extensions can be overwritten when --force specified
-- [ ] Default behavior remains non-destructive
+1. [x] CLI Argument Handling
+
+   - Added --force flag to command parser
+   - Success: Flag appears in help output and is parseable
+   - Next: Core Logic Implementation
+
+2. [x] Core Logic Implementation
+
+   - Modified extension installation to overwrite existing when --force specified
+   - Dependencies: CLI Argument Handling
+   - Success: Force install verified via manual testing
+   - Next: Testing Infrastructure
+
+3. [ ] Testing Infrastructure
+
+   - Add tests for force install scenarios
+   - Dependencies: Core Logic Implementation
+   - Success: All tests pass in CI
+   - Next: Documentation
+
+4. [ ] Documentation
+   - Update man pages and help text
+   - Add to migration guide
+   - Dependencies: Testing Infrastructure
+   - Success: Docs updated and reviewed
+
+## Technical Approach
+
+- Modify `clap` configuration in CLI entrypoint
+- Update `icp-core` installation logic to handle overwrites
+- Add integration tests verifying force behavior
+- Document flag usage in appropriate help sections
 
 ## Dependencies
 
-- Package Manager HANDOFF-004 (Force Flag Pattern)
-- Core Extraction HANDOFF-005 (Component Protection)
+- Requires completed CLI simplification task (ARG-004)
+- Relies on extension registry from component-migration
 
-## Implementation Notes
+## Success Criteria
 
-- Add force: bool parameter to extension installation
-- Update CLI parser to accept --force flag
-- Modify installation logic to respect force flag
+- Users can overwrite existing extensions with --force
+- Fails gracefully when force not specified and extension exists
+- Full test coverage of force scenarios
+- Documentation reflects new functionality

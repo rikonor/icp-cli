@@ -61,6 +61,7 @@ pub trait AddExtension: Sync + Send {
         name: &str,
         p: &str,
         checksum: Option<&str>,
+        force: bool,
     ) -> Result<(), AddExtensionError>;
 }
 
@@ -103,13 +104,20 @@ impl AddExtension for ExtensionAdder {
         name: &str,
         p: &str,
         checksum: Option<&str>,
+        force: bool,
     ) -> Result<(), AddExtensionError> {
-        let m = self.mh.load().context("failed to load manifest")?;
+        let mut m = self.mh.load().context("failed to load manifest")?;
 
-        if m.xs.iter().any(|x| x.name == name) {
-            return Err(AddExtensionError::AlreadyExists(
-                name.to_owned(), // name
-            ));
+        if let Some(existing) = m.xs.iter().position(|x| x.name == name) {
+            if !force {
+                return Err(AddExtensionError::AlreadyExists(name.to_owned()));
+            }
+            // Remove existing extension files
+            let old_ext = &m.xs[existing];
+            for p in [&old_ext.pre, &old_ext.wasm] {
+                remove_file(p).context("failed to remove existing extension files")?;
+            }
+            m.xs.remove(existing);
         }
 
         let ext = match AdditionType::try_from(p)? {
