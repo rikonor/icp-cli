@@ -8,10 +8,8 @@ inputs:
   token:
     description: Token for accessing the Homebrew tap repository
     required: true
-    default: ${{ secrets.HOMEBREW_TAP_TOKEN }}
   tap_repo:
     description: Homebrew tap repository name
-    default: rikonor/homebrew-icp-cli
     required: false
 
 runs:
@@ -27,19 +25,19 @@ runs:
         gh release view "v${{ inputs.version }}" --json assets > release.json
 
         # Get x86_64 binary info
-        INTEL_URL=$(jq -r '.assets[] | select(.name | contains("x86_64-apple-darwin-homebrew")) | .browser_download_url' release.json)
+        INTEL_URL=$(jq -r '.assets[] | select(.name | contains("x86_64-apple-darwin-homebrew")) | .url' release.json)
         INTEL_NAME=$(basename "$INTEL_URL")
         echo "intel_url=$INTEL_URL" >> $GITHUB_OUTPUT
 
         # Get ARM binary info
-        ARM_URL=$(jq -r '.assets[] | select(.name | contains("aarch64-apple-darwin-homebrew")) | .browser_download_url' release.json)
+        ARM_URL=$(jq -r '.assets[] | select(.name | contains("aarch64-apple-darwin-homebrew")) | .url' release.json)
         ARM_NAME=$(basename "$ARM_URL")
         echo "arm_url=$ARM_URL" >> $GITHUB_OUTPUT
 
         # Get extension info
         jq -r '.assets[] | select(.name | endswith(".wasm")) | {
           name: (.name | sub(".component.wasm$"; "")),
-          url: .browser_download_url
+          url: .url
         }' release.json > extensions.json
 
         # Download checksums

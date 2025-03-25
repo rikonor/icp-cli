@@ -185,3 +185,5 @@ jobs:
       - uses: ./.github/actions/distribution/homebrew
         with:
           version: ${{ inputs.version }}
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          tap_repo: rikonor/homebrew-icp-cli
