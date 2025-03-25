@@ -129,21 +129,32 @@ static DEFAULT_PATH_MANIFEST: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION {
    - Implement post_install hook for extension management ✓
    - Test installation flow ✓
    - Success: Formula installs CLI and extensions ✓
-   - Next: CI Integration
+   - Next: Extension Checksum Support
 
-5. [ ] CI Integration
+5. [ ] Extension Checksum Support
 
    - Dependencies: Formula Creation
+   - Add --checksum flag to extension add command
+   - Update formula template to use checksums
+   - Test checksum verification flow
+   - Success: Extensions verify checksums during installation
+   - Next: CI Integration
+
+6. [ ] CI Integration
+
+   - Dependencies: Formula Creation
+   - Implement formula generation automation ✓
+   - Add version and checksum synchronization ✓
+   - Integrate with GitHub Actions ✓
    - Setup workflow to update homebrew-icp-cli repository
-   - Add version synchronization
    - Configure automated testing
    - Test release process
    - Success: Formula auto-updates on releases
    - Next: Documentation
 
-6. [ ] Documentation
+7. [ ] Documentation
 
-   - Dependencies: CI Integration
+   - Dependencies: CI Integration, Extension Checksum Support
    - Update installation guides
    - Add troubleshooting section
    - Document extension handling

@@ -1,31 +1,34 @@
 class IcpCli < Formula
-  desc "Command-line interface for the Internet Computer platform"
+  desc "CLI tool for Internet Computer with WebAssembly component-based extensions"
   homepage "https://github.com/rikonor/icp-cli"
   version "{{version}}"
+  license "MIT"
 
-  if Hardware::CPU.intel?
-    url "{{intel_binary.url}}"
-    sha256 "{{intel_binary.sha256}}"
-  else
-    url "{{arm_binary.url}}"
-    sha256 "{{arm_binary.sha256}}"
+  on_macos do
+    on_arm do
+      url "{{arm_binary.url}}"
+      sha256 "{{arm_binary.sha256}}"
+    end
+    on_intel do
+      url "{{intel_binary.url}}"
+      sha256 "{{intel_binary.sha256}}"
+    end
   end
-
-  {{#each extensions}}
-  resource "{{name}}" do
-    url "{{url}}"
-    sha256 "{{sha256}}"
-  end
-  {{/each}}
 
   def install
-    bin.install "icp"
+    downloaded_name = File.basename(stable.url)
+    bin.install downloaded_name => "icp"
+  end
 
-    {{#each extensions}}
-    resource("{{name}}").stage do
-      system bin/"icp", "extension", "add", "--name", "{{name}}", "{{name}}.component.wasm"
+  def post_install
+    begin
+      {{#each extensions}}
+      # TODO(cline): pass expected checksum via `icp extension add --checksum {{sha256}}`
+      system "#{bin}/icp", "extension", "add", "--name", "{{name}}", "{{url}}"
+      {{/each}}
+    rescue StandardError => e
+      puts "Other error: #{e.message}"
     end
-    {{/each}}
   end
 
   test do
