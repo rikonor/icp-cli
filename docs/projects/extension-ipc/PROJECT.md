@@ -25,15 +25,6 @@ Complete ✅
   - Implement async support, thread-safe handling, and CLI workflow integration
   - Located in: `tasks/infrastructure/`
 
-- [Not Started] Argument Validation Task
-
-  - Add required argument checks to prevent extension panics
-  - Located in: `tasks/argument-validation/`
-
-- [Not Started] Force Install Task
-  - Add --force flag to overwrite existing extensions
-  - Located in: `tasks/force-install/`
-
 ## Project Completion
 
 The Extension Inter-Communication project has been successfully completed, with all planned functionality implemented and tested. The key features include:

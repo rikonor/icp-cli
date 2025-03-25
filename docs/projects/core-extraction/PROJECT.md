@@ -35,9 +35,19 @@ In Progress (45% Complete)
     - [ ] Implement required parameter checks for CLI commands
 
 - [In Progress] Testing Infrastructure Task
+
   - Improve overall test coverage and testing tools
   - Current progress: 5%
   - Located in: `tasks/testing-infrastructure/`
+
+- [Not Started] Argument Validation Task
+
+  - Add required argument checks to prevent extension panics
+  - Located in: `tasks/argument-validation/`
+
+- [Not Started] Force Install Task
+  - Add --force flag to overwrite existing extensions
+  - Located in: `tasks/force-install/`
 
 ## Project Overview
 

@@ -45,7 +45,7 @@ We are transitioning from the quick-install implementation to package manager in
 - See task file for detailed subtask sequence
 - Security Enhancements:
   - [ ] Add --force flag for extension overwrites
-  - [ ] Implement checksum validation for installed extensions
+  - [x] Implement checksum validation for installed extensions
 
 #### Cargo [Not Started]
 

@@ -6,9 +6,9 @@ Add checksum verification for extension installation
 
 ## Success Criteria
 
-- [ ] --checksum parameter added to extension add
-- [ ] SHA256 validation performed during installation
-- [ ] Invalid checksum fails installation with clear error
+- [x] --checksum parameter added to extension add
+- [x] SHA256 validation performed during installation
+- [x] Invalid checksum fails installation with clear error
 
 ## Dependencies
 
