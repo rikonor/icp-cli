@@ -50,6 +50,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # Cache cargo registry and build artifacts
+      # Uses a hierarchical caching strategy:
+      # 1. Try exact match with Cargo.lock hash
+      # 2. Fall back to same target/variant without hash
+      # 3. Fall back to same target without variant
+      # 4. Fall back to just OS-level cache
+      # This ensures we can reuse cached dependencies even when Cargo.lock changes
+      # or when building different variants of the same target
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ matrix.target }}-${{ matrix.variant }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-cargo-${{ matrix.target }}-${{ matrix.variant }}-
+            ${{ runner.os }}-cargo-${{ matrix.target }}-
+            ${{ runner.os }}-cargo-
+
       - name: Build CLI
         shell: bash
         run: |
@@ -79,6 +99,19 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      # Cache cargo registry and build artifacts for wasm builds
+      # Uses a separate cache key prefix to avoid conflicts with native builds
+      # Still maintains fallback to base wasm cache if Cargo.lock changes
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: wasm-cargo-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            wasm-cargo-
 
       - name: Setup Rust target
         run: rustup target add wasm32-unknown-unknown
