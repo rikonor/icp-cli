@@ -113,6 +113,82 @@ pub const BASIC_LIB_TEMPLATE: &str = r#"
   (export "test:calc/lib" (instance $calc))
 )"#;
 
+/// Minimal valid extension template that implements the icp-cli world.wit requirements
+///
+/// Imports:
+/// - local:host/misc with print, rand, time
+///
+/// Exports:
+/// - local:extension/cli with spec and run
+///
+/// Features:
+/// - Compliant with icp-cli's component model
+/// - Dummy implementations for all required functions
+/// - Includes memory and realloc for canonical ABI
+pub const EXTENSION_MINIMAL_TEMPLATE: &str = r#"
+(component
+  ;; Import required host interfaces
+  (import "local:host/misc" (instance $misc
+    (export "print" (func (param "s" string)))
+    (export "rand" (func (result u8)))
+    (export "time" (func (result u64)))
+  ))
+
+  ;; Core module with required infrastructure
+  (core module $impl
+    (memory (export "mem") 1)
+
+    ;; Realloc implementation (simplified for testing)
+    (func $realloc (param i32 i32 i32 i32) (result i32)
+      (i32.const 0)
+    )
+    (export "realloc" (func $realloc))
+
+    ;; spec implementation - returns empty string via memory
+    (func $spec (result i32)
+      ;; Store ptr (0) and len (0) at fixed memory locations
+      (i32.store (i32.const 0) (i32.const 0))  ;; ptr
+      (i32.store (i32.const 4) (i32.const 0))  ;; len
+      (i32.const 0)  ;; return pointer to (ptr, len) pair
+    )
+    (export "spec" (func $spec))
+
+    ;; run implementation - returns success (0)
+    (func $run (param i32 i32) (result i32)
+      (i32.const 0)
+    )
+    (export "run" (func $run))
+  )
+
+  (core instance $instance (instantiate $impl))
+
+  ;; Lift spec function to component-level
+  (func $spec_lifted (result string)
+    (canon lift
+      (core func $instance "spec")
+      (memory $instance "mem")
+      (realloc (func $instance "realloc"))
+    )
+  )
+
+  ;; Lift run function to component-level
+  (func $run_lifted (param "args" (list string)) (result u8)
+    (canon lift
+      (core func $instance "run")
+      (memory $instance "mem")
+      (realloc (func $instance "realloc"))
+    )
+  )
+
+  ;; Export the CLI interface
+  (instance $cli
+    (export "spec" (func $spec_lifted))
+    (export "run" (func $run_lifted))
+  )
+  (export "local:extension/cli" (instance $cli))
+)
+"#;
+
 /// Template with many interfaces (stress test)
 pub const MANY_INTERFACES_TEMPLATE: &str = r#"
 (component
