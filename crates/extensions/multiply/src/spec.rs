@@ -63,6 +63,9 @@ pub struct ArgSpec {
 
     /// Long name for the argument
     pub long: Option<String>,
+
+    /// Whether argument is required
+    pub required: Option<bool>,
 }
 
 impl From<ArgSpec> for Arg {
@@ -83,6 +86,11 @@ impl From<ArgSpec> for Arg {
         // Long
         if let Some(long) = value.long {
             c = c.long(long);
+        }
+
+        // Required
+        if let Some(required) = value.required {
+            c = c.required(required);
         }
 
         c

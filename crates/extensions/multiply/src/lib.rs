@@ -18,7 +18,7 @@ struct Component;
 const CLI_SPEC: &str = r#"{
     "name": "multiply",
     "help": "Multiply numbers",
-    "args": [{ "name": "a" }, { "name": "b" }],
+    "args": [{ "name": "a", "required": true }, { "name": "b", "required": true }],
     "subcommands": []
 }"#;
 
@@ -40,17 +40,17 @@ impl cli::Guest for Component {
 
         let a: u32 = m
             .try_get_one::<String>("a")
-            .unwrap()
-            .unwrap()
+            .expect("missing argument 'a'")
+            .expect("missing argument 'a'")
             .parse()
-            .unwrap();
+            .expect("invalid argument 'a'");
 
         let b: u32 = m
             .try_get_one::<String>("b")
-            .unwrap()
-            .unwrap()
+            .expect("missing argument 'b'")
+            .expect("missing argument 'b'")
             .parse()
-            .unwrap();
+            .expect("invalid argument 'b'");
 
         let _out = multiply(a, b);
 

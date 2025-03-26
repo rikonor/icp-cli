@@ -19,7 +19,7 @@ struct Component;
 const CLI_SPEC: &str = r#"{
     "name": "square",
     "help": "Take a square (a^2)",
-    "args": [{ "name": "a" }],
+    "args": [{ "name": "a", "required": true }],
     "subcommands": []
 }"#;
 
@@ -41,17 +41,17 @@ impl cli::Guest for Component {
 
         let a: u32 = m
             .try_get_one::<String>("a")
-            .unwrap()
-            .unwrap()
+            .expect("missing argument 'a'")
+            .expect("missing argument 'a'")
             .parse()
-            .unwrap();
+            .expect("invalid argument 'a'");
 
         // let b: u32 = m
         //     .try_get_one::<String>("b")
-        //     .unwrap()
-        //     .unwrap()
+        //     .expect("missing argument 'b'")
+        //     .expect("missing argument 'b'")
         //     .parse()
-        //     .unwrap();
+        //     .expect("invalid argument 'b'");
 
         // TMP(orricon): for demo
         let b: u32 = 2;
