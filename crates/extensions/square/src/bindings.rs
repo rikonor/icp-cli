@@ -179,7 +179,7 @@ pub mod exports {
                 );
             }
         }
-        pub mod power {
+        pub mod square {
             #[allow(dead_code, clippy::all)]
             pub mod lib {
                 #[used]
@@ -188,25 +188,29 @@ pub mod exports {
                 use super::super::super::super::_rt;
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
-                pub unsafe fn _export_power_cabi<T: Guest>(arg0: i32, arg1: i32) -> i32 {
+                pub unsafe fn _export_square_cabi<T: Guest>(
+                    arg0: i32,
+                    arg1: i32,
+                ) -> i32 {
                     #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let result0 = T::power(arg0 as u32, arg1 as u32);
+                    let result0 = T::square(arg0 as u32, arg1 as u32);
                     _rt::as_i32(result0)
                 }
                 pub trait Guest {
-                    /// take a power
-                    fn power(a: u32, b: u32) -> u32;
+                    /// take a square
+                    fn square(a: u32, b: u32) -> u32;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_local_power_lib_cabi {
+                macro_rules! __export_local_square_lib_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
-                        const _ : () = { #[export_name = "local:power/lib#power"] unsafe
-                        extern "C" fn export_power(arg0 : i32, arg1 : i32,) -> i32 {
-                        $($path_to_types)*:: _export_power_cabi::<$ty > (arg0, arg1) } };
+                        const _ : () = { #[export_name = "local:square/lib#square"]
+                        unsafe extern "C" fn export_square(arg0 : i32, arg1 : i32,) ->
+                        i32 { $($path_to_types)*:: _export_square_cabi::<$ty > (arg0,
+                        arg1) } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_local_power_lib_cabi;
+                pub(crate) use __export_local_square_lib_cabi;
             }
         }
     }
@@ -322,8 +326,8 @@ macro_rules! __export_root_impl {
         exports::local::extension::cli::__export_local_extension_cli_cabi!($ty
         with_types_in $($path_to_types_root)*:: exports::local::extension::cli);
         $($path_to_types_root)*::
-        exports::local::power::lib::__export_local_power_lib_cabi!($ty with_types_in
-        $($path_to_types_root)*:: exports::local::power::lib);
+        exports::local::square::lib::__export_local_square_lib_cabi!($ty with_types_in
+        $($path_to_types_root)*:: exports::local::square::lib);
     };
 }
 #[doc(inline)]
@@ -331,15 +335,15 @@ pub(crate) use __export_root_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[link_section = "component-type:wit-bindgen:0.36.0:root:component:root:encoded world"]
 #[doc(hidden)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 379] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x80\x02\x01A\x02\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 381] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x82\x02\x01A\x02\x01\
 A\x08\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\
 \x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\x0flocal:host/misc\x05\0\x01B\x02\
 \x01@\x02\x01ay\x01by\0y\x04\0\x08multiply\x01\0\x03\0\x12local:multiply/lib\x05\
 \x01\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\0\x03\
 run\x01\x02\x04\0\x13local:extension/cli\x05\x02\x01B\x02\x01@\x02\x01ay\x01by\0\
-y\x04\0\x05power\x01\0\x04\0\x0flocal:power/lib\x05\x03\x04\0\x13root:component/\
-root\x04\0\x0b\x0a\x01\0\x04root\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\
+y\x04\0\x06square\x01\0\x04\0\x10local:square/lib\x05\x03\x04\0\x13root:componen\
+t/root\x04\0\x0b\x0a\x01\0\x04root\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\
 \x0dwit-component\x070.220.1\x10wit-bindgen-rust\x060.36.0";
 #[inline(never)]
 #[doc(hidden)]

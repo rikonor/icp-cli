@@ -25,10 +25,10 @@ package local:multiply {
   }
 }
 
-package local:power {
+package local:square {
   interface lib {
-    // take a power
-    power: func(a: u32, b: u32) -> u32;
+    // take a square
+    square: func(a: u32, b: u32) -> u32;
   }
 }
 
@@ -37,5 +37,5 @@ world root {
   export local:extension/cli;
 
   import local:multiply/lib;
-  export local:power/lib;
+  export local:square/lib;
 }

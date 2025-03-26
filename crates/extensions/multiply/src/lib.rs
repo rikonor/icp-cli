@@ -65,12 +65,13 @@ impl lib::Guest for Component {
 }
 
 fn multiply(a: u32, b: u32) -> u32 {
+    print(&format!("[multiply] computing {a} x {b}"));
     let mut out = 0;
     for _ in 0..a {
         out += b;
     }
 
-    print(&format!("[multiply] {a} * {b} = {out}"));
+    print(&format!("[multiply] {a} x {b} = {out}"));
     out
 }
 

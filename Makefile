@@ -23,25 +23,3 @@ component: build
 
 output-path:
 	@realpath $(COMPONENT_OUT_DIR)/$(EXTENSION_NAME).component.wasm
-
-test-quick-install:
-	@mkdir -p dist/binaries/icp dist/binaries/extensions
-	@echo "test content" > dist/binaries/icp/icp-x86_64-apple-darwin-standard
-	@echo "test content" > dist/binaries/extensions/multiply.component.wasm
-	@echo "test content" > dist/binaries/extensions/power.component.wasm
-	@echo "test content" | sha256sum | cut -d' ' -f1 > dist/checksums.txt
-	@echo "$$(cat dist/checksums.txt) icp-x86_64-apple-darwin-standard" > dist/checksums.txt
-	@echo "test content" | sha256sum | cut -d' ' -f1 | tr -d '\n' > dist/checksums.tmp
-	@echo " multiply.component.wasm" >> dist/checksums.tmp
-	@cat dist/checksums.tmp >> dist/checksums.txt
-	@echo "test content" | sha256sum | cut -d' ' -f1 | tr -d '\n' > dist/checksums.tmp
-	@echo " power.component.wasm" >> dist/checksums.tmp
-	@cat dist/checksums.tmp >> dist/checksums.txt
-	@rm dist/checksums.tmp
-	@cargo run --bin generate_scripts -- \
-		--binary-path dist/binaries/icp \
-		--extensions-path dist/binaries/extensions \
-		--checksums-path dist/checksums.txt \
-		--output-dir dist \
-		--domain example.com
-	@echo "\nGeneration complete! View the result with:\n  open dist/index.html\n"

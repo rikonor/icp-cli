@@ -486,12 +486,10 @@ async fn main() -> Result<(), Error> {
             // Invoke extension
             match insts.get(cmd) {
                 Some(inst) => {
-                    let exit_code = inst
+                    let _exit_code = inst
                         .local_extension_cli()
                         .call_run(&mut store, &args)
                         .await?;
-
-                    println!("{exit_code}");
                 }
                 None => unreachable!("invalid extension"),
             }

@@ -136,15 +136,15 @@ jobs:
       - name: build multiply
         run: make CARGO_RELEASE=1 EXTENSION_NAME=multiply
 
-      - name: build power
-        run: make CARGO_RELEASE=1 EXTENSION_NAME=power
+      - name: build square
+        run: make CARGO_RELEASE=1 EXTENSION_NAME=square
 
       - uses: actions/upload-artifact@v4
         with:
           name: extensions
           path: |
             target/wasm32-unknown-unknown/release/multiply.component.wasm
-            target/wasm32-unknown-unknown/release/power.component.wasm
+            target/wasm32-unknown-unknown/release/square.component.wasm
 
   create-release:
     needs: [build-cli, build-extensions]

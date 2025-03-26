@@ -9,7 +9,7 @@ use bindings::local::multiply::lib::multiply;
 
 // exports
 use bindings::exports::local::extension::cli;
-use bindings::exports::local::power::lib;
+use bindings::exports::local::square::lib;
 
 mod spec;
 use spec::CommandSpec;
@@ -17,9 +17,9 @@ use spec::CommandSpec;
 struct Component;
 
 const CLI_SPEC: &str = r#"{
-    "name": "power",
-    "help": "Take a power (a^b)",
-    "args": [{ "name": "a" }, { "name": "b" }],
+    "name": "square",
+    "help": "Take a square (a^2)",
+    "args": [{ "name": "a" }],
     "subcommands": []
 }"#;
 
@@ -46,32 +46,36 @@ impl cli::Guest for Component {
             .parse()
             .unwrap();
 
-        let b: u32 = m
-            .try_get_one::<String>("b")
-            .unwrap()
-            .unwrap()
-            .parse()
-            .unwrap();
+        // let b: u32 = m
+        //     .try_get_one::<String>("b")
+        //     .unwrap()
+        //     .unwrap()
+        //     .parse()
+        //     .unwrap();
 
-        let _out = power(a, b);
+        // TMP(orricon): for demo
+        let b: u32 = 2;
+
+        let _out = square(a, b);
 
         0
     }
 }
 
 impl lib::Guest for Component {
-    fn power(a: u32, b: u32) -> u32 {
-        power(a, b)
+    fn square(a: u32, b: u32) -> u32 {
+        square(a, b)
     }
 }
 
-fn power(a: u32, b: u32) -> u32 {
-    let mut out = 1;
-    for _ in 0..b {
+fn square(a: u32, b: u32) -> u32 {
+    print(&format!("[square] computing {a}**{b}"));
+    let mut out = a;
+    for _ in 1..b {
         out = multiply(out, a)
     }
 
-    print(&format!("[power] {a}^{b} = {out}"));
+    print(&format!("[square] {a}**{b} = {out}"));
     out
 }
 
