@@ -8,7 +8,7 @@ mod mock;
 mod templates;
 
 pub use mock::MockComponentBuilder;
-pub use templates::{BASIC_LIB_TEMPLATE, MULTI_LIB_TEMPLATE};
+pub use templates::{BASIC_LIB_TEMPLATE, EXTENSION_MINIMAL_TEMPLATE, MULTI_LIB_TEMPLATE};
 
 #[cfg(test)]
 mod tests {

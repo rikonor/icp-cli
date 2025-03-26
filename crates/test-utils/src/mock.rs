@@ -1,5 +1,6 @@
 use crate::templates::{
-    BASIC_LIB_TEMPLATE, EMPTY_COMPONENT_TEMPLATE, MANY_INTERFACES_TEMPLATE, MULTI_LIB_TEMPLATE,
+    BASIC_LIB_TEMPLATE, EMPTY_COMPONENT_TEMPLATE, EXTENSION_MINIMAL_TEMPLATE,
+    MANY_INTERFACES_TEMPLATE, MULTI_LIB_TEMPLATE,
 };
 use anyhow::Error;
 use wasmtime::{component::Component, Engine};
@@ -38,6 +39,13 @@ impl MockComponentBuilder {
         }
     }
 
+    /// Create a new builder with the minimal extension template
+    pub fn new_extension_minimal() -> Self {
+        Self {
+            wat: EXTENSION_MINIMAL_TEMPLATE.to_string(),
+        }
+    }
+
     /// Create a new builder with custom WAT content
     pub fn new_custom(wat: &str) -> Self {
         Self {
@@ -67,6 +75,7 @@ mod tests {
         MockComponentBuilder::new_multi_lib().build(&engine)?;
         MockComponentBuilder::new_empty_component().build(&engine)?;
         MockComponentBuilder::new_many_interfaces().build(&engine)?;
+        MockComponentBuilder::new_extension_minimal().build(&engine)?;
 
         Ok(())
     }
