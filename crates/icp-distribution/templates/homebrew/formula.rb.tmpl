@@ -23,8 +23,7 @@ class IcpCli < Formula
   def post_install
     begin
       {{#each extensions}}
-      # TODO(cline): pass expected checksum via `icp extension add --checksum {{sha256}}`
-      system "#{bin}/icp", "extension", "add", "--name", "{{name}}", "{{url}}"
+      system "#{bin}/icp", "extension", "add", "--name", "{{name}}", "--force", "--checksum", "{{sha256}}", "{{url}}"
       {{/each}}
     rescue StandardError => e
       puts "Other error: #{e.message}"
