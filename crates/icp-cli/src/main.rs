@@ -1,7 +1,7 @@
 use std::{
     env::args_os,
     ffi::OsString,
-    fs::create_dir_all,
+    fs::{create_dir_all, read},
     path::{Path, PathBuf},
     str::FromStr,
     sync::Arc,
@@ -312,10 +312,12 @@ async fn main() -> Result<(), Error> {
     // Load components in dependency order
     for name in &loading_order {
         if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
+            let pre = read(&extension.pre)?;
+
             let component = unsafe {
-                Component::deserialize_file(
-                    &ngn,           // engine
-                    &extension.pre, // path
+                Component::deserialize(
+                    &ngn, // engine
+                    &pre, // bytes
                 )
             }?;
 
