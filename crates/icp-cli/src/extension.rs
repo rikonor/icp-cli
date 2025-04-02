@@ -1,6 +1,6 @@
 use std::{
-    fs::{create_dir_all, exists, read, remove_file, write},
-    path::PathBuf,
+    fs::{create_dir_all, read, remove_file, write},
+    path::{Path, PathBuf},
     sync::Arc,
 };
 
@@ -29,7 +29,7 @@ impl TryFrom<&str> for AdditionType {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         // File
-        if exists(value)? {
+        if Path::new(value).exists() {
             return Ok(Self::File(value.into()));
         }
 
