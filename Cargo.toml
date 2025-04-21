@@ -5,6 +5,7 @@ members = [
     "crates/icp-cli",
     "crates/icp-core",
     "crates/extensions/*",
+    "crates/examples/*",
     "crates/test-utils",
     "crates/icp-distribution",
 ]

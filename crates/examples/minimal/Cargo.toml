@@ -1,0 +1,22 @@
+[package]
+name = "minimal"  # Renamed for consistency
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+# Add wit-bindgen runtime support
+wit-bindgen-rt = { workspace = true }
+# Add clap and serde for potential CLI handling, even if minimal now
+clap = { workspace = true, optional = true }
+serde = { workspace = true, optional = true }
+serde_json = { workspace = true, optional = true }
+
+
+[lib]
+crate-type = ["cdylib"] # Critical for WASM component
+
+[package.metadata.component]
+package = "component:minimal" # Define component package ID
+
+[package.metadata.component.dependencies]
+# No external component dependencies for this minimal example

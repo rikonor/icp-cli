@@ -1,0 +1,41 @@
+package root:component;
+
+// Interface provided by the host environment
+package local:host {
+  interface misc {
+    // Function to print a string to the host console
+    print: func(s: string);
+  }
+}
+
+// Standard interface expected from all extensions
+package local:extension {
+  interface cli {
+    // Provides a JSON schema describing the extension's CLI commands/args
+    spec: func() -> string;
+
+    // Executes the extension's CLI logic based on provided arguments
+    // Returns an exit code (0 for success)
+    run: func(args: list<string>) -> u8;
+  }
+}
+
+// Custom interface specific to this minimal extension
+package local:minimal {
+  interface lib {
+    // A simple function that returns a fixed string
+    ping: func() -> string;
+  }
+}
+
+// Defines the world for this component, linking imports and exports
+world root {
+  // Import the print function from the host
+  import local:host/misc;
+
+  // Export the standard CLI interface
+  export local:extension/cli;
+
+  // Export the custom minimal library interface
+  export local:minimal/lib;
+}
