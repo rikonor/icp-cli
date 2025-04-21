@@ -1,3 +1,8 @@
 /target
 manifest.json
 dist/
+
+# PM Tool configuration directory
+.pm/*
+!.pm/config.toml
+!.pm/guidelines/

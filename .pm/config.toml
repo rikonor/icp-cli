@@ -1,0 +1,10 @@
+[guidelines]
+active = [
+    "pm",
+    "coding",
+    "testing",
+    "vcs",
+    "detailed-content-preference",
+    "ambiguity-resolution",
+    "guideline-management",
+]
