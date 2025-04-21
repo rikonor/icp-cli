@@ -1,6 +1,8 @@
 [guidelines]
 active = [
     "pm",
+    "codebase-purpose",
+    "extension-development",
     "coding",
     "testing",
     "vcs",
