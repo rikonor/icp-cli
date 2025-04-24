@@ -1279,7 +1279,7 @@ dependencies = [
  "clap",
  "serde",
  "serde_json",
- "wit-bindgen-rt 0.39.0",
+ "wit-bindgen-rt 0.41.0",
 ]
 
 [[package]]
@@ -1309,7 +1309,7 @@ dependencies = [
  "clap",
  "serde",
  "serde_json",
- "wit-bindgen-rt 0.39.0",
+ "wit-bindgen-rt 0.41.0",
 ]
 
 [[package]]
@@ -1911,7 +1911,7 @@ dependencies = [
  "clap",
  "serde",
  "serde_json",
- "wit-bindgen-rt 0.39.0",
+ "wit-bindgen-rt 0.41.0",
 ]
 
 [[package]]
@@ -2937,9 +2937,9 @@ dependencies = [
 
 [[package]]
 name = "wit-bindgen-rt"
-version = "0.39.0"
+version = "0.41.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6f42320e61fe2cfd34354ecb597f86f413484a798ba44a8ca1165c58d42da6c1"
+checksum = "c4db52a11d4dfb0a59f194c064055794ee6564eb1ced88c25da2cf76e50c5621"
 dependencies = [
  "bitflags",
 ]

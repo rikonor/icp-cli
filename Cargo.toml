@@ -46,4 +46,4 @@ tempfile = "3.5.0"
 handlebars = "4.3.5"
 
 # WASM/Component dependencies
-wit-bindgen-rt = { version = "0.39.0", features = ["bitflags"] }
+wit-bindgen-rt = { version = "0.41.0", features = ["bitflags"] }
