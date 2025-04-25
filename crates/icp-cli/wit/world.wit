@@ -1,24 +1,23 @@
-package root:component;
+package icp:cli@0.0.1;
 
-package local:host {
-  interface misc {
-    print: func(s: string);
-    rand: func() -> u8;
-    time: func() -> u64;
-  }
+interface misc {
+  print: func(s: string);
+
+  rand: func() -> u8;
+
+  time: func() -> u64;
 }
 
-package local:extension {
-  interface cli {
-    // spec provides a schema a for the cli
-    spec: func() -> string;
+interface cli {
+  /// spec provides a schema a for the cli
+  spec: func() -> string;
 
-    // run the cli portion of the extension
-    run: func(args: list<string>) -> u8;
-  }
+  /// run the cli portion of the extension
+  run: func(args: list<string>) -> u8;
 }
 
 world extension {
-  import local:host/misc;
-  export local:extension/cli;
+  import misc;
+
+  export cli;
 }

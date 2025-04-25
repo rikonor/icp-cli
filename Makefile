@@ -23,3 +23,9 @@ component: build
 
 output-path:
 	@realpath $(COMPONENT_OUT_DIR)/$(EXTENSION_NAME).component.wasm
+
+wkg:
+	@wkg get \
+		icp:cli@0.0.1 \
+		--overwrite \
+		-o crates/icp-cli/wit/world.wit

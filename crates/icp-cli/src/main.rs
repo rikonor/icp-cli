@@ -93,7 +93,7 @@ static DEFAULT_DIR_PRECOMPILES: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION
 });
 
 // WIT Bindings
-use local::host::misc::{self, Host};
+use icp::cli::misc::{self, Host};
 
 bindgen!({
     path: "wit",
@@ -389,7 +389,7 @@ async fn main() -> Result<(), Error> {
 
         // Call spec for CommandSpec
         let cspec = inst
-            .local_extension_cli()
+            .icp_cli_cli()
             .call_spec(&mut store)
             .await
             .context("failed to retrieve spec")?;
@@ -488,8 +488,8 @@ async fn main() -> Result<(), Error> {
             // Invoke extension
             match insts.get(cmd) {
                 Some(inst) => {
-                    let _exit_code = inst
-                        .local_extension_cli()
+                    let _exit_code = inst //
+                        .icp_cli_cli()
                         .call_run(&mut store, &args)
                         .await?;
                 }

@@ -16,3 +16,7 @@ crate-type = ["cdylib"]
 package = "component:project"
 
 [package.metadata.component.dependencies]
+
+[package.metadata.component.target.dependencies]
+"icp:cli" = "0.0.1"
+"icp:cli-multiply" = "0.0.1"

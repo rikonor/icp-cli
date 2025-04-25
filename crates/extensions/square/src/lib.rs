@@ -3,13 +3,10 @@ use clap::Command;
 #[allow(warnings)]
 mod bindings;
 
-// imports
-use bindings::local::host::misc::print;
-use bindings::local::multiply::lib::multiply;
-
-// exports
-use bindings::exports::local::extension::cli;
-use bindings::exports::local::square::lib;
+use bindings::{
+    exports::icp::{cli::cli, cli_square::lib},
+    icp::{cli::misc::print, cli_multiply::lib::multiply},
+};
 
 mod spec;
 use spec::CommandSpec;

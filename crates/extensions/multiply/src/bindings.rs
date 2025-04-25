@@ -3,8 +3,8 @@
 //   * runtime_path: "wit_bindgen_rt"
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
-pub mod local {
-    pub mod host {
+pub mod icp {
+    pub mod cli {
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod misc {
             #[used]
@@ -17,7 +17,7 @@ pub mod local {
                     let ptr0 = vec0.as_ptr().cast::<u8>();
                     let len0 = vec0.len();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "local:host/misc")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.0.1")]
                     unsafe extern "C" {
                         #[link_name = "print"]
                         fn wit_import1(_: *mut u8, _: usize);
@@ -33,7 +33,7 @@ pub mod local {
             pub fn rand() -> u8 {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "local:host/misc")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.0.1")]
                     unsafe extern "C" {
                         #[link_name = "rand"]
                         fn wit_import0() -> i32;
@@ -50,7 +50,7 @@ pub mod local {
             pub fn time() -> u64 {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "local:host/misc")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.0.1")]
                     unsafe extern "C" {
                         #[link_name = "time"]
                         fn wit_import0() -> i64;
@@ -69,8 +69,8 @@ pub mod local {
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
 pub mod exports {
-    pub mod local {
-        pub mod extension {
+    pub mod icp {
+        pub mod cli {
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
             pub mod cli {
                 #[used]
@@ -139,23 +139,23 @@ pub mod exports {
                     fn run(args: _rt::Vec<_rt::String>) -> u8;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_local_extension_cli_cabi {
+                macro_rules! __export_icp_cli_cli_0_0_1_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "local:extension/cli#spec")] unsafe extern "C" fn export_spec()
-                        -> * mut u8 { unsafe { $($path_to_types)*::
-                        _export_spec_cabi::<$ty > () } } #[unsafe (export_name =
-                        "cabi_post_local:extension/cli#spec")] unsafe extern "C" fn
+                        "icp:cli/cli@0.0.1#spec")] unsafe extern "C" fn export_spec() ->
+                        * mut u8 { unsafe { $($path_to_types)*:: _export_spec_cabi::<$ty
+                        > () } } #[unsafe (export_name =
+                        "cabi_post_icp:cli/cli@0.0.1#spec")] unsafe extern "C" fn
                         _post_return_spec(arg0 : * mut u8,) { unsafe {
                         $($path_to_types)*:: __post_return_spec::<$ty > (arg0) } }
-                        #[unsafe (export_name = "local:extension/cli#run")] unsafe extern
+                        #[unsafe (export_name = "icp:cli/cli@0.0.1#run")] unsafe extern
                         "C" fn export_run(arg0 : * mut u8, arg1 : usize,) -> i32 { unsafe
                         { $($path_to_types)*:: _export_run_cabi::<$ty > (arg0, arg1) } }
                         };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_local_extension_cli_cabi;
+                pub(crate) use __export_icp_cli_cli_0_0_1_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -169,7 +169,7 @@ pub mod exports {
                 );
             }
         }
-        pub mod multiply {
+        pub mod cli_multiply {
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
             pub mod lib {
                 #[used]
@@ -187,21 +187,20 @@ pub mod exports {
                     _rt::as_i32(result0)
                 }
                 pub trait Guest {
-                    /// multiply two numbers
                     fn multiply(a: u32, b: u32) -> u32;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_local_multiply_lib_cabi {
+                macro_rules! __export_icp_cli_multiply_lib_0_0_1_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "local:multiply/lib#multiply")] unsafe extern "C" fn
+                        "icp:cli-multiply/lib@0.0.1#multiply")] unsafe extern "C" fn
                         export_multiply(arg0 : i32, arg1 : i32,) -> i32 { unsafe {
                         $($path_to_types)*:: _export_multiply_cabi::<$ty > (arg0, arg1) }
                         } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_local_multiply_lib_cabi;
+                pub(crate) use __export_icp_cli_multiply_lib_0_0_1_cabi;
             }
         }
     }
@@ -212,22 +211,6 @@ mod _rt {
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
-    }
-    pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
-        if size == 0 {
-            return;
-        }
-        let layout = alloc::Layout::from_size_align_unchecked(size, align);
-        alloc::dealloc(ptr, layout);
-    }
-    pub use alloc_crate::string::String;
-    pub use alloc_crate::vec::Vec;
-    pub unsafe fn string_lift(bytes: Vec<u8>) -> String {
-        if cfg!(debug_assertions) {
-            String::from_utf8(bytes).unwrap()
-        } else {
-            String::from_utf8_unchecked(bytes)
-        }
     }
     pub fn as_i32<T: AsI32>(t: T) -> i32 {
         t.as_i32()
@@ -288,6 +271,22 @@ mod _rt {
             self as i32
         }
     }
+    pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
+        if size == 0 {
+            return;
+        }
+        let layout = alloc::Layout::from_size_align_unchecked(size, align);
+        alloc::dealloc(ptr, layout);
+    }
+    pub use alloc_crate::string::String;
+    pub use alloc_crate::vec::Vec;
+    pub unsafe fn string_lift(bytes: Vec<u8>) -> String {
+        if cfg!(debug_assertions) {
+            String::from_utf8(bytes).unwrap()
+        } else {
+            String::from_utf8_unchecked(bytes)
+        }
+    }
     pub use alloc_crate::alloc;
     extern crate alloc as alloc_crate;
 }
@@ -309,36 +308,36 @@ mod _rt {
 /// ```
 #[allow(unused_macros)]
 #[doc(hidden)]
-macro_rules! __export_root_impl {
+macro_rules! __export_extension_impl {
     ($ty:ident) => {
         self::export!($ty with_types_in self);
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::local::extension::cli::__export_local_extension_cli_cabi!($ty
-        with_types_in $($path_to_types_root)*:: exports::local::extension::cli);
+        exports::icp::cli_multiply::lib::__export_icp_cli_multiply_lib_0_0_1_cabi!($ty
+        with_types_in $($path_to_types_root)*:: exports::icp::cli_multiply::lib);
         $($path_to_types_root)*::
-        exports::local::multiply::lib::__export_local_multiply_lib_cabi!($ty
-        with_types_in $($path_to_types_root)*:: exports::local::multiply::lib);
+        exports::icp::cli::cli::__export_icp_cli_cli_0_0_1_cabi!($ty with_types_in
+        $($path_to_types_root)*:: exports::icp::cli::cli);
     };
 }
 #[doc(inline)]
-pub(crate) use __export_root_impl as export;
+pub(crate) use __export_extension_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:root:component:root:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:icp:cli-multiply@0.0.1:extension:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 335] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xd4\x01\x01A\x02\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 362] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xea\x01\x01A\x02\x01\
 A\x06\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\
-\x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\x0flocal:host/misc\x05\0\x01B\x05\
-\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\0\x03run\x01\x02\
-\x04\0\x13local:extension/cli\x05\x01\x01B\x02\x01@\x02\x01ay\x01by\0y\x04\0\x08\
-multiply\x01\0\x04\0\x12local:multiply/lib\x05\x02\x04\0\x13root:component/root\x04\
-\0\x0b\x0a\x01\0\x04root\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-\
-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
+\x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\x12icp:cli/misc@0.0.1\x05\0\x01B\x02\
+\x01@\x02\x01ay\x01by\0y\x04\0\x08multiply\x01\0\x04\0\x1aicp:cli-multiply/lib@0\
+.0.1\x05\x01\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0\
+}\x04\0\x03run\x01\x02\x04\0\x11icp:cli/cli@0.0.1\x05\x02\x04\0\x20icp:cli-multi\
+ply/extension@0.0.1\x04\0\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09producers\x01\
+\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
