@@ -9,7 +9,7 @@ use wasmtime::component::{Instance, Linker};
 use wasmtime::Store;
 
 use super::function_registry::{FunctionRegistry, FunctionRegistryError};
-use crate::interface::LIBRARY_SUFFIX;
+use crate::interface::{parse_interface_name, LIBRARY_SUFFIX};
 use crate::manifest::{ExportedInterface, ImportedInterface};
 
 /// Errors that can occur during dynamic linking operations
@@ -53,12 +53,13 @@ impl DynamicLinker {
         }
     }
 
-    /// Link imports for an extension
+    /// Link imports and exports for an extension
     ///
     /// # Arguments
     ///
     /// * `lnk` - Wasmtime linker to add imports to
     /// * `imps` - List of imported interfaces to link
+    /// * `exps` - List of exported interfaces to link
     ///
     /// # Returns
     ///
@@ -72,8 +73,9 @@ impl DynamicLinker {
     ) -> Result<(), DynamicLinkingError> {
         // Link imports
         for imp in imps {
-            // Skip non-library interfaces
-            if !imp.name.ends_with(LIBRARY_SUFFIX) {
+            // Skip non-library interfaces (check base name)
+            let (name, _) = parse_interface_name(&imp.name);
+            if !name.ends_with(LIBRARY_SUFFIX) {
                 continue;
             }
 
@@ -126,8 +128,9 @@ impl DynamicLinker {
 
         // Link exports
         for exp in exps {
-            // Skip non-library interfaces
-            if !exp.name.ends_with(LIBRARY_SUFFIX) {
+            // Skip non-library interfaces (check base name)
+            let (name, _) = parse_interface_name(&exp.name);
+            if !name.ends_with(LIBRARY_SUFFIX) {
                 continue;
             }
 

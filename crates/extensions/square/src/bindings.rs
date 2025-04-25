@@ -159,9 +159,7 @@ pub mod exports {
                     _rt::as_i32(result4)
                 }
                 pub trait Guest {
-                    /// spec provides a schema a for the cli
                     fn spec() -> _rt::String;
-                    /// run the cli portion of the extension
                     fn run(args: _rt::Vec<_rt::String>) -> u8;
                 }
                 #[doc(hidden)]
