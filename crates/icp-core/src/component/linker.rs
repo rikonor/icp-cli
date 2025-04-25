@@ -78,6 +78,8 @@ impl DynamicLinker {
                 continue;
             }
 
+            let mut inst = lnk.instance(&imp.name)?;
+
             for f in imp.functions {
                 let k = FunctionRegistry::create_key(
                     &imp.name, // interface
@@ -96,32 +98,28 @@ impl DynamicLinker {
 
                 let fname = f.clone();
 
-                lnk.instance(&imp.name)?.func_new_async(
-                    &f,
-                    move |mut store, params, results| {
-                        let fname = fname.clone();
-                        let fref = Arc::clone(&fref);
+                inst.func_new_async(&f, move |mut store, params, results| {
+                    let fname = fname.clone();
+                    let fref = Arc::clone(&fref);
 
-                        Box::new(async move {
-                            let f = {
-                                let g = fref.lock().unwrap();
-                                *g.as_ref().ok_or_else(|| {
-                                    DynamicLinkingError::UnresolvedReference(fname)
-                                })?
-                            };
+                    Box::new(async move {
+                        let f = {
+                            let g = fref.lock().unwrap();
+                            *g.as_ref()
+                                .ok_or_else(|| DynamicLinkingError::UnresolvedReference(fname))?
+                        };
 
-                            f.call_async(&mut store, params, results)
-                                .await
-                                .context("call failed")?;
+                        f.call_async(&mut store, params, results)
+                            .await
+                            .context("call failed")?;
 
-                            f.post_return_async(&mut store)
-                                .await
-                                .context("post-return failed")?;
+                        f.post_return_async(&mut store)
+                            .await
+                            .context("post-return failed")?;
 
-                            Ok(())
-                        })
-                    },
-                )?;
+                        Ok(())
+                    })
+                })?;
             }
         }
 
@@ -132,6 +130,8 @@ impl DynamicLinker {
             if !name.ends_with(LIBRARY_SUFFIX) {
                 continue;
             }
+
+            let mut inst = lnk.instance(&exp.name)?;
 
             for f in exp.funcs {
                 let k = FunctionRegistry::create_key(
@@ -151,32 +151,28 @@ impl DynamicLinker {
 
                 let fname = f.clone();
 
-                lnk.instance(&exp.name)?.func_new_async(
-                    &f,
-                    move |mut store, params, results| {
-                        let fname = fname.clone();
-                        let fref = Arc::clone(&fref);
+                inst.func_new_async(&f, move |mut store, params, results| {
+                    let fname = fname.clone();
+                    let fref = Arc::clone(&fref);
 
-                        Box::new(async move {
-                            let f = {
-                                let g = fref.lock().unwrap();
-                                *g.as_ref().ok_or_else(|| {
-                                    DynamicLinkingError::UnresolvedReference(fname)
-                                })?
-                            };
+                    Box::new(async move {
+                        let f = {
+                            let g = fref.lock().unwrap();
+                            *g.as_ref()
+                                .ok_or_else(|| DynamicLinkingError::UnresolvedReference(fname))?
+                        };
 
-                            f.call_async(&mut store, params, results)
-                                .await
-                                .context("call failed")?;
+                        f.call_async(&mut store, params, results)
+                            .await
+                            .context("call failed")?;
 
-                            f.post_return_async(&mut store)
-                                .await
-                                .context("post-return failed")?;
+                        f.post_return_async(&mut store)
+                            .await
+                            .context("post-return failed")?;
 
-                            Ok(())
-                        })
-                    },
-                )?;
+                        Ok(())
+                    })
+                })?;
             }
         }
 
@@ -320,8 +316,8 @@ mod tests {
         // Create dynamic linker
         let mut dynlnk = DynamicLinker::new(reg);
 
-        let imp1 = ImportedInterface {
-            name: "my-namespace:my-package/lib@0.0.1".to_string(),
+        let imp = ImportedInterface {
+            name: "my-namespace:my-package-1/lib@0.0.1".to_string(),
             provider: "N/A".to_string(),
             functions: vec![
                 "fn-1".to_string(), //
@@ -329,10 +325,15 @@ mod tests {
             ],
         };
 
+        let exp = ExportedInterface {
+            name: "my-namespace:my-package-2/lib@0.0.1".to_string(),
+            funcs: vec!["fn-1".to_string(), "fn-2".to_string()],
+        };
+
         dynlnk.link(
             &mut lnk,
-            vec![imp1], // imports
-            vec![],     // exports
+            vec![imp], // imports
+            vec![exp], // exports
         )?;
 
         Ok(())
