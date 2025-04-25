@@ -171,3 +171,94 @@ async fn test_multi_lib_detection() -> Result<(), Error> {
 
     Ok(())
 }
+
+#[tokio::test]
+async fn test_versioned_lib_detection() -> Result<(), Error> {
+    let mut config = Config::new();
+    config.wasm_component_model(true).async_support(true);
+    let engine = Engine::new(&config)?;
+
+    // Create component with versioned library interfaces
+    let component = MockComponentBuilder::new_versioned_lib().build(&engine)?;
+
+    // Test interface detection
+    let interfaces = IfaceDetector.detect(&engine, &component).await?;
+
+    // With the fixed implementation, versioned interfaces should be detected
+    assert_eq!(interfaces.imports.len(), 1);
+    assert_eq!(
+        interfaces.imports[0],
+        Interface {
+            name: "test:math/lib@0.0.1".to_string(),
+            funcs: vec!["add".to_string()],
+        }
+    );
+
+    assert_eq!(interfaces.exports.len(), 1);
+    assert_eq!(
+        interfaces.exports[0],
+        Interface {
+            name: "test:calc/lib@0.0.1".to_string(),
+            funcs: vec!["multiply".to_string()],
+        }
+    );
+
+    Ok(())
+}
+
+#[tokio::test]
+async fn test_mixed_versioned_lib_detection() -> Result<(), Error> {
+    let mut config = Config::new();
+    config.wasm_component_model(true).async_support(true);
+    let engine = Engine::new(&config)?;
+
+    // Create component with mixed versioned and non-versioned interfaces
+    let component = MockComponentBuilder::new_mixed_versioned_lib().build(&engine)?;
+
+    // Test interface detection
+    let interfaces = IfaceDetector.detect(&engine, &component).await?;
+
+    // With the fixed implementation, both versioned and non-versioned interfaces should be detected
+    assert_eq!(interfaces.imports.len(), 2);
+
+    // Check for versioned math library interface
+    let math_lib = interfaces
+        .imports
+        .iter()
+        .find(|i| i.name == "test:math/lib@0.0.1")
+        .expect("Versioned math lib not found");
+    assert_eq!(math_lib.funcs.len(), 1);
+    assert!(math_lib.funcs.contains(&"add".to_string()));
+
+    // Check for non-versioned string library interface
+    let string_lib = interfaces
+        .imports
+        .iter()
+        .find(|i| i.name == "test:string/lib")
+        .expect("String lib not found");
+    assert_eq!(string_lib.funcs.len(), 1);
+    assert!(string_lib.funcs.contains(&"concat".to_string()));
+
+    // Check exports
+    assert_eq!(interfaces.exports.len(), 2);
+
+    // Check for versioned calc library interface
+    let calc_lib = interfaces
+        .exports
+        .iter()
+        .find(|i| i.name == "test:calc/lib@0.0.1")
+        .expect("Versioned calc lib not found");
+    assert_eq!(calc_lib.funcs.len(), 1);
+    assert!(calc_lib.funcs.contains(&"multiply".to_string()));
+
+    // Check for non-versioned format library interface
+    let format_lib = interfaces
+        .exports
+        .iter()
+        .find(|i| i.name == "test:format/lib")
+        .expect("Format lib not found");
+    assert_eq!(format_lib.funcs.len(), 1);
+    assert!(format_lib.funcs.contains(&"format".to_string()));
+
+    Ok(())
+}

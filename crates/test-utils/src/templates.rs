@@ -374,3 +374,148 @@ pub const MULTI_LIB_TEMPLATE: &str = r#"
   (export "test:calc/lib" (instance $calc))
   (export "test:format/lib" (instance $format))
 )"#;
+
+/// Template with versioned library interfaces
+///
+/// Purpose:
+/// - Tests the detection of versioned interfaces (with @x.y.z suffix)
+/// - Demonstrates the issue with the current interface detection logic
+///
+/// Structure:
+/// - Imports a math library with version ("test:math/lib@0.0.1")
+/// - Exports a calc library with version ("test:calc/lib@0.0.1")
+///
+/// Key Features:
+/// - Versioned interface names with @x.y.z suffix
+///
+/// Test Expectations:
+/// - With current implementation: Should fail to detect imports and exports
+/// - With fixed implementation: Should detect one import and one export
+pub const VERSIONED_LIB_TEMPLATE: &str = r#"
+(component
+  ;; Import interface type and instance with version
+  (type $add_ty (func (param "x" u32) (param "y" u32) (result u32)))
+  (import "test:math/lib@0.0.1"
+    (instance $math
+      (export "add" (func (type $add_ty)))))
+
+  ;; Core module implementation
+  (core module $impl
+    (memory (export "mem") 1)
+
+    ;; Realloc function required for string handling
+    (func $realloc (param i32 i32 i32 i32) (result i32)
+      (i32.const 0))  ;; Dummy implementation for testing
+    (export "realloc" (func $realloc))
+
+    ;; Core implementation
+    (func $multiply (param i32 i32) (result i32)
+      local.get 0
+      local.get 1
+      i32.mul)
+    (export "multiply" (func $multiply)))
+
+  ;; Create core instance
+  (core instance $instance (instantiate $impl))
+
+  ;; Define multiply function type
+  (type $multiply_ty (func (param "x" u32) (param "y" u32) (result u32)))
+
+  ;; Lift core function to component function
+  (func $multiply_lifted (type $multiply_ty)
+    (canon lift
+      (core func $instance "multiply")
+      (memory $instance "mem")
+      (realloc (func $instance "realloc"))))
+
+  ;; Define calc library instance with exports
+  (instance $calc
+    (export "multiply" (func $multiply_lifted)))
+
+  ;; Export the calc library instance with version
+  (export "test:calc/lib@0.0.1" (instance $calc))
+)"#;
+
+/// Template with mixed versioned and non-versioned library interfaces
+///
+/// Purpose:
+/// - Tests the detection of both versioned and non-versioned interfaces
+/// - Ensures both types of interfaces can work together
+///
+/// Structure:
+/// - Imports both versioned ("test:math/lib@0.0.1") and non-versioned ("test:string/lib") interfaces
+/// - Exports both versioned ("test:calc/lib@0.0.1") and non-versioned ("test:format/lib") interfaces
+///
+/// Key Features:
+/// - Mix of versioned and non-versioned interface names
+///
+/// Test Expectations:
+/// - With current implementation: Should only detect non-versioned interfaces
+/// - With fixed implementation: Should detect all interfaces
+pub const MIXED_VERSIONED_LIB_TEMPLATE: &str = r#"
+(component
+  ;; Import interface types
+  (type $add_ty (func (param "x" u32) (param "y" u32) (result u32)))
+  (type $concat_ty (func (param "a" string) (param "b" string) (result string)))
+
+  ;; Import versioned math library
+  (import "test:math/lib@0.0.1"
+    (instance $math
+      (export "add" (func (type $add_ty)))))
+
+  ;; Import non-versioned string library
+  (import "test:string/lib"
+    (instance $str
+      (export "concat" (func (type $concat_ty)))))
+
+  ;; Core module implementation
+  (core module $impl
+    (memory (export "mem") 1)
+
+    ;; Realloc function required for string handling
+    (func $realloc (param i32 i32 i32 i32) (result i32)
+      (i32.const 0))  ;; Dummy implementation for testing
+    (export "realloc" (func $realloc))
+
+    ;; Core implementations
+    (func $multiply (param i32 i32) (result i32)
+      local.get 0
+      local.get 1
+      i32.mul)
+    (export "multiply" (func $multiply))
+
+    (func $format (param i32) (result i32)
+      local.get 0)
+    (export "format" (func $format)))
+
+  ;; Create core instance
+  (core instance $instance (instantiate $impl))
+
+  ;; Define function types
+  (type $multiply_ty (func (param "x" u32) (param "y" u32) (result u32)))
+  (type $format_ty (func (param "x" u32) (result u32)))
+
+  ;; Lift core functions to component functions
+  (func $multiply_lifted (type $multiply_ty)
+    (canon lift
+      (core func $instance "multiply")
+      (memory $instance "mem")
+      (realloc (func $instance "realloc"))))
+
+  (func $format_lifted (type $format_ty)
+    (canon lift
+      (core func $instance "format")
+      (memory $instance "mem")
+      (realloc (func $instance "realloc"))))
+
+  ;; Define library instances with exports
+  (instance $calc
+    (export "multiply" (func $multiply_lifted)))
+
+  (instance $format
+    (export "format" (func $format_lifted)))
+
+  ;; Export the library instances
+  (export "test:calc/lib@0.0.1" (instance $calc))
+  (export "test:format/lib" (instance $format))
+)"#;

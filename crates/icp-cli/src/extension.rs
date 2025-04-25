@@ -13,7 +13,7 @@ use wasmtime::{component::Component, Engine};
 
 use icp_core::{
     dependency::{DependencyError, DependencyGraph},
-    interface::{ComponentInterfaces, DetectIfaces, LIBRARY_SUFFIX},
+    interface::{parse_interface_name, ComponentInterfaces, DetectIfaces, LIBRARY_SUFFIX},
     manifest::{
         self, ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store,
     },
@@ -179,7 +179,11 @@ impl AddExtension for ExtensionAdder {
         let [imports, exports] = [imports, exports].map(|ifaces| {
             ifaces
                 .into_iter()
-                .filter(|x| x.name.ends_with(LIBRARY_SUFFIX))
+                .filter(|x| {
+                    // Extract base name without version
+                    let (base_name, _) = parse_interface_name(&x.name);
+                    base_name.ends_with(LIBRARY_SUFFIX)
+                })
                 .collect::<Vec<_>>()
         });
 

@@ -87,3 +87,33 @@ pub use detector::{ComponentInterfaces, DetectIfaces, IfaceDetector, Interface};
 /// assert!(interface_name.ends_with(LIBRARY_SUFFIX));
 /// ```
 pub const LIBRARY_SUFFIX: &str = "/lib";
+
+/// Parse an interface name into its base name and version components
+///
+/// This function extracts the base name and version from an interface name.
+/// For versioned interfaces (e.g., "math/lib@1.0.0"), it returns the base name
+/// ("math/lib") and the version ("1.0.0").
+/// For non-versioned interfaces (e.g., "math/lib"), it returns the name and None.
+///
+/// # Examples
+///
+/// ```
+/// use icp_core::interface::parse_interface_name;
+///
+/// let (base, version) = parse_interface_name("math/lib@1.0.0");
+/// assert_eq!(base, "math/lib");
+/// assert_eq!(version, Some("1.0.0".to_string()));
+///
+/// let (base, version) = parse_interface_name("math/lib");
+/// assert_eq!(base, "math/lib");
+/// assert_eq!(version, None);
+/// ```
+pub fn parse_interface_name(name: &str) -> (String, Option<String>) {
+    if let Some(idx) = name.rfind('@') {
+        let base_name = name[..idx].to_string();
+        let version = name[idx + 1..].to_string();
+        (base_name, Some(version))
+    } else {
+        (name.to_string(), None)
+    }
+}
