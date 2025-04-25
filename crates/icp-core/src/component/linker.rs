@@ -4,7 +4,6 @@ use std::{
 };
 
 use anyhow::{anyhow, Context};
-use thiserror::Error;
 use wasmtime::component::{Instance, Linker};
 use wasmtime::Store;
 
@@ -13,7 +12,7 @@ use crate::interface::{parse_interface_name, LIBRARY_SUFFIX};
 use crate::manifest::{ExportedInterface, ImportedInterface};
 
 /// Errors that can occur during dynamic linking operations
-#[derive(Debug, Error)]
+#[derive(Debug, thiserror::Error)]
 pub enum DynamicLinkingError {
     /// Function reference not resolved
     #[error("function reference not resolved: {0}")]
@@ -280,6 +279,9 @@ impl DynamicLinker {
 
 #[cfg(test)]
 mod tests {
+    use anyhow::Error;
+    use wasmtime::{Config, Engine};
+
     use super::*;
 
     #[test]
@@ -298,5 +300,41 @@ mod tests {
         assert!(!linker.is_extension_resolved("test"));
         linker.resolved_exports.insert("test".to_string(), true);
         assert!(linker.is_extension_resolved("test"));
+    }
+
+    #[tokio::test]
+    async fn test_link_duplicate_function_definition_fails() -> Result<(), Error> {
+        // WASM Configuration
+        let mut cfg = Config::new();
+        let cfg = cfg.async_support(true);
+
+        // Engine
+        let ngn = Engine::new(cfg)?;
+
+        // Linker
+        let mut lnk: Linker<()> = Linker::new(&ngn);
+
+        // Create function registry
+        let reg = FunctionRegistry::new();
+
+        // Create dynamic linker
+        let mut dynlnk = DynamicLinker::new(reg);
+
+        let imp1 = ImportedInterface {
+            name: "my-namespace:my-package/lib@0.0.1".to_string(),
+            provider: "N/A".to_string(),
+            functions: vec![
+                "fn-1".to_string(), //
+                "fn-2".to_string(), //
+            ],
+        };
+
+        dynlnk.link(
+            &mut lnk,
+            vec![imp1], // imports
+            vec![],     // exports
+        )?;
+
+        Ok(())
     }
 }
