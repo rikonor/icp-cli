@@ -145,6 +145,7 @@ jobs:
           path: |
             target/wasm32-unknown-unknown/release/build.component.wasm
             target/wasm32-unknown-unknown/release/project.component.wasm
+            target/wasm32-unknown-unknown/release/identity.component.wasm
 
   create-release:
     needs: [build-cli, build-extensions]
