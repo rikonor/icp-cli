@@ -133,18 +133,18 @@ jobs:
         if: steps.check-wasm-tools.outputs.skip_install == 'false'
         run: cargo install wasm-tools
 
-      - name: build multiply
-        run: make CARGO_RELEASE=1 EXTENSION_NAME=multiply
-
-      - name: build square
-        run: make CARGO_RELEASE=1 EXTENSION_NAME=square
+      - name: build extensions
+        run: |
+          make CARGO_RELEASE=1 EXTENSION_NAME=build
+          make CARGO_RELEASE=1 EXTENSION_NAME=project
+          make CARGO_RELEASE=1 EXTENSION_NAME=identity
 
       - uses: actions/upload-artifact@v4
         with:
           name: extensions
           path: |
-            target/wasm32-unknown-unknown/release/multiply.component.wasm
-            target/wasm32-unknown-unknown/release/square.component.wasm
+            target/wasm32-unknown-unknown/release/build.component.wasm
+            target/wasm32-unknown-unknown/release/project.component.wasm
 
   create-release:
     needs: [build-cli, build-extensions]
