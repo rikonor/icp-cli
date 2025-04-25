@@ -1,0 +1,19 @@
+[package]
+name = "identity"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+clap = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
+
+[lib]
+crate-type = ["cdylib"]
+
+[package.metadata.component]
+package = "component:identity"
+target = "icp:cli-identity/extension@0.0.1"
+
+[package.metadata.component.dependencies]
