@@ -20,7 +20,7 @@ jobs:
         id: get-cli-version
         run: |
           # Fetch the latest tag matching v*.*.* pattern
-          LATEST_CLI_TAG=$(gh release list --repo ${{ github.repository }} --limit 1 --exclude-drafts --exclude-prereleases --json tagName -q '.[0].tagName | select(startswith("v"))')
+          LATEST_CLI_TAG=$(gh release list --repo ${{ github.repository }} --limit 1 --exclude-drafts --exclude-pre-releases --json tagName -q '.[0].tagName | select(startswith("v"))')
           if [ -z "$LATEST_CLI_TAG" ]; then
             echo "Error: Could not determine latest CLI release tag."
             exit 1
