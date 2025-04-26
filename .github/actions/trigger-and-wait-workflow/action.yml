@@ -1,0 +1,53 @@
+name: 'Trigger and Wait for Workflow'
+description: 'Triggers a specified workflow, retrieves its run ID, and waits for it to complete.'
+
+inputs:
+  workflow_name:
+    description: 'The filename of the workflow to trigger (e.g., update-distribution-channels.yml)'
+    required: true
+  ref:
+    description: 'The git ref (branch or tag) to run the workflow on'
+    required: true
+  github_token:
+    description: 'GitHub token with permissions to trigger workflows and read run status'
+    required: true
+
+runs:
+  using: "composite"
+  steps:
+    - name: Trigger Workflow
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        echo "Triggering workflow '${{ inputs.workflow_name }}' on ref '${{ inputs.ref }}'..."
+        gh workflow run ${{ inputs.workflow_name }} --ref ${{ inputs.ref }}
+        echo "Workflow triggered."
+
+    - name: Get Triggered Workflow Run ID
+      id: get-run-id
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: |
+        # Wait a few seconds for the run to register
+        sleep 5
+        echo "Fetching run ID for workflow '${{ inputs.workflow_name }}' on ref '${{ inputs.ref }}'..."
+        RUN_ID=$(gh run list --workflow=${{ inputs.workflow_name }} --ref ${{ inputs.ref }} --limit 1 --json databaseId --jq '.[0].databaseId')
+        if [ -z "$RUN_ID" ] || [ "$RUN_ID" == "null" ]; then
+          echo "::error::Failed to retrieve run ID. Workflow '${{ inputs.workflow_name }}' might not have started for ref '${{ inputs.ref }}'."
+          exit 1
+        fi
+        echo "Found run ID: $RUN_ID"
+        # Set RUN_ID as an environment variable for the next step within the composite action's context
+        echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+
+    - name: Wait for Triggered Workflow
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        # RUN_ID is inherited from the previous step's GITHUB_ENV
+      run: |
+        echo "Waiting for workflow run $RUN_ID to complete..."
+        gh run watch $RUN_ID --exit-status
+        echo "Workflow run $RUN_ID completed."

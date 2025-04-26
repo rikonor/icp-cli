@@ -148,39 +148,16 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Trigger Distribution Update via gh CLI
-        env:
-          GH_TOKEN: ${{ github.token }} # gh cli needs auth
-          # HOMEBREW_TAP_TOKEN is needed by the triggered workflow,
-          # which will inherit secrets available to the runner.
-        run: |
-          echo "Triggering update-distribution-channels workflow on ref ${{ github.ref }}"
-          gh workflow run update-distribution-channels.yml --ref ${{ github.ref }}
-          echo "Workflow triggered. Note: This step completes immediately, check Actions tab for progress."
-
-      - name: Get Triggered Workflow Run ID
-        id: get-run-id
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          # Wait a few seconds for the run to register
-          sleep 5
-          echo "Fetching run ID for workflow 'update-distribution-channels.yml' on ref '${{ github.ref }}'..."
-          RUN_ID=$(gh run list --workflow=update-distribution-channels.yml --ref ${{ github.ref }} --limit 1 --json databaseId --jq '.[0].databaseId')
-          if [ -z "$RUN_ID" ] || [ "$RUN_ID" == "null" ]; then
-            echo "::error::Failed to retrieve run ID. Workflow 'update-distribution-channels.yml' might not have started."
-            exit 1
-          fi
-          echo "Found run ID: $RUN_ID"
-          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
-
-      - name: Wait for Distribution Workflow
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          echo "Waiting for distribution workflow run $RUN_ID to complete..."
-          gh run watch $RUN_ID --exit-status
-          echo "Distribution workflow run $RUN_ID completed."
+      - name: Trigger and Wait for Distribution Update
+        uses: ./.github/actions/trigger-and-wait-workflow
+        with:
+          workflow_name: update-distribution-channels.yml
+          ref: ${{ github.ref_name }} # Use the tag name (e.g., v1.2.3)
+          github_token: ${{ github.token }}
+          # Note: The triggered workflow (update-distribution-channels.yml)
+          # needs access to secrets like HOMEBREW_TAP_TOKEN.
+          # These should be available via the runner's environment or explicitly passed
+          # if the triggered workflow becomes a 'workflow_call' type.
 
   # APT distribution remains separate for now
   distribution-apt:
