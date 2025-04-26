@@ -4,7 +4,7 @@ use clap::Command;
 mod bindings;
 
 use bindings::{
-    exports::icp::cli_project::lib::Guest,
+    exports::icp::project::lib::Guest,
     icp::cli::misc::{print, time},
 };
 

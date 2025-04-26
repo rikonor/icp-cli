@@ -70,6 +70,36 @@ pub mod icp {
 #[allow(dead_code, clippy::all)]
 pub mod exports {
     pub mod icp {
+        pub mod build {
+            #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+            pub mod lib {
+                #[used]
+                #[doc(hidden)]
+                static __FORCE_SECTION_REF: fn() = super::super::super::super::__link_custom_section_describing_imports;
+                use super::super::super::super::_rt;
+                #[doc(hidden)]
+                #[allow(non_snake_case)]
+                pub unsafe fn _export_build_cabi<T: Guest>() -> i32 {
+                    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
+                    let result0 = T::build();
+                    _rt::as_i32(result0)
+                }
+                pub trait Guest {
+                    fn build() -> u32;
+                }
+                #[doc(hidden)]
+                macro_rules! __export_icp_build_lib_0_0_1_cabi {
+                    ($ty:ident with_types_in $($path_to_types:tt)*) => {
+                        const _ : () = { #[unsafe (export_name =
+                        "icp:build/lib@0.0.1#build")] unsafe extern "C" fn export_build()
+                        -> i32 { unsafe { $($path_to_types)*:: _export_build_cabi::<$ty >
+                        () } } };
+                    };
+                }
+                #[doc(hidden)]
+                pub(crate) use __export_icp_build_lib_0_0_1_cabi;
+            }
+        }
         pub mod cli {
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
             pub mod cli {
@@ -165,36 +195,6 @@ pub mod exports {
                     [::core::mem::MaybeUninit::uninit(); 2
                         * ::core::mem::size_of::<*const u8>()],
                 );
-            }
-        }
-        pub mod cli_build {
-            #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
-            pub mod lib {
-                #[used]
-                #[doc(hidden)]
-                static __FORCE_SECTION_REF: fn() = super::super::super::super::__link_custom_section_describing_imports;
-                use super::super::super::super::_rt;
-                #[doc(hidden)]
-                #[allow(non_snake_case)]
-                pub unsafe fn _export_build_cabi<T: Guest>() -> i32 {
-                    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let result0 = T::build();
-                    _rt::as_i32(result0)
-                }
-                pub trait Guest {
-                    fn build() -> u32;
-                }
-                #[doc(hidden)]
-                macro_rules! __export_icp_cli_build_lib_0_0_1_cabi {
-                    ($ty:ident with_types_in $($path_to_types:tt)*) => {
-                        const _ : () = { #[unsafe (export_name =
-                        "icp:cli-build/lib@0.0.1#build")] unsafe extern "C" fn
-                        export_build() -> i32 { unsafe { $($path_to_types)*::
-                        _export_build_cabi::<$ty > () } } };
-                    };
-                }
-                #[doc(hidden)]
-                pub(crate) use __export_icp_cli_build_lib_0_0_1_cabi;
             }
         }
     }
@@ -308,9 +308,8 @@ macro_rules! __export_extension_impl {
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::icp::cli_build::lib::__export_icp_cli_build_lib_0_0_1_cabi!($ty
-        with_types_in $($path_to_types_root)*:: exports::icp::cli_build::lib);
-        $($path_to_types_root)*::
+        exports::icp::build::lib::__export_icp_build_lib_0_0_1_cabi!($ty with_types_in
+        $($path_to_types_root)*:: exports::icp::build::lib); $($path_to_types_root)*::
         exports::icp::cli::cli::__export_icp_cli_cli_0_0_1_cabi!($ty with_types_in
         $($path_to_types_root)*:: exports::icp::cli::cli);
     };
@@ -319,19 +318,19 @@ macro_rules! __export_extension_impl {
 pub(crate) use __export_extension_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:icp:cli-build@0.0.1:extension:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:icp:build@0.0.1:extension:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 347] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xdb\x01\x01A\x02\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 339] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xd3\x01\x01A\x02\x01\
 A\x06\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\
 \x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\x12icp:cli/misc@0.0.1\x05\0\x01B\x02\
-\x01@\0\0y\x04\0\x05build\x01\0\x04\0\x17icp:cli-build/lib@0.0.1\x05\x01\x01B\x05\
-\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\0\x03run\x01\x02\
-\x04\0\x11icp:cli/cli@0.0.1\x05\x02\x04\0\x1dicp:cli-build/extension@0.0.1\x04\0\
-\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dw\
-it-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
+\x01@\0\0y\x04\0\x05build\x01\0\x04\0\x13icp:build/lib@0.0.1\x05\x01\x01B\x05\x01\
+@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\0\x03run\x01\x02\x04\
+\0\x11icp:cli/cli@0.0.1\x05\x02\x04\0\x19icp:build/extension@0.0.1\x04\0\x0b\x0f\
+\x01\0\x09extension\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-compo\
+nent\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

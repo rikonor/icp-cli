@@ -14,6 +14,6 @@ crate-type = ["cdylib"]
 
 [package.metadata.component]
 package = "component:project"
-target = "icp:cli-project/extension@0.0.1"
+target = "icp:project/extension@0.0.1"
 
 [package.metadata.component.dependencies]

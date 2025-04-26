@@ -3,41 +3,25 @@
 version = 1
 
 [[package]]
-name = "icp:cli"
+name = "icp:build"
 
 [[package.version]]
 requirement = "^0.0.1"
 version = "0.0.1"
-digest = "sha256:0a257c8dcfbd0e36f4a759a7a4ec9f297acfeb18bbe81d7d7ee2f590ec2f07b7"
+digest = "sha256:997a0b3af2580cbe574eddc0ace22c1950244325b670780d40f95e928ca9e0ef"
 
 [[package]]
-name = "icp:cli-build"
+name = "icp:identity"
 
 [[package.version]]
 requirement = "^0.0.1"
 version = "0.0.1"
-digest = "sha256:588f2cd293806ca13f86a7e4dd6c5d0c5d8d1c7096f3bb26fe9e6133d0d9b3c6"
+digest = "sha256:6870a3f09e61a648699bdadb554697f0ce7cbee171855bd738de62252eb15d36"
 
 [[package]]
-name = "icp:cli-identity"
+name = "icp:project"
 
 [[package.version]]
 requirement = "^0.0.1"
 version = "0.0.1"
-digest = "sha256:c8e8add47032810e98e2cea9c387c263305d671df79916ff565876f46f702dfd"
-
-[[package]]
-name = "icp:cli-multiply"
-
-[[package.version]]
-requirement = "^0.0.1"
-version = "0.0.1"
-digest = "sha256:0c91779eb996464a1559565e509a3faf9c8bc44f36a3576e2bfc63295c9a482e"
-
-[[package]]
-name = "icp:cli-project"
-
-[[package.version]]
-requirement = "^0.0.1"
-version = "0.0.1"
-digest = "sha256:e6725d1ea5a81710f829bc254f97bc9319dfed0fc05546840c97fb7a7502f86c"
+digest = "sha256:dccfcbf12be5eacf0b4c11fee59281040706a9deab488b1ffbcea1158807a3be"

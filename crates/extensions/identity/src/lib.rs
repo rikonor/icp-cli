@@ -3,7 +3,7 @@ use clap::Command;
 #[allow(warnings)]
 mod bindings;
 
-use bindings::{exports::icp::cli_identity::lib::Guest, icp::cli::misc::print};
+use bindings::{exports::icp::identity::lib::Guest, icp::cli::misc::print};
 
 mod spec;
 use spec::CommandSpec;

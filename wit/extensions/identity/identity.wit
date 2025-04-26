@@ -1,7 +1,8 @@
-package icp:cli-multiply@0.0.1;
+package icp:identity@0.0.1;
 
 interface lib {
-  multiply: func(a: u32, b: u32) -> u32;
+  create: func() -> u32;
+  sign: func() -> u32;
 }
 
 world extension {

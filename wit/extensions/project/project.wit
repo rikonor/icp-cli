@@ -1,0 +1,10 @@
+package icp:project@0.0.1;
+
+interface lib {
+  create: func() -> u32;
+}
+
+world extension {
+  include icp:cli/extension@0.0.1;
+  export lib;
+}

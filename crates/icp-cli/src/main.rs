@@ -96,7 +96,7 @@ static DEFAULT_DIR_PRECOMPILES: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION
 use icp::cli::misc::{self, Host};
 
 bindgen!({
-    path: "wit",
+    path: "../../wit/cli",
     world: "extension",
     async: true,
 });

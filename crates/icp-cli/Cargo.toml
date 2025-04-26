@@ -29,6 +29,3 @@ sha2 = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 wasmtime = { workspace = true }
-
-# [package.metadata.component.target.dependencies]
-# "icp:cli" = "0.0.1"
