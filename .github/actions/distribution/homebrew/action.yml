@@ -25,8 +25,8 @@ runs:
         GH_TOKEN: ${{ inputs.token }} # Use the input token here
       run: |
         # Get release info with URLs
-        echo "Fetching release info for v${{ inputs.version }}..."
-        gh release view "v${{ inputs.version }}" --json assets > release.json
+        echo "Fetching release info for ${{ inputs.version }}..."
+        gh release view "${{ inputs.version }}" --json assets > release.json
         if [ $? -ne 0 ]; then echo "Error: Failed to fetch release info."; exit 1; fi
         echo "Release info saved to release.json"
 
@@ -46,7 +46,7 @@ runs:
 
         # Download checksums file
         echo "Downloading checksums..."
-        gh release download "v${{ inputs.version }}" --pattern "checksums.txt" --output checksums.txt
+        gh release download "${{ inputs.version }}" --pattern "checksums.txt" --output checksums.txt
         if [ $? -ne 0 ]; then echo "Error: Failed to download checksums.txt."; exit 1; fi
 
         # Extract checksums
