@@ -20,9 +20,9 @@ struct Args {
     #[arg(long)]
     version: String,
 
-    /// JSON string containing extension info (name, version, url, sha256)
+    /// Path to the JSON file containing extension info (name, version, url, sha256)
     #[arg(long)]
-    extension_info_json: String,
+    extension_info_path: PathBuf,
 
     /// URL for Intel binary
     #[arg(long)]
@@ -81,8 +81,13 @@ fn main() -> Result<()> {
         sha256: args.arm_sha256, // Use directly from args
     };
 
-    // Parse extensions from the JSON input string
-    let extensions = parse_extensions_from_json(&args.extension_info_json)?;
+    // Read extension info JSON from the specified file path
+    let extension_json_content = std::fs::read_to_string(&args.extension_info_path)
+        .map_err(|e| icp_distribution::DistributionError::IoError(e))?; // Handle file reading error
+    println!("Read extension info from: {:?}", args.extension_info_path);
+
+    // Parse extensions from the JSON content read from the file
+    let extensions = parse_extensions_from_json(&extension_json_content)?;
 
     // Create formula context
     let formula_context =

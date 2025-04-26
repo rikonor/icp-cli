@@ -74,13 +74,22 @@ runs:
         git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
         git clone "https://x-access-token:${{ inputs.token }}@github.com/${{ inputs.tap_repo }}.git" tap-repo
 
+    - name: Write Extension Info to File
+      shell: bash
+      run: |
+        echo "Writing extension info JSON to hb_ext_info.json..."
+        echo '${{ inputs.extension_info_json }}' > hb_ext_info.json
+        if [ $? -ne 0 ]; then echo "Error: Failed to write hb_ext_info.json"; exit 1; fi
+        echo "Contents of hb_ext_info.json:"
+        cat hb_ext_info.json
+
     - name: Generate Formula
       shell: bash
       run: |
-        # Generate formula using our tool, passing the extension JSON directly
+        # Generate formula using our tool, passing the path to the extension JSON file
         cargo run --package icp-distribution --bin generate_formula -- \
           --version "${{ inputs.version }}" \
-          --extension-info-json '${{ inputs.extension_info_json }}' \
+          --extension-info-path hb_ext_info.json \ # Pass path to the JSON file
           --intel-url "${{ steps.release.outputs.intel_url }}" \
           --intel-sha256 "${{ steps.release.outputs.intel_sha256 }}" \
           --arm-url "${{ steps.release.outputs.arm_url }}" \
@@ -99,5 +108,5 @@ runs:
       shell: bash
       run: |
         echo "Cleaning up temporary files..."
-        rm -f release.json *.sha256 # Remove downloaded release info and checksum files
+        rm -f release.json *.sha256 hb_ext_info.json # Remove downloaded release info, checksum files, and temp JSON
         echo "Cleanup complete."
