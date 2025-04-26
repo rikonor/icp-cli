@@ -22,24 +22,45 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
       run: |
         # Get release info with URLs
-        gh release view "v${{ inputs.version }}" --json assets > release.json
+        echo "Fetching release info for ${{ inputs.version }}..."
+        gh release view "${{ inputs.version }}" --json assets > release.json
+        if [ $? -ne 0 ]; then echo "Error: Failed to fetch release info."; exit 1; fi
+        echo "Release info saved to release.json"
 
         # Get x86_64 binary info
+        echo "Extracting Intel URL..."
         INTEL_URL=$(jq -r '.assets[] | select(.name | contains("x86_64-apple-darwin-homebrew")) | .url' release.json)
+        if [ -z "$INTEL_URL" ] || [ "$INTEL_URL" == "null" ]; then echo "Error: Intel URL not found in release assets."; exit 1; fi
         echo "intel_url=$INTEL_URL" >> $GITHUB_OUTPUT
+        echo "Intel URL: $INTEL_URL"
 
         # Get ARM binary info
+        echo "Extracting ARM URL..."
         ARM_URL=$(jq -r '.assets[] | select(.name | contains("aarch64-apple-darwin-homebrew")) | .url' release.json)
+        if [ -z "$ARM_URL" ] || [ "$ARM_URL" == "null" ]; then echo "Error: ARM URL not found in release assets."; exit 1; fi
         echo "arm_url=$ARM_URL" >> $GITHUB_OUTPUT
+        echo "ARM URL: $ARM_URL"
 
         # Get extension info
-        jq -r '[.assets[] | select(.name | endswith(".wasm")) | {
+        echo "Extracting extension info..."
+        jq -r '[.assets[] | select(.name | endswith(".component.wasm")) | {
           name: (.name | sub(".component.wasm$"; "")),
           url: .url
         }]' release.json > extensions.json
+        if [ $? -ne 0 ]; then echo "Error: Failed to extract extension info."; exit 1; fi
+        echo "Extension info saved to extensions.json"
 
-        # Download checksums
-        gh release download "v${{ inputs.version }}" -p "checksums.txt"
+        # Download all individual checksum files
+        echo "Downloading all .sha256 checksum files..."
+        gh release download "${{ inputs.version }}" -p "*.sha256"
+        if [ $? -ne 0 ]; then echo "Error: Failed to download checksum files."; exit 1; fi
+
+        # Combine checksums into a single temporary file
+        echo "Combining checksum files into temp_checksums.txt..."
+        cat *.sha256 > temp_checksums.txt
+        if [ $? -ne 0 ] || [ ! -s temp_checksums.txt ]; then echo "Error: Failed to create or combine checksum files."; exit 1; fi
+        echo "Checksums combined. Content:"
+        cat temp_checksums.txt
 
     - name: Clone Tap Repository
       shell: bash
@@ -54,7 +75,7 @@ runs:
         # Generate formula using our tool with direct inputs
         cargo run --package icp-distribution --bin generate_formula -- \
           --version "${{ inputs.version }}" \
-          --checksums checksums.txt \
+          --checksums temp_checksums.txt \
           --extensions extensions.json \
           --intel-url "${{ steps.release.outputs.intel_url }}" \
           --arm-url "${{ steps.release.outputs.arm_url }}" \
@@ -67,3 +88,10 @@ runs:
         git add Formula/icp-cli.rb
         git commit -m "Update icp-cli to version ${{ inputs.version }}"
         git push
+
+    - name: Cleanup Temporary Files
+      shell: bash
+      run: |
+        echo "Cleaning up temporary files..."
+        rm -f release.json extensions.json temp_checksums.txt *.sha256
+        echo "Cleanup complete."
