@@ -101,7 +101,12 @@ jobs:
             Release of ${{ env.EXTENSION_NAME }} extension, version ${{ env.EXTENSION_VERSION }}.
             Component WASM and SHA256 checksum attached.
 
-      - name: Trigger Distribution Channel Update # Removed redundant checkout step
-        uses: ./.github/workflows/update-distribution-channels.yml
-        with:
-          HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+      - name: Trigger Distribution Update via gh CLI
+        env:
+          GH_TOKEN: ${{ github.token }} # gh cli needs auth
+          # HOMEBREW_TAP_TOKEN is needed by the triggered workflow,
+          # which will inherit secrets available to the runner.
+        run: |
+          echo "Triggering update-distribution-channels workflow on ref ${{ github.ref }}"
+          gh workflow run update-distribution-channels.yml --ref ${{ github.ref }}
+          echo "Workflow triggered. Note: This step completes immediately, check Actions tab for progress."
