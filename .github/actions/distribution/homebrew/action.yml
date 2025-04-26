@@ -10,7 +10,7 @@ inputs:
     required: true
   tap_repo:
     description: Homebrew tap repository name
-    required: false
+    required: false # Optional, defaults can be inferred if needed
   extension_info_json:
     description: JSON string containing extension info (name, version, url, sha256)
     required: true
@@ -18,11 +18,22 @@ inputs:
 runs:
   using: composite
   steps:
-    - name: Get Release Info
+    - name: DEBUG - Print Inputs
+      shell: bash
+      run: |
+        echo "--- DEBUG: Homebrew Action Inputs ---"
+        echo "Version: ${{ inputs.version }}"
+        echo "Token: [REDACTED]" # Don't print secrets
+        echo "Tap Repo: ${{ inputs.tap_repo }}"
+        echo "Extension Info JSON:"
+        echo "${{ inputs.extension_info_json }}" # Print raw JSON
+        echo "--- END DEBUG ---"
+
+    - name: Get Release Info (Partial for Debug)
       id: release
       shell: bash
       env:
-        GH_TOKEN: ${{ inputs.token }}
+        GH_TOKEN: ${{ inputs.token }} # Use the input token here
       run: |
         # Get release info with URLs
         echo "Fetching release info for ${{ inputs.version }}..."
@@ -30,77 +41,61 @@ runs:
         if [ $? -ne 0 ]; then echo "Error: Failed to fetch release info."; exit 1; fi
         echo "Release info saved to release.json"
 
-        # Get x86_64 binary info
+        # Get x86_64 binary info (URL only for debug)
         echo "Extracting Intel URL..."
         INTEL_URL=$(jq -r '.assets[] | select(.name | contains("x86_64-apple-darwin-homebrew") and (endswith(".sha256") | not)) | .url' release.json)
         if [ -z "$INTEL_URL" ] || [ "$INTEL_URL" == "null" ]; then echo "Error: Intel URL not found in release assets."; exit 1; fi
-        echo "intel_url=$INTEL_URL" >> $GITHUB_OUTPUT
+        # echo "intel_url=$INTEL_URL" >> $GITHUB_OUTPUT # Don't output for debug
         echo "Intel URL: $INTEL_URL"
 
-        # Get ARM binary info
+        # Get ARM binary info (URL only for debug)
         echo "Extracting ARM URL..."
         ARM_URL=$(jq -r '.assets[] | select(.name | contains("aarch64-apple-darwin-homebrew") and (endswith(".sha256") | not)) | .url' release.json)
         if [ -z "$ARM_URL" ] || [ "$ARM_URL" == "null" ]; then echo "Error: ARM URL not found in release assets."; exit 1; fi
-        echo "arm_url=$ARM_URL" >> $GITHUB_OUTPUT
+        # echo "arm_url=$ARM_URL" >> $GITHUB_OUTPUT # Don't output for debug
         echo "ARM URL: $ARM_URL"
 
-        # Download only the main binary checksum files for homebrew variants
-        echo "Downloading main binary .sha256 checksum files..."
-        gh release download "${{ inputs.version }}" -p "*-apple-darwin-homebrew.sha256"
-        if [ $? -ne 0 ]; then echo "Error: Failed to download main binary checksum files."; exit 1; fi
-
-        # Extract checksums for intel and arm binaries
-        echo "Extracting checksums..."
-        INTEL_CHECKSUM_FILE=$(ls *x86_64-apple-darwin-homebrew.sha256 2>/dev/null)
-        ARM_CHECKSUM_FILE=$(ls *aarch64-apple-darwin-homebrew.sha256 2>/dev/null)
-
-        if [ -z "$INTEL_CHECKSUM_FILE" ] || [ ! -f "$INTEL_CHECKSUM_FILE" ]; then echo "Error: Intel checksum file not found."; exit 1; fi
-        if [ -z "$ARM_CHECKSUM_FILE" ] || [ ! -f "$ARM_CHECKSUM_FILE" ]; then echo "Error: ARM checksum file not found."; exit 1; fi
-
-        INTEL_SHA256=$(awk '{print $1}' "$INTEL_CHECKSUM_FILE")
-        ARM_SHA256=$(awk '{print $1}' "$ARM_CHECKSUM_FILE")
-
-        if [ -z "$INTEL_SHA256" ]; then echo "Error: Could not extract Intel checksum."; exit 1; fi
-        if [ -z "$ARM_SHA256" ]; then echo "Error: Could not extract ARM checksum."; exit 1; fi
-
-        echo "intel_sha256=$INTEL_SHA256" >> $GITHUB_OUTPUT
-        echo "arm_sha256=$ARM_SHA256" >> $GITHUB_OUTPUT
-        echo "Intel SHA256: $INTEL_SHA256"
-        echo "ARM SHA256: $ARM_SHA256"
+        # Skip checksum download and extraction for debug
+        echo "Skipping checksum download/extraction for debug..."
+        # echo "intel_sha256=dummy_intel_sha" >> $GITHUB_OUTPUT # Dummy output if needed later
+        # echo "arm_sha256=dummy_arm_sha" >> $GITHUB_OUTPUT # Dummy output if needed later
 
     - name: Clone Tap Repository
       shell: bash
       run: |
-        git config --global user.name "github-actions[bot]"
-        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-        git clone "https://x-access-token:${{ inputs.token }}@github.com/${{ inputs.tap_repo }}.git" tap-repo
+        #        git config --global user.name "github-actions[bot]"
+        #        git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
+        #        git clone "https://x-access-token:${{ inputs.token }}@github.com/${{ inputs.tap_repo }}.git" tap-repo
+        echo "Skipping Tap Repo Clone for Debugging"
 
     - name: Generate Formula
       shell: bash
       run: |
-        # Generate formula using our tool with direct inputs
-        # Generate formula using our tool, passing the extension JSON directly
-        # NOTE: Assumes generate_formula is updated to accept --extension-info-json
-        cargo run --package icp-distribution --bin generate_formula -- \
-          --version "${{ inputs.version }}" \
-          --extension-info-json '${{ inputs.extension_info_json }}' \
-          --intel-url "${{ steps.release.outputs.intel_url }}" \
-          --intel-sha256 "${{ steps.release.outputs.intel_sha256 }}" \
-          --arm-url "${{ steps.release.outputs.arm_url }}" \
-          --arm-sha256 "${{ steps.release.outputs.arm_sha256 }}" \
-          --output tap-repo/Formula/icp-cli.rb
+        #        # Generate formula using our tool with direct inputs
+        #        # Generate formula using our tool, passing the extension JSON directly
+        #        # NOTE: Assumes generate_formula is updated to accept --extension-info-json
+        #        cargo run --package icp-distribution --bin generate_formula -- \
+        #          --version "${{ inputs.version }}" \
+        #          --extension-info-json '${{ inputs.extension_info_json }}' \
+        #          --intel-url "${{ steps.release.outputs.intel_url }}" \
+        #          --intel-sha256 "${{ steps.release.outputs.intel_sha256 }}" \
+        #          --arm-url "${{ steps.release.outputs.arm_url }}" \
+        #          --arm-sha256 "${{ steps.release.outputs.arm_sha256 }}" \
+        #          --output tap-repo/Formula/icp-cli.rb
+        echo "Skipping Formula Generation for Debugging"
 
     - name: Commit and Push Changes
       shell: bash
-      working-directory: tap-repo
+      # working-directory: tap-repo # Avoid error if dir doesn't exist
       run: |
-        git add Formula/icp-cli.rb
-        git commit -m "Update icp-cli to version ${{ inputs.version }}"
-        git push
+        #        git add Formula/icp-cli.rb
+        #        git commit -m "Update icp-cli to version ${{ inputs.version }}"
+        #        git push
+        echo "Skipping Commit and Push for Debugging"
 
     - name: Cleanup Temporary Files
       shell: bash
       run: |
         echo "Cleaning up temporary files..."
-        rm -f release.json *.sha256 # Remove downloaded checksum files
+        rm -f release.json *.sha256 # Remove downloaded checksum files if they exist
         echo "Cleanup complete."

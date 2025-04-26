@@ -1,0 +1,52 @@
+name: Update Distribution Channels
+
+on:
+  workflow_dispatch: # Allows manual triggering for testing
+
+permissions:
+  contents: read # Needed to read release tags and use gh cli
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Fetch Latest CLI Release Tag
+        id: get-cli-version
+        run: |
+          # Fetch the latest tag matching v*.*.* pattern
+          LATEST_CLI_TAG=$(gh release list --repo ${{ github.repository }} --limit 1 --exclude-drafts --exclude-prereleases --json tagName -q '.[0].tagName | select(startswith("v"))')
+          if [ -z "$LATEST_CLI_TAG" ]; then
+            echo "Error: Could not determine latest CLI release tag."
+            exit 1
+          fi
+          echo "Latest CLI Tag: $LATEST_CLI_TAG"
+          echo "cli_version=$LATEST_CLI_TAG" >> $GITHUB_OUTPUT
+
+      - name: Get Latest Extension Info
+        id: get-extensions
+        uses: ./.github/actions/fetch-latest-extensions
+        with:
+          extensions: "build identity project" # Define which extensions to include
+          github_token: ${{ env.GH_TOKEN }}
+
+      - name: DEBUG - Call Quick Install Action
+        uses: ./.github/actions/distribution/quick-install # Use the modified debug version
+        with:
+          version: ${{ steps.get-cli-version.outputs.cli_version }} # Pass fetched CLI version
+          token: ${{ env.GH_TOKEN }} # Pass token (will be redacted by action)
+          icp_binaries: "dummy-binary-list" # Provide dummy value as action expects it but doesn't use it in debug mode
+          extension_info_json: ${{ steps.get-extensions.outputs.extension_info }} # Pass fetched JSON
+
+      - name: DEBUG - Call Homebrew Action
+        uses: ./.github/actions/distribution/homebrew # Use the modified debug version
+        with:
+          version: ${{ steps.get-cli-version.outputs.cli_version }} # Pass fetched CLI version
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN || env.GH_TOKEN }} # Use tap token if available, else default (will be redacted) - Needs secret definition later
+          tap_repo: ${{ github.repository_owner }}/homebrew-icp-cli # Example tap repo
+          extension_info_json: ${{ steps.get-extensions.outputs.extension_info }} # Pass fetched JSON
