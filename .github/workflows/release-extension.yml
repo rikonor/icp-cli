@@ -1,0 +1,101 @@
+name: Release Extension
+
+on:
+  push:
+    tags:
+      - "*-v*.*.*" # Trigger on tags like 'project-v1.2.3', 'identity-v0.1.0'
+
+permissions:
+  contents: write # Needed to create releases
+
+jobs:
+  release-extension:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Cache Cargo artifacts and wasm-tools
+        uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            ~/.cargo/bin
+            target
+          key: ${{ runner.os }}-wasm-cargo-${{ hashFiles('**/Cargo.lock') }}-with-tools
+          restore-keys: |
+            ${{ runner.os }}-wasm-cargo-${{ hashFiles('**/Cargo.lock') }}-
+            ${{ runner.os }}-wasm-cargo-
+
+      - name: Extract extension name and version from tag
+        id: extract_info
+        shell: bash
+        run: |
+          TAG="${{ github.ref_name }}"
+          # Extract name (everything before the last '-v')
+          EXT_NAME=$(echo "$TAG" | sed -E 's/(.*)-v([0-9]+\.[0-9]+\.[0-9]+.*)/\1/')
+          # Extract version (everything after the last '-v')
+          EXT_VERSION=$(echo "$TAG" | sed -E 's/(.*)-v([0-9]+\.[0-9]+\.[0-9]+.*)/\2/')
+          echo "Extracted Name: $EXT_NAME"
+          echo "Extracted Version: $EXT_VERSION"
+          echo "name=$EXT_NAME" >> $GITHUB_OUTPUT
+          echo "version=$EXT_VERSION" >> $GITHUB_OUTPUT
+          # Set environment variables for subsequent steps
+          echo "EXTENSION_NAME=$EXT_NAME" >> $GITHUB_ENV
+          echo "EXTENSION_VERSION=$EXT_VERSION" >> $GITHUB_ENV
+
+      - name: Verify Cargo.toml version matches tag version
+        shell: bash
+        run: |
+          echo "Checking version consistency for extension: ${{ env.EXTENSION_NAME }}"
+          CARGO_FILE="crates/extensions/${{ env.EXTENSION_NAME }}/Cargo.toml"
+          if [ ! -f "$CARGO_FILE" ]; then
+            echo "Error: $CARGO_FILE not found!"
+            exit 1
+          fi
+          CARGO_VERSION=$(grep '^version *=' "$CARGO_FILE" | cut -d '"' -f 2)
+          echo "Version from tag: ${{ env.EXTENSION_VERSION }}"
+          echo "Version from $CARGO_FILE: $CARGO_VERSION"
+          if [ "$CARGO_VERSION" != "${{ env.EXTENSION_VERSION }}" ]; then
+            echo "Error: Tag version (${{ env.EXTENSION_VERSION }}) does not match $CARGO_FILE version ($CARGO_VERSION)."
+            exit 1
+          fi
+          echo "Versions match."
+
+      - name: Setup Rust WASM target
+        run: rustup target add wasm32-unknown-unknown
+
+      - name: Check wasm-tools installation
+        id: check-wasm-tools
+        shell: bash
+        run: |
+          if command -v wasm-tools &> /dev/null; then
+            echo "wasm-tools already installed (cached)"
+            echo "skip_install=true" >> $GITHUB_OUTPUT
+          else
+            echo "wasm-tools not found, will install."
+            echo "skip_install=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Install wasm-tools
+        if: steps.check-wasm-tools.outputs.skip_install == 'false'
+        run: cargo install wasm-tools
+
+      - name: Build the specific extension
+        shell: bash
+        run: |
+          echo "Building extension: ${{ env.EXTENSION_NAME }}"
+          make CARGO_RELEASE=1 EXTENSION_NAME=${{ env.EXTENSION_NAME }}
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          name: "Extension: ${{ env.EXTENSION_NAME }} v${{ env.EXTENSION_VERSION }}"
+          tag_name: ${{ github.ref_name }} # Use the original tag e.g., project-v1.2.3
+          files: |
+            target/wasm32-unknown-unknown/release/${{ env.EXTENSION_NAME }}.component.wasm
+          body: |
+            Release of ${{ env.EXTENSION_NAME }} extension, version ${{ env.EXTENSION_VERSION }}.
+            Component WASM attached.

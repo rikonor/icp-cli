@@ -1,6 +1,6 @@
 [package]
 name = "icp-distribution"
-version = "0.1.0"
+version.workspace = true
 edition = "2021"
 description = "Distribution tools for the ICP CLI"
 authors = ["ICP Team"]

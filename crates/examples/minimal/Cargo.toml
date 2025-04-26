@@ -1,6 +1,6 @@
 [package]
-name = "minimal"  # Renamed for consistency
-version = "0.1.0"
+name = "minimal"         # Renamed for consistency
+version.workspace = true
 edition = "2021"
 
 [dependencies]

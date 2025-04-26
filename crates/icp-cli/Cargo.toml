@@ -1,6 +1,6 @@
 [package]
 name = "icp-cli"
-version = "0.1.5"
+version.workspace = true
 edition = "2021"
 description = "Internet Computer utility with WASM extensions support"
 license = "MIT"
