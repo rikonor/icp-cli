@@ -29,14 +29,14 @@ runs:
 
         # Get x86_64 binary info
         echo "Extracting Intel URL..."
-        INTEL_URL=$(jq -r '.assets[] | select(.name | contains("x86_64-apple-darwin-homebrew")) | .url' release.json)
+        INTEL_URL=$(jq -r '.assets[] | select(.name | contains("x86_64-apple-darwin-homebrew") and (endswith(".sha256") | not)) | .url' release.json)
         if [ -z "$INTEL_URL" ] || [ "$INTEL_URL" == "null" ]; then echo "Error: Intel URL not found in release assets."; exit 1; fi
         echo "intel_url=$INTEL_URL" >> $GITHUB_OUTPUT
         echo "Intel URL: $INTEL_URL"
 
         # Get ARM binary info
         echo "Extracting ARM URL..."
-        ARM_URL=$(jq -r '.assets[] | select(.name | contains("aarch64-apple-darwin-homebrew")) | .url' release.json)
+        ARM_URL=$(jq -r '.assets[] | select(.name | contains("aarch64-apple-darwin-homebrew") and (endswith(".sha256") | not)) | .url' release.json)
         if [ -z "$ARM_URL" ] || [ "$ARM_URL" == "null" ]; then echo "Error: ARM URL not found in release assets."; exit 1; fi
         echo "arm_url=$ARM_URL" >> $GITHUB_OUTPUT
         echo "ARM URL: $ARM_URL"
