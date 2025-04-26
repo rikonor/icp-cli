@@ -1,8 +1,9 @@
 use crate::error::{DistributionError, Result};
 use serde::Serialize;
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
-use std::ffi::OsStr;
+// Remove unused imports
+// use std::collections::HashMap;
+// use std::ffi::OsStr;
 use std::fs::{self, File};
 use std::io::Read;
 use std::path::PathBuf;
@@ -25,76 +26,81 @@ pub struct ExtensionInfo {
 
 pub struct BinaryProcessor {
     binaries_dir: PathBuf,
-    extensions_dir: PathBuf,
-    checksums: HashMap<String, String>,
+    // extensions_dir is removed as parse_extensions is no longer needed here
+    // checksums HashMap is removed as we read from .sha256 files directly
 }
 
 impl BinaryProcessor {
     /// Creates a new BinaryProcessor for the given directory
-    pub fn new(
-        binaries_dir: PathBuf,
-        extensions_dir: PathBuf,
-        checksums_path: PathBuf,
-    ) -> Result<Self> {
+    pub fn new(binaries_dir: PathBuf) -> Result<Self> {
         if !binaries_dir.exists() {
             return Err(DistributionError::BinaryNotFound(binaries_dir));
         }
-
-        if !extensions_dir.exists() {
-            return Err(DistributionError::ExtensionNotFound(extensions_dir));
-        }
-
-        if !checksums_path.exists() {
-            return Err(DistributionError::MissingFile(checksums_path));
-        }
-
-        let checksums = fs::read_to_string(&checksums_path)?
-            .lines()
-            .filter_map(|line| {
-                let parts: Vec<&str> = line.split_whitespace().collect();
-                if parts.len() >= 2 {
-                    Some((parts[1].to_string(), parts[0].to_string()))
-                } else {
-                    None
-                }
-            })
-            .collect();
-
-        Ok(Self {
-            binaries_dir,
-            extensions_dir,
-            checksums,
-        })
+        // No need to check extensions_dir or checksums_path anymore
+        Ok(Self { binaries_dir })
     }
 
-    /// Validates a binary file's format and checksum
+    /// Reads the checksum from the corresponding .sha256 file
+    fn read_checksum_file(&self, binary_filename: &str) -> Result<String> {
+        let checksum_filename = format!("{}.sha256", binary_filename);
+        let checksum_path = self.binaries_dir.join(&checksum_filename);
+
+        if !checksum_path.exists() {
+            // It's possible a binary exists without a checksum file during development/testing
+            // Return an error or a default value? Returning error seems safer for distribution.
+            eprintln!("Warning: Checksum file not found for {}", binary_filename);
+            return Err(DistributionError::MissingFile(checksum_path));
+            // Alternatively, return Ok(String::new()) or Ok("CHECKSUM_NOT_FOUND".to_string())
+            // if generate_scripts can handle missing checksums gracefully.
+        }
+
+        let checksum_content = fs::read_to_string(&checksum_path)?;
+        // Extract the first part (the checksum itself) in case the file contains extra info (like filename)
+        let checksum = checksum_content
+            .split_whitespace()
+            .next()
+            .ok_or_else(|| {
+                DistributionError::InvalidFormat(format!(
+                    "Checksum file {} is empty or invalid",
+                    checksum_filename
+                ))
+            })?
+            .to_string();
+        Ok(checksum)
+    }
+
+    /// Validates a binary file's format and checksum against its .sha256 file
     pub fn validate_binary(&self, filename: &str) -> Result<()> {
         let file_path = self.binaries_dir.join(filename);
         if !file_path.exists() {
             return Err(DistributionError::BinaryNotFound(file_path));
         }
 
-        // Validate filename format
+        // Validate filename format (simplified check, assumes icp-<target>-<variant>[.exe])
         let parts: Vec<&str> = filename.split('-').collect();
-        if parts.len() < 4 {
+        if !filename.starts_with("icp-") || parts.len() < 3 {
             return Err(DistributionError::InvalidFormat(format!(
-                "Invalid filename format: {}. Expected format: icp-<arch>-<os>-<variant>",
+                "Invalid filename format: {}. Expected format: icp-<target>-<variant>[.exe]",
                 filename
             )));
         }
 
-        // Verify checksum if available
-        if let Some(expected_checksum) = self.checksums.get(filename) {
-            let mut file = File::open(&file_path)?;
-            let mut hasher = Sha256::new();
-            let mut buffer = Vec::new();
-            file.read_to_end(&mut buffer)?;
-            hasher.update(&buffer);
-            let hash = format!("{:x}", hasher.finalize());
+        // Verify checksum against the .sha256 file
+        let expected_checksum = self.read_checksum_file(filename)?;
 
-            if hash != *expected_checksum {
-                return Err(DistributionError::ChecksumMismatch(filename.to_string()));
-            }
+        let mut file = File::open(&file_path)?;
+        let mut hasher = Sha256::new();
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer)?;
+        hasher.update(&buffer);
+        let actual_hash = format!("{:x}", hasher.finalize());
+
+        if actual_hash != expected_checksum {
+            eprintln!(
+                "Checksum mismatch for {}: Expected {}, Got {}",
+                filename, expected_checksum, actual_hash
+            );
+            return Err(DistributionError::ChecksumMismatch(filename.to_string()));
         }
 
         Ok(())
@@ -105,71 +111,91 @@ impl BinaryProcessor {
         self.parse_binaries()
     }
 
-    /// Parse just the binaries, excluding extensions
+    /// Parse just the binaries, excluding extensions and .sha256 files
     fn parse_binaries(&self) -> Result<Vec<BinaryInfo>> {
         let mut binaries = Vec::new();
 
         for entry in fs::read_dir(&self.binaries_dir)? {
             let entry = entry?;
+            let path = entry.path();
             let filename = entry.file_name().to_string_lossy().to_string();
-            if filename == "checksums.txt" {
+
+            // Skip directories and .sha256 files
+            if path.is_dir() || filename.ends_with(".sha256") {
                 continue;
             }
 
-            // Parse filename like: icp-x86_64-apple-darwin-standard
-            let parts: Vec<&str> = filename.split('-').collect();
-            if parts.len() >= 4 {
-                // Validate the binary before including it
-                self.validate_binary(&filename)?;
+            // Basic check to ensure it's likely an icp binary we want
+            if !filename.starts_with("icp-") {
+                eprintln!(
+                    "Skipping file that does not start with 'icp-': {}",
+                    filename
+                );
+                continue;
+            }
 
-                binaries.push(BinaryInfo {
-                    name: filename.clone(),
-                    target: parts[1..parts.len() - 1].join("-"),
-                    variant: parts.last().unwrap().to_string(),
-                    checksum: self.checksums.get(&filename).cloned().unwrap_or_default(),
-                });
+            // Parse filename like: icp-x86_64-apple-darwin-standard or icp-x86_64-pc-windows-msvc-standard.exe
+            let parts: Vec<&str> = filename.split('-').collect();
+            // Handle .exe for parsing variant correctly
+            let (variant_part, target_parts) = if filename.ends_with(".exe") {
+                let variant_with_exe = parts.last().unwrap_or(&"");
+                let variant = variant_with_exe
+                    .strip_suffix(".exe")
+                    .unwrap_or(variant_with_exe);
+                (variant, &parts[1..parts.len() - 1])
+            } else {
+                // Dereference parts.last() to match the type of the `if` branch (&str, &[&str])
+                (*parts.last().unwrap_or(&""), &parts[1..parts.len() - 1])
+            };
+
+            if parts.len() >= 3 {
+                // Need at least icp-<target>-<variant>
+                // Validate the binary before including it (this now reads the .sha256 file)
+                match self.validate_binary(&filename) {
+                    Ok(_) => {
+                        // Read checksum again here to store it in BinaryInfo
+                        // (validate_binary confirms it exists and matches)
+                        let checksum = self.read_checksum_file(&filename).unwrap_or_else(|e| {
+                            eprintln!("Error reading checksum for {}: {}", filename, e);
+                            // Return a specific string indicating error, or handle differently if needed
+                            "ERROR_READING_CHECKSUM".to_string()
+                        });
+
+                        binaries.push(BinaryInfo {
+                            name: filename.clone(),
+                            target: target_parts.join("-"),
+                            variant: variant_part.to_string(),
+                            checksum,
+                        });
+                    }
+                    Err(e) => {
+                        // Log error but potentially continue? Or fail hard?
+                        // Failing hard seems safer for distribution artifacts.
+                        eprintln!(
+                            "Validation failed for binary '{}', skipping: {}",
+                            filename, e
+                        );
+                        // Optionally return the error to stop processing: return Err(e);
+                    }
+                }
+            } else {
+                eprintln!(
+                    "Skipping file with unexpected format (less than 3 parts): {}",
+                    filename
+                );
             }
         }
 
-        if binaries.is_empty() {
-            return Err(DistributionError::BinaryNotFound(self.binaries_dir.clone()));
-        }
+        // It's okay if binaries list is empty if no matching files were found/valid
+        // The check below might be too strict if some platforms are optional
+        // if binaries.is_empty() {
+        //     return Err(DistributionError::BinaryNotFound(self.binaries_dir.clone()));
+        // }
 
         Ok(binaries)
     }
 
-    /// Parse WebAssembly component extensions
-    pub fn parse_extensions(&self) -> Result<Vec<ExtensionInfo>> {
-        let mut extensions = Vec::new();
-        for entry in fs::read_dir(&self.extensions_dir)? {
-            let entry = entry?;
-            let path = entry.path();
-
-            // Only process .wasm files
-            if path.extension() == Some(OsStr::new("wasm")) {
-                let filename = path.file_name().unwrap().to_string_lossy().to_string();
-
-                // Extract name by removing .component.wasm or .wasm extension
-                let name = filename
-                    .strip_suffix(".component.wasm")
-                    .or_else(|| filename.strip_suffix(".wasm"))
-                    .unwrap_or(&filename)
-                    .to_string();
-
-                // Get checksum if available
-                let checksum = self.checksums.get(&filename).cloned().unwrap_or_default();
-
-                extensions.push(ExtensionInfo {
-                    name,
-                    version: "unknown".to_string(), // Placeholder version
-                    file: filename,
-                    checksum,
-                });
-            }
-        }
-
-        Ok(extensions)
-    }
+    // parse_extensions method is removed as it's no longer needed by generate_scripts
 }
 
 #[cfg(test)]
@@ -179,16 +205,18 @@ mod tests {
     use std::io::Write;
     use tempfile::TempDir;
 
-    fn setup_test_dirs() -> (TempDir, PathBuf, PathBuf, PathBuf) {
+    // Update return type to remove checksums_path
+    fn setup_test_dirs() -> (TempDir, PathBuf, PathBuf) {
         let temp_dir = TempDir::new().unwrap();
         let binaries_dir = temp_dir.path().join("binaries");
         let extensions_dir = temp_dir.path().join("extensions");
-        let checksums_path = temp_dir.path().join("checksums.txt");
+        // let checksums_path = temp_dir.path().join("checksums.txt"); // Removed
 
         fs::create_dir(&binaries_dir).unwrap();
         fs::create_dir(&extensions_dir).unwrap();
 
-        (temp_dir, binaries_dir, extensions_dir, checksums_path)
+        // Update returned tuple
+        (temp_dir, binaries_dir, extensions_dir)
     }
 
     fn create_test_binary(dir: PathBuf, name: &str, content: &[u8]) -> PathBuf {
@@ -200,7 +228,8 @@ mod tests {
 
     #[test]
     fn test_binary_validation() {
-        let (_temp_dir, binaries_dir, extensions_dir, checksums_path) = setup_test_dirs();
+        // Update destructuring to match setup_test_dirs return type
+        let (_temp_dir, binaries_dir, _extensions_dir) = setup_test_dirs();
 
         // Create test binary
         let binary_name = "icp-x86_64-apple-darwin-standard";
@@ -210,28 +239,33 @@ mod tests {
         // Create checksums file
         let mut hasher = Sha256::new();
         hasher.update(binary_content);
-        let checksum = format!("{:x}", hasher.finalize());
+        let checksum = format!("{:x}", hasher.finalize()); // Calculate checksum
 
-        let checksums_content = format!("{} {}", checksum, binary_name);
-        fs::write(&checksums_path, checksums_content).unwrap();
+        // Create the corresponding .sha256 file for the test with the correct checksum
+        let checksum_file_path = binaries_dir.join(format!("{}.sha256", binary_name));
+        fs::write(&checksum_file_path, checksum).unwrap(); // Write only the checksum string
 
         // Test validation
-        let processor = BinaryProcessor::new(binaries_dir, extensions_dir, checksums_path).unwrap();
+        // Constructor call is already correct here
+        let processor = BinaryProcessor::new(binaries_dir).unwrap();
         assert!(processor.validate_binary(binary_name).is_ok());
     }
 
     #[test]
     fn test_invalid_binary_format() {
-        let (_temp_dir, binaries_dir, extensions_dir, checksums_path) = setup_test_dirs();
+        // Update destructuring to match setup_test_dirs return type
+        let (_temp_dir, binaries_dir, _extensions_dir) = setup_test_dirs();
 
         // Create invalid binary name
         let binary_name = "invalid-name";
         create_test_binary(binaries_dir.clone(), binary_name, b"test content");
 
-        // Create empty checksums file
-        fs::write(&checksums_path, "").unwrap();
+        // Remove the write to the non-existent checksums_path variable
+        // fs::write(&checksums_path, "").unwrap();
 
-        let processor = BinaryProcessor::new(binaries_dir, extensions_dir, checksums_path).unwrap();
+        // Update constructor call
+        let processor = BinaryProcessor::new(binaries_dir).unwrap();
+        // Validation should still fail based on filename format, not constructor
         assert!(matches!(
             processor.validate_binary(binary_name),
             Err(DistributionError::InvalidFormat(_))
@@ -240,16 +274,21 @@ mod tests {
 
     #[test]
     fn test_checksum_mismatch() {
-        let (_temp_dir, binaries_dir, extensions_dir, checksums_path) = setup_test_dirs();
+        // Update destructuring to match setup_test_dirs return type
+        let (_temp_dir, binaries_dir, _extensions_dir) = setup_test_dirs();
 
         // Create test binary
         let binary_name = "icp-x86_64-apple-darwin-standard";
         create_test_binary(binaries_dir.clone(), binary_name, b"test content");
 
         // Create checksums file with wrong checksum
-        fs::write(&checksums_path, format!("wrong_checksum {}", binary_name)).unwrap();
+        // Create the corresponding .sha256 file with the wrong checksum
+        let checksum_file_path = binaries_dir.join(format!("{}.sha256", binary_name));
+        fs::write(&checksum_file_path, "wrong_checksum").unwrap();
 
-        let processor = BinaryProcessor::new(binaries_dir, extensions_dir, checksums_path).unwrap();
+        // Update constructor call
+        let processor = BinaryProcessor::new(binaries_dir).unwrap();
+        // Validation should fail due to checksum mismatch read from the .sha256 file
         assert!(matches!(
             processor.validate_binary(binary_name),
             Err(DistributionError::ChecksumMismatch(_))

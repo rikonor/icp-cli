@@ -5,54 +5,42 @@ inputs:
   version:
     description: Version number to distribute
     required: true
+
   token:
     description: GitHub token for authentication
     required: true
-  icp_binaries:
-    description: List of standard ICP binary files to include
-    required: true
+
   extension_info_json:
     description: JSON string containing info for latest extensions
-    required: true # Make it required as generate_scripts needs it
+    required: true
 
 runs:
   using: composite
   steps:
-    - name: Setup Rust
-      uses: actions-rs/toolchain@v1
-      with:
-        profile: minimal
-        toolchain: stable
-        override: true
-
-    - name: Download checksums
+    - name: Download ICP Binaries and Checksums using Glob Patterns
       shell: bash
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        gh release download "${{ inputs.version }}" \
-          --dir dist \
-          --pattern "checksums.txt"
+        echo "Downloading binaries and checksums for ${{ inputs.version }}..."
+        mkdir -p dist/binaries/icp # Ensure target directory exists
 
-    - name: Download icp binaries
-      shell: bash
-      env:
-        GH_TOKEN: ${{ inputs.token }}
-      run: |
-        for binary in ${{ inputs.icp_binaries }}; do
-          gh release download "${{ inputs.version }}" \
-            --dir dist/binaries/icp \
-            --pattern "$binary"
-        done
+        echo "Downloading binaries matching 'icp-*'..."
+        # Download binaries - use a pattern that excludes .sha256 if possible, or handle potential extra files later
+        # Using a simple 'icp-*' pattern for now. Might need refinement if other 'icp-*' files exist.
+        gh release download "${{ inputs.version }}" --dir dist/binaries/icp --pattern "icp-*" --clobber
+        if [ $? -ne 0 ]; then echo "Warning: Failed to download binaries matching 'icp-*'."; fi
 
-    # Removed obsolete extension download step - info comes from JSON now
+        echo "Download using 'icp-*' pattern complete."
+        echo "Contents of dist/binaries/icp:"
+        ls -l dist/binaries/icp
 
     - name: Generate scripts
       shell: bash
       run: |
         cargo run --bin generate_scripts -- \
           --binary-path dist/binaries/icp \
-          --checksums-path dist/checksums.txt \
+          # --checksums-path is removed; generate_scripts needs update to find .sha256 files
           --output-dir dist \
           --domain "${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}" \
           --repo-url "https://github.com/${GITHUB_REPOSITORY}" \

@@ -29,14 +29,8 @@ struct Args {
     #[arg(long, default_value = "dist/binaries/icp")]
     binary_path: PathBuf,
 
-    /// Path to the extensions directory (kept for BinaryProcessor::new compatibility)
-    #[arg(long, default_value = "dist/binaries/extensions")]
-    extensions_path: PathBuf,
-
-    /// Path to the checksums (kept for BinaryProcessor::new compatibility)
-    #[arg(long, default_value = "dist/checksums.txt")]
-    checksums_path: PathBuf,
-
+    // extensions_path is no longer needed as extensions are parsed from JSON
+    // checksums_path is no longer needed as checksums are read from .sha256 files
     /// JSON string containing extension info (name, version, url, sha256)
     #[arg(long)]
     extension_info_json: String,
@@ -103,10 +97,10 @@ fn run() -> Result<()> {
     std::fs::write(&nojekyll_path, "")?;
     println!("Created .nojekyll file: {:?}", nojekyll_path);
 
-    // Process binaries and extensions
+    // Process binaries
     println!("Validating binaries in: {:?}", args.binary_path);
-    let processor =
-        BinaryProcessor::new(args.binary_path, args.extensions_path, args.checksums_path)?;
+    // Update BinaryProcessor::new call to only pass binary_path
+    let processor = BinaryProcessor::new(args.binary_path)?;
     let binaries = processor.parse_binary_info()?;
     println!("Found {} valid binaries", binaries.len());
 
