@@ -4,7 +4,7 @@ on:
   workflow_dispatch: # Allows manual triggering for testing
 
 permissions:
-  contents: read # Needed to read release tags and use gh cli
+  contents: write # Needed to checkout, read release tags, and push to gh-pages
 
 jobs:
   update:
