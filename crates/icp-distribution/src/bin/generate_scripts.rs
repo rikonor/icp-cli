@@ -19,7 +19,6 @@ use std::process;
 struct ExtensionInfoInput {
     name: String,
     version: String,
-    url: String, // URL of the .component.wasm file
     sha256: String,
 }
 
@@ -65,10 +64,7 @@ struct TemplateData {
 }
 
 // Function to parse extensions directly from JSON string
-fn parse_extensions_from_json(
-    json_string: &str,
-    url_builder: &UrlBuilder,
-) -> Result<Vec<ExtensionInfo>> {
+fn parse_extensions_from_json(json_string: &str) -> Result<Vec<ExtensionInfo>> {
     let inputs: Vec<ExtensionInfoInput> =
         serde_json::from_str(json_string).map_err(|e| DistributionError::JsonError(e))?; // Handle JSON parsing error
 
@@ -123,7 +119,7 @@ fn run() -> Result<()> {
 
     // Generate landing page
     // Parse extensions from JSON input instead of scanning directory
-    let extensions = parse_extensions_from_json(&args.extension_info_json, &url_builder)?;
+    let extensions = parse_extensions_from_json(&args.extension_info_json)?; // Call with only json_string
     println!("Parsed {} extensions from JSON", extensions.len());
 
     let template_data = TemplateData {
