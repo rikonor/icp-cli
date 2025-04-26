@@ -93,7 +93,7 @@ static DEFAULT_DIR_PRECOMPILES: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION
 });
 
 // WIT Bindings
-use icp::cli::misc::{self, Host};
+use icp::cli::{filesystem, misc};
 
 bindgen!({
     path: "../../wit/cli",
@@ -103,7 +103,7 @@ bindgen!({
 
 struct State;
 
-impl Host for State {
+impl misc::Host for State {
     async fn print(&mut self, s: String) {
         println!("{s}");
     }
@@ -120,6 +120,27 @@ impl Host for State {
     }
 }
 
+// Implementation for the custom filesystem interface
+impl filesystem::Host for State {
+    async fn create_directory(&mut self, path: String) -> Result<(), String> {
+        // Note: Paths are relative to the workspace root where icp-cli runs.
+        // TODO: Add interception/administration logic here if desired.
+        match std::fs::create_dir_all(&path) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(format!("Failed to create directory '{}': {}", path, e)),
+        }
+    }
+
+    async fn write_file(&mut self, path: String, contents: Vec<u8>) -> Result<(), String> {
+        // Note: Paths are relative to the workspace root where icp-cli runs.
+        // TODO: Add interception/administration logic here if desired.
+        match std::fs::write(&path, &contents) {
+            Ok(_) => Ok(()),
+            Err(e) => Err(format!("Failed to write file '{}': {}", path, e)),
+        }
+    }
+}
+
 // Directory setup helper
 fn _ensure_directories(
     manifest: &Path,
@@ -133,9 +154,6 @@ fn _ensure_directories(
     create_dir_all(precompiles).context("failed to create precompiles directory")?;
     Ok(())
 }
-
-// // Ensure directories exist
-// ensure_directories(manifest_path, extensions_dir, precompiles_dir)?;
 
 #[tokio::main]
 async fn main() -> Result<(), Error> {
@@ -296,6 +314,11 @@ async fn main() -> Result<(), Error> {
 
     // Link host imports
     misc::add_to_linker(
+        &mut lnk,                  // linker
+        |state: &mut State| state, // get
+    )?;
+    filesystem::add_to_linker(
+        // Link filesystem host functions
         &mut lnk,                  // linker
         |state: &mut State| state, // get
     )?;
