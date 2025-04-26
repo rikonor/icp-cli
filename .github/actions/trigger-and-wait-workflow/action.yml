@@ -30,12 +30,21 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.github_token }}
       run: |
+        # Get the commit SHA for the tag/ref
+        echo "Getting commit SHA for ref '${{ inputs.ref }}'..."
+        COMMIT_SHA=$(git rev-parse ${{ inputs.ref }})
+        if [ -z "$COMMIT_SHA" ]; then
+          echo "::error::Failed to get commit SHA for ref '${{ inputs.ref }}'."
+          exit 1
+        fi
+        echo "Commit SHA: $COMMIT_SHA"
+
         # Wait a few seconds for the run to register
         sleep 5
-        echo "Fetching run ID for workflow '${{ inputs.workflow_name }}' on ref '${{ inputs.ref }}'..."
-        RUN_ID=$(gh run list --workflow=${{ inputs.workflow_name }} --ref ${{ inputs.ref }} --limit 1 --json databaseId --jq '.[0].databaseId')
+        echo "Fetching run ID for workflow '${{ inputs.workflow_name }}' triggered by commit '$COMMIT_SHA'..."
+        RUN_ID=$(gh run list --workflow=${{ inputs.workflow_name }} --commit $COMMIT_SHA --limit 1 --json databaseId --jq '.[0].databaseId')
         if [ -z "$RUN_ID" ] || [ "$RUN_ID" == "null" ]; then
-          echo "::error::Failed to retrieve run ID. Workflow '${{ inputs.workflow_name }}' might not have started for ref '${{ inputs.ref }}'."
+          echo "::error::Failed to retrieve run ID. Workflow '${{ inputs.workflow_name }}' might not have started for commit '$COMMIT_SHA'."
           exit 1
         fi
         echo "Found run ID: $RUN_ID"
