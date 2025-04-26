@@ -144,6 +144,9 @@ jobs:
     needs: create-release
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Trigger Distribution Channel Update
         uses: ./.github/workflows/update-distribution-channels.yml
         with:

@@ -101,9 +101,7 @@ jobs:
             Release of ${{ env.EXTENSION_NAME }} extension, version ${{ env.EXTENSION_VERSION }}.
             Component WASM and SHA256 checksum attached.
 
-      - name: Trigger Distribution Channel Update
+      - name: Trigger Distribution Channel Update # Removed redundant checkout step
         uses: ./.github/workflows/update-distribution-channels.yml
-        with: # Using 'with' as suggested, similar to the step above
-          # NOTE: Reusable workflow expects this as a secret, but we pass via 'with'
-          # The reusable workflow *might* need adjustment if this doesn't work implicitly.
+        with:
           HOMEBREW_TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
