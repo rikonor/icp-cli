@@ -1,7 +1,19 @@
 name: Update Distribution Channels
 
 on:
-  workflow_dispatch: # Allows manual triggering for testing
+  workflow_call:
+    # No specific inputs needed from caller for now,
+    # as it fetches latest CLI/extensions itself.
+    # We might add inputs later if needed (e.g., specific version).
+    secrets:
+      HOMEBREW_TAP_TOKEN:
+        required: true
+        description: "Token for pushing to the Homebrew tap repository"
+
+# Concurrency control to prevent multiple simultaneous updates
+concurrency:
+  group: distribution-update
+  cancel-in-progress: true
 
 permissions:
   contents: write # Needed to checkout, read release tags, and push to gh-pages
@@ -47,6 +59,6 @@ jobs:
         uses: ./.github/actions/distribution/homebrew # Use the restored action
         with:
           version: ${{ steps.get-cli-version.outputs.cli_version }} # Pass fetched CLI version (e.g., v0.1.13)
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN || env.GH_TOKEN }} # Use tap token if available, else default
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }} # Use the required secret passed via workflow_call
           tap_repo: ${{ github.repository_owner }}/homebrew-icp-cli # Specify the target tap repository
           extension_info_json: ${{ steps.get-extensions.outputs.extension_info }} # Pass fetched JSON

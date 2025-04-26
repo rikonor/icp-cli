@@ -4,6 +4,7 @@ active = [
     "codebase-purpose",
     "extension-development",
     "coding",
+    "concise-comments",
     "testing",
     "vcs",
     "detailed-content-preference",
