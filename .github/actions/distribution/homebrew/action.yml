@@ -55,11 +55,11 @@ runs:
         gh release download "${{ inputs.version }}" -p "*.sha256"
         if [ $? -ne 0 ]; then echo "Error: Failed to download checksum files."; exit 1; fi
 
-        # Combine checksums into a single temporary file
+        # Combine checksums into a single temporary file, filtering for valid lines
         echo "Combining checksum files into temp_checksums.txt..."
-        cat *.sha256 > temp_checksums.txt
-        if [ $? -ne 0 ] || [ ! -s temp_checksums.txt ]; then echo "Error: Failed to create or combine checksum files."; exit 1; fi
-        echo "Checksums combined. Content:"
+        cat *.sha256 | grep -E '^[a-f0-9]{64}\s+' > temp_checksums.txt
+        if [ $? -ne 0 ] || [ ! -s temp_checksums.txt ]; then echo "Error: Failed to create or combine checksum files, or no valid checksum lines found."; exit 1; fi
+        echo "Checksums combined and filtered. Content:"
         cat temp_checksums.txt
 
     - name: Clone Tap Repository
