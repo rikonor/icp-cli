@@ -39,7 +39,7 @@ runs:
 
           # Find the latest non-draft, non-prerelease tag matching the pattern <name>-v*.*.*
           # Sort by created date descending, limit to 1
-          LATEST_TAG=$(gh release list --repo "$REPO" --limit 10 --exclude-drafts --exclude-pre-releases --json tagName --jq ".[] | select(.tagName | test(\"^${EXT_NAME}-v[0-9]+\\\\.[0-9]+\\\\.[0-9]+$\")) | .tagName" | head -n 1)
+          LATEST_TAG=$(gh release list --repo "$REPO" --limit 50 --exclude-drafts --exclude-pre-releases --json tagName --jq ".[] | select(.tagName | test(\"^${EXT_NAME}-v[0-9]+\\\\.[0-9]+\\\\.[0-9]+$\")) | .tagName" | head -n 1)
 
           if [ -z "$LATEST_TAG" ]; then
             echo "WARNING: No stable release tag found matching pattern '${EXT_NAME}-v*.*.*'. Skipping."
