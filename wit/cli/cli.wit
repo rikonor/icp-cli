@@ -1,4 +1,4 @@
-package icp:cli@0.0.1;
+package icp:cli@0.1.0; // Bumped version due to adding filesystem import
 
 interface misc {
   print: func(s: string);
@@ -16,5 +16,7 @@ interface cli {
 
 world extension {
   import misc;
+  import filesystem;
+
   export cli;
 }

@@ -4,8 +4,10 @@ metadata:
 ---
 
 ---
+
 metadata:
-  description: Comprehensive guide for creating, building, and testing ICP CLI extensions.
+description: Comprehensive guide for creating, building, and testing ICP CLI extensions.
+
 ---
 
 # ICP CLI Extension Development
@@ -25,7 +27,7 @@ metadata:
 
 - `Cargo.toml`: Defines the crate and its dependencies
 - `src/lib.rs`: Contains the extension's implementation
-- `wit/world.wit`: Defines the WebAssembly interface types for the extension
+- WIT definition file in the root `wit/extensions/` directory (e.g., `wit/extensions/<extension_name>.wit`)
 
 ## Building Extensions
 
@@ -97,7 +99,7 @@ icp-cli extension rm <extension_name>
 If an extension doesn't work as expected:
 
 1. Check the extension's implementation in `crates/extensions/<extension_name>/src/`.
-2. Verify that the WIT interface in `crates/extensions/<extension_name>/wit/` is correctly defined.
+2. Verify that the WIT interface in `wit/extensions/<extension_name>.wit` is correctly defined.
 3. Ensure that any dependencies are correctly specified and available.
 4. Rebuild the extension and try again.
 

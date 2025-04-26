@@ -22,6 +22,6 @@ digest = "sha256:6870a3f09e61a648699bdadb554697f0ce7cbee171855bd738de62252eb15d3
 name = "icp:project"
 
 [[package.version]]
-requirement = "^0.0.1"
-version = "0.0.1"
-digest = "sha256:dccfcbf12be5eacf0b4c11fee59281040706a9deab488b1ffbcea1158807a3be"
+requirement = "^0.1.0"
+version = "0.1.0"
+digest = "sha256:6f369620437a30cc74e54c81e8455a0871b82fed5401fe831d03aab69309ec47"
