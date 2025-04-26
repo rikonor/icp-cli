@@ -135,6 +135,7 @@
     <div class="header">
         <h1>ICP CLI</h1>
         <p>A command-line utility for Internet Computer with WebAssembly component model for extension support</p>
+        <p><strong>Current Version: 0.1.13</strong></p>
     </div>
 
     <h2>Quick Installation</h2>
@@ -186,28 +187,40 @@
 
     <div class="download-grid">
         <div class="download-card">
-            <h3>x86_64-apple-darwin</h3>
-            <div class="variant">Variant: standard</div>
-            <a href="icp-x86_64-apple-darwin-standard" class="button" download>Download Binary</a>
-            <div class="checksum">SHA256: e39f54cd10fbba2aa37a504840919a538e71331cc44d335bba0a57477857b4ca</div>
-        </div>
-        <div class="download-card">
             <h3>x86_64-pc-windows-msvc</h3>
-            <div class="variant">Variant: standard.exe</div>
-            <a href="icp-x86_64-pc-windows-msvc-standard.exe" class="button" download>Download Binary</a>
-            <div class="checksum">SHA256: 11491d29ea9d29cc958175a9fe8d82cd51522e6d8bda1c64f2b4c67ab0da77ea</div>
-        </div>
-        <div class="download-card">
-            <h3>aarch64-apple-darwin</h3>
             <div class="variant">Variant: standard</div>
-            <a href="icp-aarch64-apple-darwin-standard" class="button" download>Download Binary</a>
-            <div class="checksum">SHA256: 6b7874e1e9ca87b668aee449a1e0ba30af59eddfe70571645366f48e3b9fd20b</div>
+            <a href="icp-x86_64-pc-windows-msvc-standard.exe" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: 16a88678fe8cd306465470685114a784882c60a3e499ee1f8bd2a4607958efac</div>
         </div>
         <div class="download-card">
             <h3>x86_64-unknown-linux-gnu</h3>
             <div class="variant">Variant: standard</div>
             <a href="icp-x86_64-unknown-linux-gnu-standard" class="button" download>Download Binary</a>
-            <div class="checksum">SHA256: e8638d33c08485cdb8e4da1ea722ec5e22af856f692ae6c39f143b559defa78d</div>
+            <div class="checksum">SHA256: 788c9f5264f852a1e94cb53157de8f62da42c390ce9f9905818901d421349ab9</div>
+        </div>
+        <div class="download-card">
+            <h3>aarch64-apple-darwin</h3>
+            <div class="variant">Variant: standard</div>
+            <a href="icp-aarch64-apple-darwin-standard" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: 2d9d154978efab2c81128158320f84d85237d8649ee4809cdd66203579b9b6ee</div>
+        </div>
+        <div class="download-card">
+            <h3>x86_64-apple-darwin</h3>
+            <div class="variant">Variant: homebrew</div>
+            <a href="icp-x86_64-apple-darwin-homebrew" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: 753c9279757dcf2ccdcdab9c4ac6c3cfdc27ec10e749209b7ac45fafd2197214</div>
+        </div>
+        <div class="download-card">
+            <h3>aarch64-apple-darwin</h3>
+            <div class="variant">Variant: homebrew</div>
+            <a href="icp-aarch64-apple-darwin-homebrew" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: 729d8e907992bfc1888ee1c205519fc3fb8fa7dc8c721fca5e1b17eece477d49</div>
+        </div>
+        <div class="download-card">
+            <h3>x86_64-apple-darwin</h3>
+            <div class="variant">Variant: standard</div>
+            <a href="icp-x86_64-apple-darwin-standard" class="button" download>Download Binary</a>
+            <div class="checksum">SHA256: 782fd3e704a679ce8109be6244c657882827cb61643ccaef9a5927aca48ec6dd</div>
         </div>
     </div>
 
@@ -219,32 +232,46 @@
 
     <div class="download-grid">
         <div class="download-card">
-            <h3>multiply</h3>
+            <h3>build <span style="font-weight: normal; font-size: 0.8em;">(v0.1.1)</span></h3>
             <div class="command-box">
                 <pre><code>icp extension add \
-  --name multiply \
-  https://rikonor.github.io/icp-cli/binaries/extensions/multiply.component.wasm</code></pre>
-                <button class="copy-button" onclick="copyCommand(this)" data-command="icp extension add --name multiply https://rikonor.github.io/icp-cli/binaries/extensions/multiply.component.wasm">
+  --name build \
+  https://rikonor.github.io/icp-cli/binaries/extensions/binaries/extensions/build.component.wasm</code></pre>
+                <button class="copy-button" onclick="copyCommand(this)" data-command="icp extension add --name build https://rikonor.github.io/icp-cli/binaries/extensions/binaries/extensions/build.component.wasm">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                     </svg>
                 </button>
             </div>
-            <div class="checksum">SHA256: d00bb255307e073fb64eeb95d14f34870c2cc8583c9f5e52ebd791b18b4001c9</div>
+            <div class="checksum">SHA256: 541af48f597f470099083031f5d0f109ef02fe8cf9e90aa2cf60dda1a555b071</div>
         </div>
         <div class="download-card">
-            <h3>power</h3>
+            <h3>identity <span style="font-weight: normal; font-size: 0.8em;">(v0.1.1)</span></h3>
             <div class="command-box">
                 <pre><code>icp extension add \
-  --name power \
-  https://rikonor.github.io/icp-cli/binaries/extensions/power.component.wasm</code></pre>
-                <button class="copy-button" onclick="copyCommand(this)" data-command="icp extension add --name power https://rikonor.github.io/icp-cli/binaries/extensions/power.component.wasm">
+  --name identity \
+  https://rikonor.github.io/icp-cli/binaries/extensions/binaries/extensions/identity.component.wasm</code></pre>
+                <button class="copy-button" onclick="copyCommand(this)" data-command="icp extension add --name identity https://rikonor.github.io/icp-cli/binaries/extensions/binaries/extensions/identity.component.wasm">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
                     </svg>
                 </button>
             </div>
-            <div class="checksum">SHA256: 812cbca369d7e5b6550bb1af15c924dc1f2e25e37c257a03b52fc040779b43ef</div>
+            <div class="checksum">SHA256: 16ebef202b88644c4290f719d84cace599dba163413332f810de8d04728bd835</div>
+        </div>
+        <div class="download-card">
+            <h3>project <span style="font-weight: normal; font-size: 0.8em;">(v0.1.3)</span></h3>
+            <div class="command-box">
+                <pre><code>icp extension add \
+  --name project \
+  https://rikonor.github.io/icp-cli/binaries/extensions/binaries/extensions/project.component.wasm</code></pre>
+                <button class="copy-button" onclick="copyCommand(this)" data-command="icp extension add --name project https://rikonor.github.io/icp-cli/binaries/extensions/binaries/extensions/project.component.wasm">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="checksum">SHA256: 8bc7d8ce09fcc0f5ca62c1e39e762473754fd3ebf4b6b2fefe34092649496a0b</div>
         </div>
     </div>
 
