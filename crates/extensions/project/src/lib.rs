@@ -44,15 +44,15 @@ fn create(name: &str) -> u8 {
         }
     }
 
-    // Create a placeholder dfx.json file inside the new directory
-    let dfx_path = format!("{}/dfx.json", name);
-    let dfx_content = b"{\n  \"canisters\": {}\n}\n"; // Basic empty dfx.json content
-    match filesystem::write_file(&dfx_path, dfx_content) {
+    // Create a placeholder icp.toml file inside the new directory
+    let icp_toml_path = format!("{}/icp.toml", name);
+    let icp_toml_content = b"[workspace]\nmembers = []\n"; // Basic empty workspace
+    match filesystem::write_file(&icp_toml_path, icp_toml_content) {
         Ok(_) => {
-            print(&format!("Created file: {}", dfx_path));
+            print(&format!("Created file: {}", icp_toml_path));
         }
         Err(e) => {
-            print(&format!("Error creating file '{}': {}", dfx_path, e));
+            print(&format!("Error creating file '{}': {}", icp_toml_path, e));
             // Optional: Consider attempting to clean up the created directory here
             return 1; // Indicate failure
         }
