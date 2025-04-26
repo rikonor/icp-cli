@@ -67,27 +67,27 @@ jobs:
       - name: Setup Rust WASM target
         run: rustup target add wasm32-unknown-unknown
 
-      - name: Check wasm-tools installation
-        id: check-wasm-tools
+      - name: Install cargo-binstall
         shell: bash
-        run: |
-          if command -v wasm-tools &> /dev/null; then
-            echo "wasm-tools already installed (cached)"
-            echo "skip_install=true" >> $GITHUB_OUTPUT
-          else
-            echo "wasm-tools not found, will install."
-            echo "skip_install=false" >> $GITHUB_OUTPUT
-          fi
+        run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
-      - name: Install wasm-tools
-        if: steps.check-wasm-tools.outputs.skip_install == 'false'
-        run: cargo install wasm-tools
+      - name: Install wasm-tools using binstall
+        shell: bash
+        run: cargo binstall -y wasm-tools
 
       - name: Build the specific extension
         shell: bash
         run: |
           echo "Building extension: ${{ env.EXTENSION_NAME }}"
           make CARGO_RELEASE=1 EXTENSION_NAME=${{ env.EXTENSION_NAME }}
+
+      - name: Generate SHA256 checksum
+        shell: bash
+        run: |
+          cd target/wasm32-unknown-unknown/release/
+          sha256sum "${{ env.EXTENSION_NAME }}.component.wasm" > "${{ env.EXTENSION_NAME }}.component.wasm.sha256"
+          echo "Generated checksum file: ${{ env.EXTENSION_NAME }}.component.wasm.sha256"
+          cd ../../../.. # Return to workspace root
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
@@ -96,6 +96,7 @@ jobs:
           tag_name: ${{ github.ref_name }} # Use the original tag e.g., project-v1.2.3
           files: |
             target/wasm32-unknown-unknown/release/${{ env.EXTENSION_NAME }}.component.wasm
+            target/wasm32-unknown-unknown/release/${{ env.EXTENSION_NAME }}.component.wasm.sha256
           body: |
             Release of ${{ env.EXTENSION_NAME }} extension, version ${{ env.EXTENSION_VERSION }}.
-            Component WASM attached.
+            Component WASM and SHA256 checksum attached.

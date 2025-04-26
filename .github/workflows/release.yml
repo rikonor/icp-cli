@@ -116,10 +116,20 @@ jobs:
             mv $d/icp-* release-assets/
           done
 
-      - name: Generate checksums
+      - name: Generate individual SHA256 checksums
+        shell: bash
         run: |
           cd release-assets
-          sha256sum * > checksums.txt
+          echo "Generating SHA256 checksums for files in $(pwd):"
+          ls -1 # List files for debugging
+          for file in *; do
+            if [ -f "$file" ]; then # Ensure it's a file, not a directory
+              sha256sum "$file" > "$file.sha256"
+              echo "  Generated $file.sha256"
+            fi
+          done
+          echo "Checksum generation complete."
+          cd .. # Return to workspace root
 
       - uses: softprops/action-gh-release@v1
         with:
