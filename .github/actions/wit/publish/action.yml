@@ -30,12 +30,11 @@ runs:
 
     - name: Install cargo-binstall
       shell: bash
-      run: cargo install cargo-binstall --locked
+      run: curl -L --proto '=https' --tlsv1.2 -sSf https://raw.githubusercontent.com/cargo-bins/cargo-binstall/main/install-from-binstall-release.sh | bash
 
     - name: Install wkg CLI using binstall
       shell: bash
       run: cargo binstall -y wkg
-      # Installs to ~/.cargo/bin which is cached
 
     - name: Create wkg config file
       shell: bash
