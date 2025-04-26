@@ -64,18 +64,25 @@ fi
 rm "${EXTENSION_CARGO_TOML}.bak" # Remove backup file on success
 echo "   Version updated successfully."
 
+echo "6. Updating Cargo.lock..."
+# Run cargo check to update the lock file based on Cargo.toml changes
+# We check the specific package to ensure only relevant parts of Cargo.lock might change
+cargo check --package ${NAME} --quiet || error_exit "cargo check failed for package ${NAME}, could not update Cargo.lock"
+echo "   Cargo.lock updated."
+
 # --- Git Operations ---
 COMMIT_MSG="chore(release): bump ${NAME} extension to v${VERSION}"
-echo "6. Committing changes..."
-git add "$EXTENSION_CARGO_TOML"
+echo "7. Committing changes..."
+# Add both the extension's Cargo.toml and the potentially updated Cargo.lock
+git add "$EXTENSION_CARGO_TOML" Cargo.lock
 git commit -m "$COMMIT_MSG"
 echo "   Committed with message: '${COMMIT_MSG}'"
 
-echo "7. Creating tag '${TAG_NAME}'..."
+echo "8. Creating tag '${TAG_NAME}'..."
 git tag "$TAG_NAME"
 echo "   Tag '${TAG_NAME}' created."
 
-echo "8. Pushing commit and tag to remote 'origin'..."
+echo "9. Pushing commit and tag to remote 'origin'..."
 # Push commit first
 if ! git push origin HEAD; then
     error_exit "Failed to push commit. Please check remote connection and permissions."

@@ -70,19 +70,23 @@ else
     error_exit "Failed to update workspace version using '$PYTHON_HELPER'."
 fi
 
+echo "6. Updating Cargo.lock..."
+# Run cargo check to update the lock file based on Cargo.toml changes
+cargo check --quiet || error_exit "cargo check failed, could not update Cargo.lock"
+echo "   Cargo.lock updated."
+
 # --- Git Operations ---
-echo "6. Committing version bump..."
-# The Python script only modifies Cargo.toml. Cargo.lock might need updating separately if desired/needed.
-# For now, only committing Cargo.toml based on the script's action.
+echo "7. Committing version bump..."
+# Add both Cargo.toml (updated by python) and Cargo.lock (updated by cargo check)
 git add Cargo.toml Cargo.lock
 git commit -m "$COMMIT_MSG"
 echo "   Committed."
 
-echo "7. Creating tag '$TAG_NAME'..."
+echo "8. Creating tag '$TAG_NAME'..."
 git tag "$TAG_NAME"
 echo "   Tagged."
 
-echo "8. Pushing commit and tag to $GIT_REMOTE..."
+echo "9. Pushing commit and tag to $GIT_REMOTE..."
 # Use --atomic for safer push if supported and desired
 git push "$GIT_REMOTE" HEAD
 git push "$GIT_REMOTE" "$TAG_NAME"

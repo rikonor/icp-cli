@@ -116,11 +116,9 @@ jobs:
             mv $d/icp-* release-assets/
           done
 
-      # --- NEW: Fetch Latest Extension Releases ---
       - name: Fetch Latest Extension Artifacts
         env:
           GH_TOKEN: ${{ github.token }}
-          # Define the extensions to include
           EXTENSIONS: "build identity project"
         shell: bash
         run: |
@@ -154,8 +152,8 @@ jobs:
           done
           rmdir ./temp-ext-download
           echo "Finished fetching extension artifacts."
-      # --- END NEW SECTION ---
-      - name: Generate individual SHA256 checksums # This step might need adjustment later if we rely solely on downloaded checksums
+
+      - name: Generate individual SHA256 checksums
         shell: bash
         run: |
           cd release-assets
