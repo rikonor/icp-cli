@@ -4,7 +4,7 @@ members = [ "crates/icp-cli", "crates/icp-core", "crates/extensions/*", "crates/
 default-members = [ "crates/icp-cli", "crates/icp-core", "crates/icp-distribution",]
 
 [workspace.package]
-version = "0.1.16"
+version = "0.1.17"
 
 [workspace.dependencies]
 anyhow = "1.0.96"
