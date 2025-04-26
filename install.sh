@@ -1,7 +1,7 @@
 #!/bin/bash
 # ICP CLI Installation Script for Unix-like systems (macOS, Linux)
 # This script downloads and installs the ICP CLI binary.
-# Version: 0.1.13
+# Version: 0.1.17
 
 set -euo pipefail
 
@@ -31,7 +31,7 @@ for cmd in curl shasum chmod; do
 done
 
 # Main Installation Process
-status "Starting ICP CLI 0.1.13 installation..."
+status "Starting ICP CLI 0.1.17 installation..."
 
 # Check if running as root
 if [ "$EUID" -eq 0 ]; then
