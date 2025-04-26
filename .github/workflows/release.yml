@@ -158,6 +158,30 @@ jobs:
           gh workflow run update-distribution-channels.yml --ref ${{ github.ref }}
           echo "Workflow triggered. Note: This step completes immediately, check Actions tab for progress."
 
+      - name: Get Triggered Workflow Run ID
+        id: get-run-id
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Wait a few seconds for the run to register
+          sleep 5
+          echo "Fetching run ID for workflow 'update-distribution-channels.yml' on ref '${{ github.ref }}'..."
+          RUN_ID=$(gh run list --workflow=update-distribution-channels.yml --ref ${{ github.ref }} --limit 1 --json databaseId --jq '.[0].databaseId')
+          if [ -z "$RUN_ID" ] || [ "$RUN_ID" == "null" ]; then
+            echo "::error::Failed to retrieve run ID. Workflow 'update-distribution-channels.yml' might not have started."
+            exit 1
+          fi
+          echo "Found run ID: $RUN_ID"
+          echo "RUN_ID=$RUN_ID" >> $GITHUB_ENV
+
+      - name: Wait for Distribution Workflow
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          echo "Waiting for distribution workflow run $RUN_ID to complete..."
+          gh run watch $RUN_ID --exit-status
+          echo "Distribution workflow run $RUN_ID completed."
+
   # APT distribution remains separate for now
   distribution-apt:
     needs: create-release # Depends directly on release creation now

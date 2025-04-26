@@ -1,19 +1,26 @@
 name: Update Distribution Channels
 
 on:
-  workflow_dispatch: # Allows manual triggering via API/CLI
+  workflow_dispatch:
 
-# Concurrency control to prevent multiple simultaneous updates
 concurrency:
   group: distribution-update
   cancel-in-progress: true
 
 permissions:
-  contents: write # Needed to checkout, read release tags, and push to gh-pages
+  contents: read
 
 jobs:
-  update:
+  setup:
     runs-on: ubuntu-latest
+    outputs:
+      cli_version: ${{ steps.get-cli-version.outputs.cli_version }}
+      extension_info_json: ${{ steps.get-extensions.outputs.extension_info }}
+
+    permissions:
+      contents: read
+      actions: read
+
     env:
       GH_TOKEN: ${{ github.token }}
 
@@ -40,18 +47,39 @@ jobs:
           extensions: "build identity project" # Define which extensions to include
           github_token: ${{ env.GH_TOKEN }}
 
+  quick-install:
+    needs: setup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write # Needed for gh-pages deployment
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
       - name: Call Quick Install Action
-        uses: ./.github/actions/distribution/quick-install # Use the restored action
+        uses: ./.github/actions/distribution/quick-install
         with:
-          version: ${{ steps.get-cli-version.outputs.cli_version }} # Pass fetched CLI version
-          token: ${{ env.GH_TOKEN }} # Pass token for release asset download
-          # icp_binaries is no longer needed as input, action fetches based on version
-          extension_info_json: ${{ steps.get-extensions.outputs.extension_info }} # Pass fetched JSON
+          version: ${{ needs.setup.outputs.cli_version }}
+          token: ${{ env.GH_TOKEN }}
+          extension_info_json: ${{ needs.setup.outputs.extension_info_json }}
+
+  homebrew:
+    needs: setup
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
       - name: Call Homebrew Action
-        uses: ./.github/actions/distribution/homebrew # Use the restored action
+        uses: ./.github/actions/distribution/homebrew
         with:
-          version: ${{ steps.get-cli-version.outputs.cli_version }} # Pass fetched CLI version (e.g., v0.1.13)
-          token: ${{ secrets.HOMEBREW_TAP_TOKEN }} # Use secret directly from environment
-          tap_repo: ${{ github.repository_owner }}/homebrew-icp-cli # Specify the target tap repository
-          extension_info_json: ${{ steps.get-extensions.outputs.extension_info }} # Pass fetched JSON
+          version: ${{ needs.setup.outputs.cli_version }}
+          token: ${{ secrets.HOMEBREW_TAP_TOKEN }}
+          tap_repo: ${{ github.repository_owner }}/homebrew-icp-cli
+          extension_info_json: ${{ needs.setup.outputs.extension_info_json }}
