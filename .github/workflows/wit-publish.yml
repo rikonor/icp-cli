@@ -16,4 +16,4 @@ jobs:
       - name: Publish WIT Packages using Composite Action
         uses: ./.github/actions/wit/publish
         with:
-          ghcr_pat: ${{ github.token }}
+          ghcr_pat: ${{ secrets.GHCR_PAT_TOKEN }}
