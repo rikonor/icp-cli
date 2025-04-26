@@ -31,9 +31,9 @@ struct Args {
 
     // extensions_path is no longer needed as extensions are parsed from JSON
     // checksums_path is no longer needed as checksums are read from .sha256 files
-    /// JSON string containing extension info (name, version, url, sha256)
+    /// Path to the JSON file containing extension info (name, version, url, sha256)
     #[arg(long)]
-    extension_info_json: String,
+    extension_info_path: PathBuf,
 
     /// Output directory for generated files
     #[arg(long, default_value = "dist")]
@@ -112,9 +112,14 @@ fn run() -> Result<()> {
     // Ensure binary_url_base and checksum_url_base are used for scripts
 
     // Generate landing page
-    // Parse extensions from JSON input instead of scanning directory
-    let extensions = parse_extensions_from_json(&args.extension_info_json)?; // Call with only json_string
-    println!("Parsed {} extensions from JSON", extensions.len());
+    // Read extension info JSON from the specified file path
+    let extension_json_content =
+        fs::read_to_string(&args.extension_info_path).map_err(|e| DistributionError::IoError(e))?; // Handle file reading error
+    println!("Read extension info from: {:?}", args.extension_info_path);
+
+    // Parse extensions from the JSON content read from the file
+    let extensions = parse_extensions_from_json(&extension_json_content)?;
+    println!("Parsed {} extensions from JSON file", extensions.len());
 
     let template_data = TemplateData {
         version: version.to_string(), // Add CLI version here

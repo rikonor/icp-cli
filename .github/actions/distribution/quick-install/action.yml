@@ -35,18 +35,34 @@ runs:
         echo "Contents of dist/binaries/icp:"
         ls -l dist/binaries/icp
 
+    - name: Write Extension Info to File
+      shell: bash
+      run: |
+        echo "Writing extension info JSON to extension_info.json..."
+        echo '${{ inputs.extension_info_json }}' > extension_info.json
+        if [ $? -ne 0 ]; then echo "Error: Failed to write extension_info.json"; exit 1; fi
+        echo "Contents of extension_info.json:"
+        cat extension_info.json
+
     - name: Generate scripts
       shell: bash
       run: |
         cargo run --bin generate_scripts -- \
           --binary-path dist/binaries/icp \
-          # --checksums-path is removed; generate_scripts needs update to find .sha256 files
           --output-dir dist \
           --domain "${GITHUB_REPOSITORY_OWNER}.github.io/${GITHUB_REPOSITORY#*/}" \
           --repo-url "https://github.com/${GITHUB_REPOSITORY}" \
-          --extension-info-json '${{ inputs.extension_info_json }}'
+          --extension-info-path extension_info.json # Pass path to the JSON file
 
-    - shell: bash
+    - name: Clean up Temporary File
+      if: always() # Ensure cleanup happens even if previous steps fail
+      shell: bash
+      run: |
+        echo "Removing temporary file extension_info.json..."
+        rm -f extension_info.json
+
+    - name: Check Generated Files # Renamed for clarity
+      shell: bash
       run: |
         required_files=("install.sh" "install.ps1" "index.html" ".nojekyll")
         for file in "${required_files[@]}"; do
