@@ -39,7 +39,7 @@ runs:
 
           # Find the latest non-draft, non-prerelease tag matching the pattern <name>-v*.*.*
           # Sort by created date descending, limit to 1
-          LATEST_TAG=$(gh release list --repo "$REPO" --limit 1 --exclude-drafts --exclude-pre-releases --json tagName,isLatest,createdAt --jq ".[] | select(.tagName | test(\"^${EXT_NAME}-v[0-9]+\\\\.[0-9]+\\\\.[0-9]+$\")) | .tagName" | head -n 1)
+          LATEST_TAG=$(gh release list --repo "$REPO" --limit 10 --exclude-drafts --exclude-pre-releases --json tagName --jq ".[] | select(.tagName | test(\"^${EXT_NAME}-v[0-9]+\\\\.[0-9]+\\\\.[0-9]+$\")) | .tagName" | head -n 1)
 
           if [ -z "$LATEST_TAG" ]; then
             echo "WARNING: No stable release tag found matching pattern '${EXT_NAME}-v*.*.*'. Skipping."
@@ -74,10 +74,10 @@ runs:
 
 
           # Escape values for JSON
-          JSON_NAME=$(echo "$EXT_NAME" | jq -R -s '.')
-          JSON_VERSION=$(echo "$VERSION" | jq -R -s '.')
-          JSON_URL=$(echo "$WASM_URL" | jq -R -s '.')
-          JSON_SHA256=$(echo "$SHA256_CONTENT" | jq -R -s '.')
+          JSON_NAME=$(echo "$EXT_NAME" | tr -d '\n' | jq -R -s '.')
+          JSON_VERSION=$(echo "$VERSION" | tr -d '\n' | jq -R -s '.')
+          JSON_URL=$(echo "$WASM_URL" | tr -d '\n' | jq -R -s '.')
+          JSON_SHA256=$(echo "$SHA256_CONTENT" | tr -d '\n' | jq -R -s '.')
 
 
           # Append to JSON output string
