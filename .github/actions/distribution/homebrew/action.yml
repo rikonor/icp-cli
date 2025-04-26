@@ -101,8 +101,14 @@ runs:
       working-directory: tap-repo
       run: |
         git add Formula/icp-cli.rb
-        git commit -m "Update icp-cli to version ${{ inputs.version }}"
-        git push
+        # Check if there are changes staged for commit
+        if git diff --staged --quiet; then
+          echo "No changes detected in Homebrew formula. Skipping commit and push."
+        else
+          echo "Changes detected in Homebrew formula. Committing and pushing..."
+          git commit -m "Update icp-cli to version ${{ inputs.version }}"
+          git push
+        fi
 
     - name: Cleanup Temporary Files
       shell: bash
