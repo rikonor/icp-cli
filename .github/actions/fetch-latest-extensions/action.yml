@@ -1,0 +1,98 @@
+name: 'Fetch Latest Extensions'
+description: 'Fetches information (version, URLs, checksum) for the latest stable releases of specified ICP CLI extensions.'
+
+inputs:
+  extensions:
+    description: 'Space-separated list of extension names to fetch (e.g., "build identity project").'
+    required: true
+  github_token:
+    description: 'GitHub token for API access.'
+    required: true
+    default: ${{ github.token }}
+  repository:
+    description: 'The repository to fetch releases from (owner/repo).'
+    required: true
+    default: ${{ github.repository }}
+
+outputs:
+  extension_info:
+    description: 'JSON string containing an array of objects, each with name, version, url, and sha256 for the latest stable release.'
+    value: ${{ steps.fetch_step.outputs.extension_info }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Fetch Extension Info
+      id: fetch_step # Added id here
+      shell: bash
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+        EXTENSIONS_INPUT: ${{ inputs.extensions }}
+        REPO: ${{ inputs.repository }}
+      run: |
+        echo "Fetching latest stable releases for extensions: $EXTENSIONS_INPUT in repo $REPO"
+        json_output="["
+        first_entry=true
+
+        for EXT_NAME in $EXTENSIONS_INPUT; do
+          echo "--- Processing extension: $EXT_NAME ---"
+
+          # Find the latest non-draft, non-prerelease tag matching the pattern <name>-v*.*.*
+          # Sort by created date descending, limit to 1
+          LATEST_TAG=$(gh release list --repo "$REPO" --limit 1 --exclude-drafts --exclude-pre-releases --json tagName,isLatest,createdAt --jq ".[] | select(.tagName | test(\"^${EXT_NAME}-v[0-9]+\\\\.[0-9]+\\\\.[0-9]+$\")) | .tagName" | head -n 1)
+
+          if [ -z "$LATEST_TAG" ]; then
+            echo "WARNING: No stable release tag found matching pattern '${EXT_NAME}-v*.*.*'. Skipping."
+            continue
+          fi
+
+          echo "Found latest stable tag for $EXT_NAME: $LATEST_TAG"
+
+          # Extract version from tag (remove prefix)
+          VERSION=$(echo "$LATEST_TAG" | sed "s/^${EXT_NAME}-v//")
+          echo "Extracted version: $VERSION"
+
+          # Get asset download URLs for wasm and sha256
+          # Note: Assumes assets are named exactly <name>.component.wasm and <name>.component.wasm.sha256
+          ASSET_INFO=$(gh release view "$LATEST_TAG" --repo "$REPO" --json assets --jq '.assets[] | select(.name == "'${EXT_NAME}'.component.wasm" or .name == "'${EXT_NAME}'.component.wasm.sha256") | {name, url}')
+
+          WASM_URL=$(echo "$ASSET_INFO" | jq -r 'select(.name == "'${EXT_NAME}'.component.wasm") | .url')
+          SHA256_URL=$(echo "$ASSET_INFO" | jq -r 'select(.name == "'${EXT_NAME}'.component.wasm.sha256") | .url')
+          # Fetch the actual SHA256 checksum content from its URL
+          # Use curl with -fsSL to fail silently on error and follow redirects
+          SHA256_CONTENT=$(curl -fsSL -H "Authorization: Bearer $GH_TOKEN" -H "Accept: application/octet-stream" "$SHA256_URL" | awk '{print $1}')
+
+
+          if [ -z "$WASM_URL" ] || [ -z "$SHA256_URL" ] || [ -z "$SHA256_CONTENT" ]; then
+             echo "WARNING: Could not find required assets (wasm URL, sha256 URL, or sha256 content) for $EXT_NAME tag $LATEST_TAG. Skipping."
+             continue
+          fi
+
+          echo "Found WASM URL: $WASM_URL"
+          echo "Found SHA256 URL: $SHA256_URL"
+          echo "Fetched SHA256 Checksum: $SHA256_CONTENT"
+
+
+          # Escape values for JSON
+          JSON_NAME=$(echo "$EXT_NAME" | jq -R -s '.')
+          JSON_VERSION=$(echo "$VERSION" | jq -R -s '.')
+          JSON_URL=$(echo "$WASM_URL" | jq -R -s '.')
+          JSON_SHA256=$(echo "$SHA256_CONTENT" | jq -R -s '.')
+
+
+          # Append to JSON output string
+          if [ "$first_entry" = true ]; then
+            first_entry=false
+          else
+            json_output="$json_output,"
+          fi
+          json_output="$json_output{\"name\":$JSON_NAME,\"version\":$JSON_VERSION,\"url\":$JSON_URL,\"sha256\":$JSON_SHA256}"
+
+        done
+
+        json_output="$json_output]"
+        echo "Final JSON output:"
+        echo "$json_output" | jq . # Pretty print for logs
+
+        # Set the action output
+        echo "extension_info=$json_output" >> $GITHUB_OUTPUT

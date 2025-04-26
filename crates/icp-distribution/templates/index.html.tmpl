@@ -135,6 +135,7 @@
     <div class="header">
         <h1>ICP CLI</h1>
         <p>A command-line utility for Internet Computer with WebAssembly component model for extension support</p>
+        <p><strong>Current Version: {{version}}</strong></p>
     </div>
 
     <h2>Quick Installation</h2>
@@ -204,7 +205,7 @@
     <div class="download-grid">
         {{#each extensions}}
         <div class="download-card">
-            <h3>{{this.name}}</h3>
+            <h3>{{this.name}} <span style="font-weight: normal; font-size: 0.8em;">(v{{this.version}})</span></h3>
             <div class="command-box">
                 <pre><code>icp extension add \
   --name {{this.name}} \

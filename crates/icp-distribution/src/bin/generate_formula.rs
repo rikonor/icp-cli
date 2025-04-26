@@ -1,11 +1,17 @@
 use clap::Parser;
 use icp_distribution::{BinaryAsset, ExtensionAsset, HomebrewFormulaContext, Result};
-use serde_json::Value;
-use std::collections::HashMap;
+use serde::Deserialize; // Added for direct deserialization
 use std::env;
-use std::fs::{self, File};
-use std::io::{BufRead, BufReader};
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
+
+// Define a struct that matches the JSON structure from fetch-latest-extensions
+#[derive(Deserialize, Debug)]
+struct ExtensionInfoInput {
+    name: String,
+    // version: String, // Version not currently needed by ExtensionAsset
+    url: String,
+    sha256: String,
+}
 
 #[derive(Parser)]
 #[command(about = "Generate Homebrew formula from template")]
@@ -14,139 +20,76 @@ struct Args {
     #[arg(long)]
     version: String,
 
-    /// Path to checksums file
+    /// JSON string containing extension info (name, version, url, sha256)
     #[arg(long)]
-    checksums: PathBuf,
-
-    /// Path to extensions JSON file
-    #[arg(long)]
-    extensions: PathBuf,
+    extension_info_json: String,
 
     /// URL for Intel binary
     #[arg(long)]
     intel_url: String,
 
+    /// SHA256 checksum for Intel binary
+    #[arg(long)]
+    intel_sha256: String,
+
     /// URL for ARM binary
     #[arg(long)]
     arm_url: String,
+
+    /// SHA256 checksum for ARM binary
+    #[arg(long)]
+    arm_sha256: String,
 
     /// Output path for generated formula
     #[arg(long)]
     output: PathBuf,
 }
 
-fn parse_checksums(path: &Path) -> Result<HashMap<String, String>> {
-    let file = File::open(path)?;
-    let reader = BufReader::new(file);
-    let mut checksums = HashMap::new();
+// Removed parse_checksums function as checksums are now direct inputs
 
-    for line in reader.lines() {
-        let line = line?;
-        if let Some((hash, filename)) = line.split_once("  ") {
-            checksums.insert(filename.to_string(), hash.to_string());
-        }
-    }
+// Updated function to parse extensions directly from JSON string
+fn parse_extensions_from_json(json_string: &str) -> Result<Vec<ExtensionAsset>> {
+    let inputs: Vec<ExtensionInfoInput> = serde_json::from_str(json_string)
+        .map_err(|e| icp_distribution::DistributionError::JsonError(e))?; // Handle JSON parsing error
 
-    Ok(checksums)
-}
-
-fn parse_extensions(
-    path: &Path,
-    checksums: &HashMap<String, String>,
-) -> Result<Vec<ExtensionAsset>> {
-    let content = fs::read_to_string(path)?;
-    let extensions: Vec<Value> = serde_json::from_str(&content)?;
-
-    extensions
-        .iter()
-        .map(|ext| {
-            let name = ext["name"]
-                .as_str()
-                .ok_or_else(|| {
-                    icp_distribution::DistributionError::TemplateError(
-                        handlebars::RenderError::new("Missing extension name"),
-                    )
-                })?
-                .to_string();
-
-            let url = ext["url"]
-                .as_str()
-                .ok_or_else(|| {
-                    icp_distribution::DistributionError::TemplateError(
-                        handlebars::RenderError::new("Missing extension URL"),
-                    )
-                })?
-                .to_string();
-
-            // Get SHA256 from checksums using the extension filename
-            let filename = format!("{}.component.wasm", name);
-            let sha256 = checksums.get(&filename).ok_or_else(|| {
-                icp_distribution::DistributionError::TemplateError(handlebars::RenderError::new(
-                    &format!("Missing checksum for extension: {}", filename),
-                ))
-            })?;
-
-            Ok(ExtensionAsset {
-                name,
-                url,
-                sha256: sha256.clone(),
-            })
+    Ok(inputs
+        .into_iter()
+        .map(|input| ExtensionAsset {
+            name: input.name,
+            url: input.url,
+            sha256: input.sha256,
         })
-        .collect()
+        .collect())
 }
 
-fn get_binary_sha256(checksums: &HashMap<String, String>, filename: &str) -> Result<String> {
-    checksums
-        .get(filename)
-        .ok_or_else(|| {
-            icp_distribution::DistributionError::TemplateError(handlebars::RenderError::new(
-                &format!("Missing checksum for binary: {}", filename),
-            ))
-        })
-        .map(String::from)
-}
-
-fn extract_filename(url: &str) -> Result<&str> {
-    url.split('/').last().ok_or_else(|| {
-        icp_distribution::DistributionError::TemplateError(handlebars::RenderError::new(
-            "Invalid binary URL",
-        ))
-    })
-}
+// Removed get_binary_sha256 function
+// Removed extract_filename function (no longer needed as checksums are direct inputs)
 
 fn main() -> Result<()> {
     let args = Args::parse();
 
-    // Parse checksums file
-    let checksums = parse_checksums(&args.checksums)?;
+    // Checksums are now direct arguments (args.intel_sha256, args.arm_sha256)
 
-    // Extract filenames first
-    let intel_filename = extract_filename(&args.intel_url)?;
-    let arm_filename = extract_filename(&args.arm_url)?;
-
-    // Get checksums using filenames
-    let intel_sha256 = get_binary_sha256(&checksums, intel_filename)?;
-    let arm_sha256 = get_binary_sha256(&checksums, arm_filename)?;
-
-    // Create binary assets
+    // Create binary assets directly using args
     let intel_binary = BinaryAsset {
         url: args.intel_url,
-        sha256: intel_sha256,
+        sha256: args.intel_sha256, // Use directly from args
     };
 
     let arm_binary = BinaryAsset {
         url: args.arm_url,
-        sha256: arm_sha256,
+        sha256: args.arm_sha256, // Use directly from args
     };
 
-    // Parse extensions
-    let extensions = parse_extensions(&args.extensions, &checksums)?;
+    // Parse extensions from the JSON input string
+    let extensions = parse_extensions_from_json(&args.extension_info_json)?;
 
     // Create formula context
     let formula_context =
         HomebrewFormulaContext::new(args.version, intel_binary, arm_binary, extensions);
 
     // Get template path relative to crate root
+    // Consider making this path resolution more robust if needed
     let template_path = env::current_dir()?
         .join("crates")
         .join("icp-distribution")

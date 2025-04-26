@@ -7,11 +7,21 @@ use icp_distribution::{
     render_template, BinaryInfo, BinaryProcessor, DistributionError, ExtensionInfo, Result,
     UrlBuilder,
 };
-use serde::Serialize;
+use serde::{Deserialize, Serialize}; // Added Deserialize
 use std::collections::HashMap;
+use std::env; // Added env
 use std::fs;
 use std::path::PathBuf;
 use std::process;
+
+// Define a struct that matches the JSON structure from fetch-latest-extensions
+#[derive(Deserialize, Debug)]
+struct ExtensionInfoInput {
+    name: String,
+    version: String,
+    url: String, // URL of the .component.wasm file
+    sha256: String,
+}
 
 #[derive(Parser)]
 #[command(author, version, about)]
@@ -20,13 +30,17 @@ struct Args {
     #[arg(long, default_value = "dist/binaries/icp")]
     binary_path: PathBuf,
 
-    /// Path to the extensions directory
+    /// Path to the extensions directory (kept for BinaryProcessor::new compatibility)
     #[arg(long, default_value = "dist/binaries/extensions")]
     extensions_path: PathBuf,
 
-    /// Path to the checksums
+    /// Path to the checksums (kept for BinaryProcessor::new compatibility)
     #[arg(long, default_value = "dist/checksums.txt")]
     checksums_path: PathBuf,
+
+    /// JSON string containing extension info (name, version, url, sha256)
+    #[arg(long)]
+    extension_info_json: String,
 
     /// Output directory for generated files
     #[arg(long, default_value = "dist")]
@@ -43,10 +57,35 @@ struct Args {
 
 #[derive(Serialize)]
 struct TemplateData {
+    version: String, // Added CLI version
     github_pages_url: String,
     github_repo_url: String,
     binaries: Vec<BinaryInfo>,
-    extensions: Vec<ExtensionInfo>,
+    extensions: Vec<ExtensionInfo>, // Uses the struct from lib.rs which now includes version
+}
+
+// Function to parse extensions directly from JSON string
+fn parse_extensions_from_json(
+    json_string: &str,
+    url_builder: &UrlBuilder,
+) -> Result<Vec<ExtensionInfo>> {
+    let inputs: Vec<ExtensionInfoInput> =
+        serde_json::from_str(json_string).map_err(|e| DistributionError::JsonError(e))?; // Handle JSON parsing error
+
+    Ok(inputs
+        .into_iter()
+        .map(|input| {
+            // Construct the relative file path expected by the template
+            let file = format!("binaries/extensions/{}.component.wasm", input.name);
+            ExtensionInfo {
+                name: input.name,
+                version: input.version,
+                // The template expects a relative path from the site root for the download command
+                file,
+                checksum: input.sha256,
+            }
+        })
+        .collect())
 }
 
 fn run() -> Result<()> {
@@ -83,18 +122,19 @@ fn run() -> Result<()> {
     // Ensure binary_url_base and checksum_url_base are used for scripts
 
     // Generate landing page
-    // Get extensions
-    let extensions = processor.parse_extensions()?;
-    println!("Found {} extensions", extensions.len());
+    // Parse extensions from JSON input instead of scanning directory
+    let extensions = parse_extensions_from_json(&args.extension_info_json, &url_builder)?;
+    println!("Parsed {} extensions from JSON", extensions.len());
 
     let template_data = TemplateData {
+        version: version.to_string(), // Add CLI version here
         github_pages_url: url_builder.pages_url()?,
         github_repo_url: url_builder.repo_url()?,
         binaries,
-        extensions,
+        extensions, // Use the parsed extensions
     };
 
-    let manifest_dir = std::env::var("CARGO_MANIFEST_DIR")
+    let manifest_dir = env::var("CARGO_MANIFEST_DIR") // Use imported env
         .map_err(|_| DistributionError::UrlError("Failed to get CARGO_MANIFEST_DIR".into()))?;
     let template_dir = PathBuf::from(&manifest_dir).join("templates/curl-install");
 

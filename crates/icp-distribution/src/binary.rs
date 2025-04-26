@@ -18,6 +18,7 @@ pub struct BinaryInfo {
 #[derive(Debug, Serialize, Clone)]
 pub struct ExtensionInfo {
     pub name: String,
+    pub version: String, // Added version field
     pub file: String,
     pub checksum: String,
 }
@@ -160,6 +161,7 @@ impl BinaryProcessor {
 
                 extensions.push(ExtensionInfo {
                     name,
+                    version: "unknown".to_string(), // Placeholder version
                     file: filename,
                     checksum,
                 });

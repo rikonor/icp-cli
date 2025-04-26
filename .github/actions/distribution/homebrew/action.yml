@@ -11,6 +11,9 @@ inputs:
   tap_repo:
     description: Homebrew tap repository name
     required: false
+  extension_info_json:
+    description: JSON string containing extension info (name, version, url, sha256)
+    required: true
 
 runs:
   using: composite
@@ -41,26 +44,29 @@ runs:
         echo "arm_url=$ARM_URL" >> $GITHUB_OUTPUT
         echo "ARM URL: $ARM_URL"
 
-        # Get extension info
-        echo "Extracting extension info..."
-        jq -r '[.assets[] | select(.name | endswith(".component.wasm")) | {
-          name: (.name | sub(".component.wasm$"; "")),
-          url: .url
-        }]' release.json > extensions.json
-        if [ $? -ne 0 ]; then echo "Error: Failed to extract extension info."; exit 1; fi
-        echo "Extension info saved to extensions.json"
+        # Download only the main binary checksum files for homebrew variants
+        echo "Downloading main binary .sha256 checksum files..."
+        gh release download "${{ inputs.version }}" -p "*-apple-darwin-homebrew.sha256"
+        if [ $? -ne 0 ]; then echo "Error: Failed to download main binary checksum files."; exit 1; fi
 
-        # Download all individual checksum files
-        echo "Downloading all .sha256 checksum files..."
-        gh release download "${{ inputs.version }}" -p "*.sha256"
-        if [ $? -ne 0 ]; then echo "Error: Failed to download checksum files."; exit 1; fi
+        # Extract checksums for intel and arm binaries
+        echo "Extracting checksums..."
+        INTEL_CHECKSUM_FILE=$(ls *x86_64-apple-darwin-homebrew.sha256 2>/dev/null)
+        ARM_CHECKSUM_FILE=$(ls *aarch64-apple-darwin-homebrew.sha256 2>/dev/null)
 
-        # Combine checksums into a single temporary file, filtering for valid lines
-        echo "Combining checksum files into temp_checksums.txt..."
-        cat *.sha256 | grep -E '^[a-f0-9]{64}\s+' > temp_checksums.txt
-        if [ $? -ne 0 ] || [ ! -s temp_checksums.txt ]; then echo "Error: Failed to create or combine checksum files, or no valid checksum lines found."; exit 1; fi
-        echo "Checksums combined and filtered. Content:"
-        cat temp_checksums.txt
+        if [ -z "$INTEL_CHECKSUM_FILE" ] || [ ! -f "$INTEL_CHECKSUM_FILE" ]; then echo "Error: Intel checksum file not found."; exit 1; fi
+        if [ -z "$ARM_CHECKSUM_FILE" ] || [ ! -f "$ARM_CHECKSUM_FILE" ]; then echo "Error: ARM checksum file not found."; exit 1; fi
+
+        INTEL_SHA256=$(awk '{print $1}' "$INTEL_CHECKSUM_FILE")
+        ARM_SHA256=$(awk '{print $1}' "$ARM_CHECKSUM_FILE")
+
+        if [ -z "$INTEL_SHA256" ]; then echo "Error: Could not extract Intel checksum."; exit 1; fi
+        if [ -z "$ARM_SHA256" ]; then echo "Error: Could not extract ARM checksum."; exit 1; fi
+
+        echo "intel_sha256=$INTEL_SHA256" >> $GITHUB_OUTPUT
+        echo "arm_sha256=$ARM_SHA256" >> $GITHUB_OUTPUT
+        echo "Intel SHA256: $INTEL_SHA256"
+        echo "ARM SHA256: $ARM_SHA256"
 
     - name: Clone Tap Repository
       shell: bash
@@ -73,12 +79,15 @@ runs:
       shell: bash
       run: |
         # Generate formula using our tool with direct inputs
+        # Generate formula using our tool, passing the extension JSON directly
+        # NOTE: Assumes generate_formula is updated to accept --extension-info-json
         cargo run --package icp-distribution --bin generate_formula -- \
           --version "${{ inputs.version }}" \
-          --checksums temp_checksums.txt \
-          --extensions extensions.json \
+          --extension-info-json '${{ inputs.extension_info_json }}' \
           --intel-url "${{ steps.release.outputs.intel_url }}" \
+          --intel-sha256 "${{ steps.release.outputs.intel_sha256 }}" \
           --arm-url "${{ steps.release.outputs.arm_url }}" \
+          --arm-sha256 "${{ steps.release.outputs.arm_sha256 }}" \
           --output tap-repo/Formula/icp-cli.rb
 
     - name: Commit and Push Changes
@@ -93,5 +102,5 @@ runs:
       shell: bash
       run: |
         echo "Cleaning up temporary files..."
-        rm -f release.json extensions.json temp_checksums.txt *.sha256
+        rm -f release.json *.sha256 # Remove downloaded checksum files
         echo "Cleanup complete."

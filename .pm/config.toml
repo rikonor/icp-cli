@@ -9,4 +9,5 @@ active = [
     "detailed-content-preference",
     "ambiguity-resolution",
     "guideline-management",
+    "release-process",
 ]
