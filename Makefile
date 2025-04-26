@@ -89,4 +89,18 @@ endif
 	@scripts/release-cli.sh $(VERSION)
 	@echo "--- Core CLI Release Script Finished ---"
 
+# Release an individual extension (updates extension version, commits, tags <NAME>-vX.Y.Z, pushes)
+# Usage: make release-extension NAME=project VERSION=X.Y.Z
+.PHONY: release-extension
+release-extension:
+ifndef NAME
+	$(error NAME is not set. Usage: make release-extension NAME=<name> VERSION=<X.Y.Z>)
+endif
+ifndef VERSION
+	$(error VERSION is not set. Usage: make release-extension NAME=<name> VERSION=<X.Y.Z>)
+endif
+	@echo "--- Running Extension Release Script for $(NAME) v$(VERSION) ---"
+	@scripts/release-extension.sh $(NAME) $(VERSION)
+	@echo "--- Extension Release Script Finished ---"
+
 # --- End Release Management ---
