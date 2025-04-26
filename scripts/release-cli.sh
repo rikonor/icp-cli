@@ -74,7 +74,7 @@ fi
 echo "6. Committing version bump..."
 # The Python script only modifies Cargo.toml. Cargo.lock might need updating separately if desired/needed.
 # For now, only committing Cargo.toml based on the script's action.
-git add Cargo.toml
+git add Cargo.toml Cargo.lock
 git commit -m "$COMMIT_MSG"
 echo "   Committed."
 
