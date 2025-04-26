@@ -1,0 +1,70 @@
+name: 'Publish WIT Packages Action'
+description: 'Installs tools, configures wkg, builds, and publishes WIT packages.'
+
+inputs:
+  ghcr_pat:
+    description: 'GitHub Personal Access Token with permissions to publish to GHCR'
+    required: true
+
+runs:
+  using: composite
+  steps:
+    - name: Set up Python 3
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.x'
+
+    # Cache cargo registry, git dependencies, target dir, and installed binaries
+    - name: Cache Cargo Dependencies and Tools
+      uses: actions/cache@v3
+      with:
+        path: |
+          ~/.cargo/registry
+          ~/.cargo/git
+          ~/.cargo/bin
+          target
+        # Key includes OS and Cargo.lock hash for better caching
+        key: ${{ runner.os }}-cargo-wit-${{ hashFiles('**/Cargo.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-cargo-wit-
+
+    - name: Install cargo-binstall
+      shell: bash
+      run: cargo install cargo-binstall --locked
+
+    - name: Install wkg CLI using binstall
+      shell: bash
+      run: cargo binstall -y wkg
+      # Installs to ~/.cargo/bin which is cached
+
+    - name: Create wkg config file
+      shell: bash
+      run: |
+        # Use GITHUB_WORKSPACE to ensure path is correct even if runner changes dir
+        CONFIG_DIR="${GITHUB_WORKSPACE}/.config/wasm-pkg"
+        mkdir -p ${CONFIG_DIR}
+        cat <<EOF > ${CONFIG_DIR}/config.toml
+        [namespace_registries]
+
+        [namespace_registries.icp]
+        registry = "ghcr.io"
+
+        [namespace_registries.icp.metadata]
+
+        [namespace_registries.icp.metadata.oci]
+        namespacePrefix = "rikonor/"
+
+        # credentials
+        [registry."ghcr.io".oci.auth]
+        username = "rikonor"
+        password = "${{ inputs.ghcr_pat }}"
+        EOF
+
+    - name: Build and Publish WIT Packages
+      shell: bash
+      run: make wit-build-publish-all
+      env:
+        # Point wkg to the config file created in the previous step
+        WKG_CONFIG_FILE: ${{ github.workspace }}/.config/wasm-pkg/config.toml
+        # Pass the version tag if the make target needs it (optional)
+        # RELEASE_VERSION: ${{ github.ref_name }} # Example if needed
