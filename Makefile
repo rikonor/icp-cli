@@ -75,3 +75,18 @@ wit-build-publish-all:
 	@echo "All WIT packages built and published successfully."
 
 # --- End WIT Package Management ---
+
+# --- Release Management ---
+
+# Release the core CLI (updates workspace version, commits, tags vX.Y.Z, pushes)
+# Usage: make release-cli VERSION=X.Y.Z
+.PHONY: release-cli
+release-cli:
+ifndef VERSION
+	$(error VERSION is not set. Usage: make release-cli VERSION=<X.Y.Z>)
+endif
+	@echo "--- Running Core CLI Release Script for v$(VERSION) ---"
+	@scripts/release-cli.sh $(VERSION)
+	@echo "--- Core CLI Release Script Finished ---"
+
+# --- End Release Management ---
