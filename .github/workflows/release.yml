@@ -116,7 +116,46 @@ jobs:
             mv $d/icp-* release-assets/
           done
 
-      - name: Generate individual SHA256 checksums
+      # --- NEW: Fetch Latest Extension Releases ---
+      - name: Fetch Latest Extension Artifacts
+        env:
+          GH_TOKEN: ${{ github.token }}
+          # Define the extensions to include
+          EXTENSIONS: "build identity project"
+        shell: bash
+        run: |
+          echo "Fetching latest releases for extensions: $EXTENSIONS"
+          mkdir -p ./temp-ext-download # Temporary download location
+
+          for EXT_NAME in $EXTENSIONS; do
+            echo "--- Processing extension: $EXT_NAME ---"
+            # Find the latest non-draft, non-prerelease tag matching the pattern
+            LATEST_TAG=$(gh release list --repo $GITHUB_REPOSITORY --limit 1 --exclude-drafts --exclude-pre-releases --json tagName --jq ".[] | select(.tagName | startswith(\"$EXT_NAME-v\")) | .tagName")
+
+            if [ -z "$LATEST_TAG" ]; then
+              echo "WARNING: No stable release found for extension '$EXT_NAME'. Skipping."
+              continue
+            fi
+
+            echo "Found latest tag for $EXT_NAME: $LATEST_TAG"
+            echo "Downloading artifacts..."
+            # Download wasm and its sha256 file
+            gh release download "$LATEST_TAG" --repo $GITHUB_REPOSITORY --pattern "${EXT_NAME}.component.wasm" --pattern "${EXT_NAME}.component.wasm.sha256" --dir ./temp-ext-download -O
+
+            # Check if files were downloaded (gh download doesn't error if pattern not found)
+            if ls ./temp-ext-download/${EXT_NAME}.component.wasm* 1> /dev/null 2>&1; then
+               echo "Moving artifacts to release-assets..."
+               mv ./temp-ext-download/${EXT_NAME}.component.wasm* release-assets/
+            else
+               echo "WARNING: Failed to download expected artifacts for $EXT_NAME tag $LATEST_TAG."
+            fi
+            # Clean up temp dir for next iteration (or in case of download failure)
+            rm -f ./temp-ext-download/*
+          done
+          rmdir ./temp-ext-download
+          echo "Finished fetching extension artifacts."
+      # --- END NEW SECTION ---
+      - name: Generate individual SHA256 checksums # This step might need adjustment later if we rely solely on downloaded checksums
         shell: bash
         run: |
           cd release-assets
