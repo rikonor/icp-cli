@@ -89,7 +89,7 @@ runs:
         # Generate formula using our tool, passing the path to the extension JSON file
         cargo run --package icp-distribution --bin generate_formula -- \
           --version "${{ inputs.version }}" \
-          --extension-info-path hb_ext_info.json \ # Pass path to the JSON file
+          --extension-info-path hb_ext_info.json \
           --intel-url "${{ steps.release.outputs.intel_url }}" \
           --intel-sha256 "${{ steps.release.outputs.intel_sha256 }}" \
           --arm-url "${{ steps.release.outputs.arm_url }}" \
