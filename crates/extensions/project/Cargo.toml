@@ -5,8 +5,10 @@ edition = "2024"
 
 [dependencies]
 clap = { workspace = true }
+glob = "0.3.2"
 serde = { workspace = true }
 serde_json = { workspace = true }
+toml = "0.8.21"
 wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
 
 [lib]
@@ -14,6 +16,6 @@ crate-type = ["cdylib"]
 
 [package.metadata.component]
 package = "component:project"
-target = "icp:project/extension@0.1.0"
+target = "icp:project/extension@0.2.0"
 
 [package.metadata.component.dependencies]

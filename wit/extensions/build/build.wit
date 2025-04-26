@@ -1,11 +1,21 @@
-package icp:build@0.0.1;
+package icp:build@0.1.0; // Updated version
 
+/// Interface for building canisters.
 interface lib {
-  build: func() -> u32;
-  register: func(name: string) -> u32;
+  /// Builds the canister located in the specified directory.
+  ///
+  /// Takes the relative path to the canister directory (containing canister.toml)
+  /// as input. Returns `ok()` on success or `err(string)` with an error message
+  /// on failure.
+  build-canister: func(canister-dir: string) -> result<_, string>;
 }
 
 world extension {
-  include icp:cli/extension@0.0.1;
+  // Include the standard CLI extension world which provides
+  // access to things like printing and the custom filesystem.
+  // Note: Ensure this version is compatible or update as needed.
+  include icp:cli/extension@0.1.0;
+
+  // Export the build library interface for other extensions to use.
   export lib;
 }

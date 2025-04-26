@@ -1,10 +1,14 @@
-package icp:project@0.1.0;
-
-interface lib {
-  create: func() -> u32;
-}
+package icp:project@0.2.0; // Bumped version due to build import
 
 world extension {
+  // Include standard CLI world (provides cli, misc, filesystem imports)
   include icp:cli/extension@0.1.0;
-  export lib;
+
+  // Import the build library interface to call build functions
+  import icp:build/lib@0.1.0;
+
+  // Note: The old 'lib' interface with 'create' is removed.
+  // CLI functionality is handled via the included 'icp:cli/cli'.
+  // A new exported library interface can be added later if needed
+  // for other extensions to call *into* the project extension.
 }
