@@ -30,7 +30,7 @@ runs:
       env:
         GH_TOKEN: ${{ inputs.token }}
       run: |
-        gh release download "v${{ inputs.version }}" \
+        gh release download "${{ inputs.version }}" \
           --dir dist \
           --pattern "checksums.txt"
 
@@ -40,7 +40,7 @@ runs:
         GH_TOKEN: ${{ inputs.token }}
       run: |
         for binary in ${{ inputs.icp_binaries }}; do
-          gh release download "v${{ inputs.version }}" \
+          gh release download "${{ inputs.version }}" \
             --dir dist/binaries/icp \
             --pattern "$binary"
         done
