@@ -1,6 +1,6 @@
 # ICP CLI Installation Script for Windows
 # This script downloads and installs the ICP CLI binary for Windows systems.
-# Version: 0.1.17
+# Version: 0.1.18
 
 $ErrorActionPreference = "Stop"
 
@@ -24,7 +24,7 @@ function Write-Error {
 
 # Main Installation Process
 try {
-    Write-Status "Starting ICP CLI 0.1.17 installation..."
+    Write-Status "Starting ICP CLI 0.1.18 installation..."
 
     # Check if running with admin privileges
     $isAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
