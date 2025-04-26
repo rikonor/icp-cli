@@ -30,34 +30,40 @@ runs:
         if [ $? -ne 0 ]; then echo "Error: Failed to fetch release info."; exit 1; fi
         echo "Release info saved to release.json"
 
-        # Get x86_64 binary info (URL)
+        # Get x86_64 binary info (URL) - Find the binary directly, not tar.gz
         echo "Extracting Intel URL..."
-        INTEL_URL=$(jq -r '.assets[] | select(.name | contains("x86_64-apple-darwin-homebrew") and (endswith(".tar.gz"))) | .url' release.json)
-        if [ -z "$INTEL_URL" ] || [ "$INTEL_URL" == "null" ]; then echo "Error: Intel URL not found in release assets."; exit 1; fi
+        INTEL_BINARY_NAME="icp-x86_64-apple-darwin-homebrew"
+        INTEL_URL=$(jq -r --arg name "$INTEL_BINARY_NAME" '.assets[] | select(.name == $name) | .url' release.json)
+        if [ -z "$INTEL_URL" ] || [ "$INTEL_URL" == "null" ]; then echo "Error: Intel URL ($INTEL_BINARY_NAME) not found in release assets."; exit 1; fi
         echo "intel_url=$INTEL_URL" >> $GITHUB_OUTPUT
         echo "Intel URL: $INTEL_URL"
 
-        # Get ARM binary info (URL)
+        # Get ARM binary info (URL) - Find the binary directly, not tar.gz
         echo "Extracting ARM URL..."
-        ARM_URL=$(jq -r '.assets[] | select(.name | contains("aarch64-apple-darwin-homebrew") and (endswith(".tar.gz"))) | .url' release.json)
-        if [ -z "$ARM_URL" ] || [ "$ARM_URL" == "null" ]; then echo "Error: ARM URL not found in release assets."; exit 1; fi
+        ARM_BINARY_NAME="icp-aarch64-apple-darwin-homebrew"
+        ARM_URL=$(jq -r --arg name "$ARM_BINARY_NAME" '.assets[] | select(.name == $name) | .url' release.json)
+        if [ -z "$ARM_URL" ] || [ "$ARM_URL" == "null" ]; then echo "Error: ARM URL ($ARM_BINARY_NAME) not found in release assets."; exit 1; fi
         echo "arm_url=$ARM_URL" >> $GITHUB_OUTPUT
         echo "ARM URL: $ARM_URL"
 
-        # Download checksums file
-        echo "Downloading checksums..."
-        gh release download "${{ inputs.version }}" --pattern "checksums.txt" --output checksums.txt
-        if [ $? -ne 0 ]; then echo "Error: Failed to download checksums.txt."; exit 1; fi
+        # Download individual checksum files
+        echo "Downloading checksum files..."
+        INTEL_SHA_FILE="${INTEL_BINARY_NAME}.sha256"
+        ARM_SHA_FILE="${ARM_BINARY_NAME}.sha256"
+        gh release download "${{ inputs.version }}" --pattern "$INTEL_SHA_FILE" --output "$INTEL_SHA_FILE"
+        if [ $? -ne 0 ]; then echo "Error: Failed to download $INTEL_SHA_FILE."; exit 1; fi
+        gh release download "${{ inputs.version }}" --pattern "$ARM_SHA_FILE" --output "$ARM_SHA_FILE"
+        if [ $? -ne 0 ]; then echo "Error: Failed to download $ARM_SHA_FILE."; exit 1; fi
 
-        # Extract checksums
-        echo "Extracting checksums..."
-        INTEL_SHA=$(grep 'x86_64-apple-darwin-homebrew.tar.gz' checksums.txt | cut -d ' ' -f 1)
-        if [ -z "$INTEL_SHA" ]; then echo "Error: Intel SHA256 not found in checksums.txt."; exit 1; fi
+        # Extract checksums from files
+        echo "Extracting checksums from files..."
+        INTEL_SHA=$(cat "$INTEL_SHA_FILE" | cut -d ' ' -f 1) # Get first field in case of extra whitespace/filename
+        if [ -z "$INTEL_SHA" ]; then echo "Error: Could not read Intel SHA256 from $INTEL_SHA_FILE."; exit 1; fi
         echo "intel_sha256=$INTEL_SHA" >> $GITHUB_OUTPUT
         echo "Intel SHA256: $INTEL_SHA"
 
-        ARM_SHA=$(grep 'aarch64-apple-darwin-homebrew.tar.gz' checksums.txt | cut -d ' ' -f 1)
-        if [ -z "$ARM_SHA" ]; then echo "Error: ARM SHA256 not found in checksums.txt."; exit 1; fi
+        ARM_SHA=$(cat "$ARM_SHA_FILE" | cut -d ' ' -f 1) # Get first field
+        if [ -z "$ARM_SHA" ]; then echo "Error: Could not read ARM SHA256 from $ARM_SHA_FILE."; exit 1; fi
         echo "arm_sha256=$ARM_SHA" >> $GITHUB_OUTPUT
         echo "ARM SHA256: $ARM_SHA"
 
@@ -93,5 +99,5 @@ runs:
       shell: bash
       run: |
         echo "Cleaning up temporary files..."
-        rm -f release.json checksums.txt # Remove downloaded files
+        rm -f release.json *.sha256 # Remove downloaded release info and checksum files
         echo "Cleanup complete."
