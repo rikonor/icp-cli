@@ -1,7 +1,18 @@
 [workspace]
 resolver = "2"
-members = [ "crates/icp-cli", "crates/icp-core", "crates/extensions/*", "crates/examples/*", "crates/test-utils", "crates/icp-distribution",]
-default-members = [ "crates/icp-cli", "crates/icp-core", "crates/icp-distribution",]
+members = [
+    "crates/icp-cli",
+    "crates/icp-core",
+    "crates/extensions/*",
+    "crates/examples/*",
+    "crates/test-utils",
+    "crates/icp-distribution",
+]
+default-members = [
+    "crates/icp-cli",
+    "crates/icp-core",
+    "crates/icp-distribution",
+]
 
 [workspace.package]
 version = "0.1.19"
@@ -21,23 +32,25 @@ sha2 = "0.10.8"
 tokio-test = "0.4"
 tempfile = "3.5.0"
 handlebars = "4.3.5"
+toml = "0.8.21"
+glob = "0.3.2"
 
 [workspace.dependencies.clap]
 version = "4.5.30"
-features = [ "derive", "string", "env",]
+features = ["derive", "string", "env"]
 
 [workspace.dependencies.serde]
 version = "1.0.218"
-features = [ "derive",]
+features = ["derive"]
 
 [workspace.dependencies.tokio]
 version = "1.43.0"
-features = [ "full",]
+features = ["full"]
 
 [workspace.dependencies.wasmtime]
 version = "32.0.0"
-features = [ "component-model",]
+features = ["component-model"]
 
 [workspace.dependencies.wit-bindgen-rt]
 version = "0.41.0"
-features = [ "bitflags",]
+features = ["bitflags"]

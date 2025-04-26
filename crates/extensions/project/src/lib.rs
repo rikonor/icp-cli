@@ -1,18 +1,32 @@
 use clap::Command;
+use glob::glob; // Added for glob pattern matching
+use serde::Deserialize; // Added for TOML deserialization
+use std::{fs, path::Path}; // Added fs for std::fs::read_to_string
 
 #[allow(warnings)]
 mod bindings;
 
 use bindings::{
-    exports::icp::project::lib::Guest, // Exported library interface (currently unimplemented)
-    icp::cli::filesystem,              // Imported custom filesystem interface
-    icp::cli::misc::{print, time},     // Imported misc utilities
+    icp::build::lib as build_lib,  // Imported build library interface
+    icp::cli::filesystem,          // Imported custom filesystem interface (write-only for now)
+    icp::cli::misc::{print, time}, // Imported misc utilities
 };
 
 mod spec;
 use spec::CommandSpec;
 
 struct Component;
+
+// Define structs for deserializing icp.toml
+#[derive(Deserialize, Debug)]
+struct ProjectManifest {
+    workspace: Workspace,
+}
+
+#[derive(Deserialize, Debug)]
+struct Workspace {
+    members: Vec<String>,
+}
 
 const CLI_SPEC: &str = r#"{
     "name": "project",
@@ -24,11 +38,16 @@ const CLI_SPEC: &str = r#"{
             "args": [
                 { "name": "name", "required": true }
             ]
+        },
+        {
+            "name": "build",
+            "help": "Build canisters in the project",
+            "args": []
         }
     ]
 }"#;
 
-// Creates a project directory and a basic dfx.json file.
+// Creates a project directory and a basic icp.toml file.
 // Returns 0 on success, 1 on failure.
 fn create(name: &str) -> u8 {
     print(&format!("[{}] Creating project '{}'...", time(), name));
@@ -62,12 +81,6 @@ fn create(name: &str) -> u8 {
     0 // Indicate success
 }
 
-impl Guest for Component {
-    fn create() -> u32 {
-        unimplemented!()
-    }
-}
-
 impl bindings::exports::icp::cli::cli::Guest for Component {
     fn spec() -> String {
         CLI_SPEC.to_string()
@@ -93,15 +106,120 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
                 return create(name.as_str());
             }
 
+            // build
+            Some(("build", _m)) => {
+                print(&format!("[{}] Starting project build...", time()));
+                let mut overall_success = true;
+
+                // 1. Read icp.toml using std::fs temporarily
+                // TODO: Replace with host-mediated filesystem::read_file if added later
+                let manifest_content_str = match fs::read_to_string("icp.toml") {
+                    Ok(s) => s,
+                    Err(e) => {
+                        print(&format!("Error reading icp.toml using std::fs: {}", e));
+                        return 1;
+                    }
+                };
+
+                // 2. Parse icp.toml
+                let manifest: ProjectManifest = match toml::from_str(&manifest_content_str) {
+                    Ok(m) => m,
+                    Err(e) => {
+                        print(&format!("Error parsing icp.toml: {}", e));
+                        return 1;
+                    }
+                };
+
+                // 3. Iterate through members and build
+                if manifest.workspace.members.is_empty() {
+                    print("No members found in icp.toml workspace. Nothing to build.");
+                } else {
+                    print(&format!("Found members: {:?}", manifest.workspace.members));
+                }
+
+                for member_pattern in manifest.workspace.members {
+                    print(&format!("Processing pattern: {}", member_pattern));
+                    match glob(&member_pattern) {
+                        Ok(paths) => {
+                            let mut found_match = false;
+                            for entry in paths {
+                                match entry {
+                                    Ok(path) => {
+                                        found_match = true;
+                                        if path.is_dir() {
+                                            let path_str = path.to_string_lossy().to_string();
+                                            print(&format!(
+                                                "Attempting to build canister at: {}",
+                                                path_str
+                                            ));
+                                            // 4. Call build extension
+                                            match build_lib::build_canister(&path_str) {
+                                                Ok(_) => {
+                                                    print(&format!(
+                                                        "Successfully called build for: {}",
+                                                        path_str
+                                                    ));
+                                                }
+                                                Err(e) => {
+                                                    print(&format!(
+                                                        "Build call failed for '{}': {}",
+                                                        path_str, e
+                                                    ));
+                                                    overall_success = false; // Mark failure
+                                                }
+                                            }
+                                        } else {
+                                            print(&format!(
+                                                "Skipping non-directory path from glob: {}",
+                                                path.display()
+                                            ));
+                                        }
+                                    }
+                                    Err(e) => {
+                                        print(&format!(
+                                            "Error processing path for pattern '{}': {}",
+                                            member_pattern, e
+                                        ));
+                                        overall_success = false; // Mark failure
+                                    }
+                                }
+                            }
+                            if !found_match {
+                                print(&format!(
+                                    "Warning: Glob pattern '{}' did not match any paths.",
+                                    member_pattern
+                                ));
+                            }
+                        }
+                        Err(e) => {
+                            print(&format!(
+                                "Error processing glob pattern '{}': {}",
+                                member_pattern, e
+                            ));
+                            overall_success = false; // Mark failure
+                        }
+                    }
+                }
+
+                if overall_success {
+                    print("Project build process completed.");
+                    return 0;
+                } else {
+                    print("Project build process completed with errors.");
+                    return 1;
+                }
+            }
+
             // Handle unknown subcommands or no subcommand
             _ => {
-                // You might want to print usage information here
+                // TODO: Print usage information from clap?
                 print("Unknown command or missing subcommand.");
                 return 1; // Indicate failure
             }
         }
-
-        // This part is now unreachable if subcommands always return
+        // Note: The end of the function is now technically reachable if a subcommand
+        // doesn't explicitly return, though current logic ensures they do.
+        // Adding a default return just in case.
         // 0
     }
 }
