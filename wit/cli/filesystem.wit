@@ -8,4 +8,8 @@ interface filesystem {
     /// Creates the file if it doesn't exist, overwrites it if it does.
     /// Returns `ok()` on success, or `err(string)` with an error message on failure.
     write-file: func(path: string, contents: list<u8>) -> result<_, string>;
+
+    /// Reads the entire contents of a file at the specified path relative to the current workspace.
+    /// Returns `ok(list<u8>)` with the file contents on success, or `err(string)` with an error message on failure.
+    read-file: func(path: string) -> result<list<u8>, string>;
 }

@@ -1,4 +1,4 @@
-package icp:cli@0.1.0; // Bumped version due to adding filesystem import
+package icp:cli@0.2.0; // Bumped version due to adding read-file to filesystem
 
 interface misc {
   print: func(s: string);

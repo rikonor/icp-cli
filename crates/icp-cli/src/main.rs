@@ -139,6 +139,15 @@ impl filesystem::Host for State {
             Err(e) => Err(format!("Failed to write file '{}': {}", path, e)),
         }
     }
+
+    async fn read_file(&mut self, path: String) -> Result<Vec<u8>, String> {
+        // Note: Paths are relative to the workspace root where icp-cli runs.
+        // TODO: Add interception/administration logic here if desired.
+        match std::fs::read(&path) {
+            Ok(contents) => Ok(contents),
+            Err(e) => Err(format!("Failed to read file '{}': {}", path, e)),
+        }
+    }
 }
 
 // Directory setup helper
