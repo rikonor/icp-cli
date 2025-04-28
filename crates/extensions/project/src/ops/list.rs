@@ -13,6 +13,28 @@ pub enum ListError {
     Unexpected(#[from] anyhow::Error),
 }
 
+impl From<ListError> for String {
+    fn from(e: ListError) -> Self {
+        match e {
+            ListError::ManifestProcessing(msg) => {
+                format!("Error processing manifest file: {}", msg)
+            }
+            ListError::Unexpected(err) => {
+                format!("An unexpected error occurred: {}", err)
+            }
+        }
+    }
+}
+
+impl From<ListError> for u8 {
+    fn from(e: ListError) -> Self {
+        match e {
+            ListError::ManifestProcessing(_) => 1,
+            ListError::Unexpected(_) => 2,
+        }
+    }
+}
+
 pub trait List {
     fn list(&self) -> Result<Vec<CanisterInfo>, ListError>;
 }

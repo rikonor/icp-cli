@@ -5,21 +5,22 @@ use std::thread_local;
 
 #[allow(warnings)]
 mod bindings;
-mod ops;
-mod spec;
 
 use bindings::{
     exports::icp::project::lib::CanisterInfo, icp::cli::filesystem, icp::cli::misc::print,
 };
 
-use ops::list::{List, ListError, Lister};
+mod ops;
+use ops::list::{List, Lister};
+
+mod spec;
 use spec::CommandSpec;
 
 struct Component;
 
 thread_local! {
     static LISTER: OnceCell<Lister> = OnceCell::with_value(Lister::new(
-        Box::new(filesystem::read_file), // read_file
+        Box::new(filesystem::read_file),
     ));
 }
 
@@ -90,13 +91,23 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
             Some(("list-canisters", _m)) => {
                 let cs = match LISTER.with(|v| v.get().expect("lister not initialized").list()) {
                     Ok(cs) => cs,
-                    Err(ListError::ManifestProcessing(_)) => return 1,
-                    Err(ListError::Unexpected(_)) => return 2,
+                    Err(err) => return err.into(),
                 };
 
-                // print results
+                match cs.is_empty() {
+                    // empty
+                    true => print("No canisters found in the project."),
 
-                1
+                    //
+                    false => {
+                        print("Found canisters:");
+                        for canister in cs {
+                            print(&format!("  - {:?}", canister));
+                        }
+                    }
+                }
+
+                0 // Success
             }
 
             _ => {
@@ -109,13 +120,7 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
 
 impl bindings::exports::icp::project::lib::Guest for Component {
     fn list_canisters() -> Result<Vec<CanisterInfo>, String> {
-        LISTER.with(|v| Ok(v.get().expect("lister not initialized").list()?))
-    }
-}
-
-impl From<ListError> for String {
-    fn from(e: ListError) -> Self {
-        format!("List error: {:?}", e)
+        Ok(LISTER.with(|v| v.get().expect("lister not initialized").list())?)
     }
 }
 
