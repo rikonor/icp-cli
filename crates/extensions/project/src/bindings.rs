@@ -4,6 +4,73 @@
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
 pub mod icp {
+    pub mod build {
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod lib {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            #[allow(unused_unsafe, clippy::all)]
+            pub fn build_canister(canister_dir: &str) -> Result<(), _rt::String> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 3 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 3
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = canister_dir;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "icp:build/lib@0.1.0")]
+                    unsafe extern "C" {
+                        #[link_name = "build-canister"]
+                        fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import2(_: *mut u8, _: usize, _: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import2(ptr0.cast_mut(), len0, ptr1) };
+                    let l3 = i32::from(*ptr1.add(0).cast::<u8>());
+                    let result7 = match l3 {
+                        0 => {
+                            let e = ();
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l4 = *ptr1
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l5 = *ptr1
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len6 = l5;
+                                let bytes6 = _rt::Vec::from_raw_parts(
+                                    l4.cast(),
+                                    len6,
+                                    len6,
+                                );
+                                _rt::string_lift(bytes6)
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result7
+                }
+            }
+        }
+    }
     pub mod cli {
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod misc {
@@ -17,7 +84,7 @@ pub mod icp {
                     let ptr0 = vec0.as_ptr().cast::<u8>();
                     let len0 = vec0.len();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/misc@0.1.0")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "print"]
                         fn wit_import1(_: *mut u8, _: usize);
@@ -33,7 +100,7 @@ pub mod icp {
             pub fn rand() -> u8 {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/misc@0.1.0")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "rand"]
                         fn wit_import0() -> i32;
@@ -50,7 +117,7 @@ pub mod icp {
             pub fn time() -> u64 {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/misc@0.1.0")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "time"]
                         fn wit_import0() -> i64;
@@ -89,7 +156,7 @@ pub mod icp {
                     let len0 = vec0.len();
                     let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/filesystem@0.1.0")]
+                    #[link(wasm_import_module = "icp:cli/filesystem@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "create-directory"]
                         fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
@@ -150,7 +217,7 @@ pub mod icp {
                     let len1 = vec1.len();
                     let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/filesystem@0.1.0")]
+                    #[link(wasm_import_module = "icp:cli/filesystem@0.2.0")]
                     unsafe extern "C" {
                         #[link_name = "write-file"]
                         fn wit_import3(
@@ -201,6 +268,73 @@ pub mod icp {
                         _ => _rt::invalid_enum_discriminant(),
                     };
                     result8
+                }
+            }
+            #[allow(unused_unsafe, clippy::all)]
+            pub fn read_file(path: &str) -> Result<_rt::Vec<u8>, _rt::String> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 3 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 3
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = path;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "icp:cli/filesystem@0.2.0")]
+                    unsafe extern "C" {
+                        #[link_name = "read-file"]
+                        fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import2(_: *mut u8, _: usize, _: *mut u8) {
+                        unreachable!()
+                    }
+                    unsafe { wit_import2(ptr0.cast_mut(), len0, ptr1) };
+                    let l3 = i32::from(*ptr1.add(0).cast::<u8>());
+                    let result10 = match l3 {
+                        0 => {
+                            let e = {
+                                let l4 = *ptr1
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l5 = *ptr1
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len6 = l5;
+                                _rt::Vec::from_raw_parts(l4.cast(), len6, len6)
+                            };
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l7 = *ptr1
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l8 = *ptr1
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len9 = l8;
+                                let bytes9 = _rt::Vec::from_raw_parts(
+                                    l7.cast(),
+                                    len9,
+                                    len9,
+                                );
+                                _rt::string_lift(bytes9)
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result10
                 }
             }
         }
@@ -277,23 +411,23 @@ pub mod exports {
                     fn run(args: _rt::Vec<_rt::String>) -> u8;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_cli_cli_0_1_0_cabi {
+                macro_rules! __export_icp_cli_cli_0_2_0_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:cli/cli@0.1.0#spec")] unsafe extern "C" fn export_spec() ->
+                        "icp:cli/cli@0.2.0#spec")] unsafe extern "C" fn export_spec() ->
                         * mut u8 { unsafe { $($path_to_types)*:: _export_spec_cabi::<$ty
                         > () } } #[unsafe (export_name =
-                        "cabi_post_icp:cli/cli@0.1.0#spec")] unsafe extern "C" fn
+                        "cabi_post_icp:cli/cli@0.2.0#spec")] unsafe extern "C" fn
                         _post_return_spec(arg0 : * mut u8,) { unsafe {
                         $($path_to_types)*:: __post_return_spec::<$ty > (arg0) } }
-                        #[unsafe (export_name = "icp:cli/cli@0.1.0#run")] unsafe extern
+                        #[unsafe (export_name = "icp:cli/cli@0.2.0#run")] unsafe extern
                         "C" fn export_run(arg0 : * mut u8, arg1 : usize,) -> i32 { unsafe
                         { $($path_to_types)*:: _export_run_cabi::<$ty > (arg0, arg1) } }
                         };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_cli_cli_0_1_0_cabi;
+                pub(crate) use __export_icp_cli_cli_0_2_0_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -308,33 +442,207 @@ pub mod exports {
             }
         }
         pub mod project {
+            /// Add library interface, update cli dep
+            /// Interface for programmatic interaction with the project extension
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
             pub mod lib {
                 #[used]
                 #[doc(hidden)]
                 static __FORCE_SECTION_REF: fn() = super::super::super::super::__link_custom_section_describing_imports;
                 use super::super::super::super::_rt;
+                /// Information about a canister within the project
+                #[derive(Clone)]
+                pub struct CanisterInfo {
+                    pub name: _rt::String,
+                    pub path: _rt::String,
+                    /// Relative path from project root
+                    pub canister_type: _rt::String,
+                }
+                impl ::core::fmt::Debug for CanisterInfo {
+                    fn fmt(
+                        &self,
+                        f: &mut ::core::fmt::Formatter<'_>,
+                    ) -> ::core::fmt::Result {
+                        f.debug_struct("CanisterInfo")
+                            .field("name", &self.name)
+                            .field("path", &self.path)
+                            .field("canister-type", &self.canister_type)
+                            .finish()
+                    }
+                }
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
-                pub unsafe fn _export_create_cabi<T: Guest>() -> i32 {
+                pub unsafe fn _export_list_canisters_cabi<T: Guest>() -> *mut u8 {
                     #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let result0 = T::create();
-                    _rt::as_i32(result0)
-                }
-                pub trait Guest {
-                    fn create() -> u32;
+                    let result0 = T::list_canisters();
+                    let ptr1 = (&raw mut _RET_AREA.0).cast::<u8>();
+                    match result0 {
+                        Ok(e) => {
+                            *ptr1.add(0).cast::<u8>() = (0i32) as u8;
+                            let vec6 = e;
+                            let len6 = vec6.len();
+                            let layout6 = _rt::alloc::Layout::from_size_align_unchecked(
+                                vec6.len() * (6 * ::core::mem::size_of::<*const u8>()),
+                                ::core::mem::size_of::<*const u8>(),
+                            );
+                            let result6 = if layout6.size() != 0 {
+                                let ptr = _rt::alloc::alloc(layout6).cast::<u8>();
+                                if ptr.is_null() {
+                                    _rt::alloc::handle_alloc_error(layout6);
+                                }
+                                ptr
+                            } else {
+                                ::core::ptr::null_mut()
+                            };
+                            for (i, e) in vec6.into_iter().enumerate() {
+                                let base = result6
+                                    .add(i * (6 * ::core::mem::size_of::<*const u8>()));
+                                {
+                                    let CanisterInfo {
+                                        name: name2,
+                                        path: path2,
+                                        canister_type: canister_type2,
+                                    } = e;
+                                    let vec3 = (name2.into_bytes()).into_boxed_slice();
+                                    let ptr3 = vec3.as_ptr().cast::<u8>();
+                                    let len3 = vec3.len();
+                                    ::core::mem::forget(vec3);
+                                    *base
+                                        .add(::core::mem::size_of::<*const u8>())
+                                        .cast::<usize>() = len3;
+                                    *base.add(0).cast::<*mut u8>() = ptr3.cast_mut();
+                                    let vec4 = (path2.into_bytes()).into_boxed_slice();
+                                    let ptr4 = vec4.as_ptr().cast::<u8>();
+                                    let len4 = vec4.len();
+                                    ::core::mem::forget(vec4);
+                                    *base
+                                        .add(3 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<usize>() = len4;
+                                    *base
+                                        .add(2 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<*mut u8>() = ptr4.cast_mut();
+                                    let vec5 = (canister_type2.into_bytes()).into_boxed_slice();
+                                    let ptr5 = vec5.as_ptr().cast::<u8>();
+                                    let len5 = vec5.len();
+                                    ::core::mem::forget(vec5);
+                                    *base
+                                        .add(5 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<usize>() = len5;
+                                    *base
+                                        .add(4 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<*mut u8>() = ptr5.cast_mut();
+                                }
+                            }
+                            *ptr1
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len6;
+                            *ptr1
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = result6;
+                        }
+                        Err(e) => {
+                            *ptr1.add(0).cast::<u8>() = (1i32) as u8;
+                            let vec7 = (e.into_bytes()).into_boxed_slice();
+                            let ptr7 = vec7.as_ptr().cast::<u8>();
+                            let len7 = vec7.len();
+                            ::core::mem::forget(vec7);
+                            *ptr1
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len7;
+                            *ptr1
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr7.cast_mut();
+                        }
+                    };
+                    ptr1
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_project_lib_0_1_0_cabi {
+                #[allow(non_snake_case)]
+                pub unsafe fn __post_return_list_canisters<T: Guest>(arg0: *mut u8) {
+                    let l0 = i32::from(*arg0.add(0).cast::<u8>());
+                    match l0 {
+                        0 => {
+                            let l1 = *arg0
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>();
+                            let l2 = *arg0
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>();
+                            let base9 = l1;
+                            let len9 = l2;
+                            for i in 0..len9 {
+                                let base = base9
+                                    .add(i * (6 * ::core::mem::size_of::<*const u8>()));
+                                {
+                                    let l3 = *base.add(0).cast::<*mut u8>();
+                                    let l4 = *base
+                                        .add(::core::mem::size_of::<*const u8>())
+                                        .cast::<usize>();
+                                    _rt::cabi_dealloc(l3, l4, 1);
+                                    let l5 = *base
+                                        .add(2 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<*mut u8>();
+                                    let l6 = *base
+                                        .add(3 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<usize>();
+                                    _rt::cabi_dealloc(l5, l6, 1);
+                                    let l7 = *base
+                                        .add(4 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<*mut u8>();
+                                    let l8 = *base
+                                        .add(5 * ::core::mem::size_of::<*const u8>())
+                                        .cast::<usize>();
+                                    _rt::cabi_dealloc(l7, l8, 1);
+                                }
+                            }
+                            _rt::cabi_dealloc(
+                                base9,
+                                len9 * (6 * ::core::mem::size_of::<*const u8>()),
+                                ::core::mem::size_of::<*const u8>(),
+                            );
+                        }
+                        _ => {
+                            let l10 = *arg0
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>();
+                            let l11 = *arg0
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>();
+                            _rt::cabi_dealloc(l10, l11, 1);
+                        }
+                    }
+                }
+                pub trait Guest {
+                    /// Lists all canisters defined in the project's icp.toml manifest
+                    fn list_canisters() -> Result<_rt::Vec<CanisterInfo>, _rt::String>;
+                }
+                #[doc(hidden)]
+                macro_rules! __export_icp_project_lib_0_3_0_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:project/lib@0.1.0#create")] unsafe extern "C" fn
-                        export_create() -> i32 { unsafe { $($path_to_types)*::
-                        _export_create_cabi::<$ty > () } } };
+                        "icp:project/lib@0.3.0#list-canisters")] unsafe extern "C" fn
+                        export_list_canisters() -> * mut u8 { unsafe {
+                        $($path_to_types)*:: _export_list_canisters_cabi::<$ty > () } }
+                        #[unsafe (export_name =
+                        "cabi_post_icp:project/lib@0.3.0#list-canisters")] unsafe extern
+                        "C" fn _post_return_list_canisters(arg0 : * mut u8,) { unsafe {
+                        $($path_to_types)*:: __post_return_list_canisters::<$ty > (arg0)
+                        } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_project_lib_0_1_0_cabi;
+                pub(crate) use __export_icp_project_lib_0_3_0_cabi;
+                #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                struct _RetArea(
+                    [::core::mem::MaybeUninit<
+                        u8,
+                    >; 3 * ::core::mem::size_of::<*const u8>()],
+                );
+                static mut _RET_AREA: _RetArea = _RetArea(
+                    [::core::mem::MaybeUninit::uninit(); 3
+                        * ::core::mem::size_of::<*const u8>()],
+                );
             }
         }
     }
@@ -361,6 +669,14 @@ mod _rt {
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
+    }
+    pub use alloc_crate::alloc;
+    pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
+        if size == 0 {
+            return;
+        }
+        let layout = alloc::Layout::from_size_align_unchecked(size, align);
+        alloc::dealloc(ptr, layout);
     }
     pub fn as_i32<T: AsI32>(t: T) -> i32 {
         t.as_i32()
@@ -421,15 +737,7 @@ mod _rt {
             self as i32
         }
     }
-    pub unsafe fn cabi_dealloc(ptr: *mut u8, size: usize, align: usize) {
-        if size == 0 {
-            return;
-        }
-        let layout = alloc::Layout::from_size_align_unchecked(size, align);
-        alloc::dealloc(ptr, layout);
-    }
     extern crate alloc as alloc_crate;
-    pub use alloc_crate::alloc;
 }
 /// Generates `#[unsafe(no_mangle)]` functions to export the specified type as
 /// the root implementation of all generated traits.
@@ -455,10 +763,10 @@ macro_rules! __export_extension_impl {
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::icp::project::lib::__export_icp_project_lib_0_1_0_cabi!($ty
+        exports::icp::project::lib::__export_icp_project_lib_0_3_0_cabi!($ty
         with_types_in $($path_to_types_root)*:: exports::icp::project::lib);
         $($path_to_types_root)*::
-        exports::icp::cli::cli::__export_icp_cli_cli_0_1_0_cabi!($ty with_types_in
+        exports::icp::cli::cli::__export_icp_cli_cli_0_2_0_cabi!($ty with_types_in
         $($path_to_types_root)*:: exports::icp::cli::cli);
     };
 }
@@ -466,21 +774,25 @@ macro_rules! __export_extension_impl {
 pub(crate) use __export_extension_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:icp:project@0.1.0:extension:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:icp:project@0.3.0:extension:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 452] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xc4\x02\x01A\x02\x01\
-A\x08\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\
-\x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\x12icp:cli/misc@0.1.0\x05\0\x01B\x06\
-\x01j\0\x01s\x01@\x01\x04paths\0\0\x04\0\x10create-directory\x01\x01\x01p}\x01@\x02\
-\x04paths\x08contents\x02\0\0\x04\0\x0awrite-file\x01\x03\x03\0\x18icp:cli/files\
-ystem@0.1.0\x05\x01\x01B\x02\x01@\0\0y\x04\0\x06create\x01\0\x04\0\x15icp:projec\
-t/lib@0.1.0\x05\x02\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04arg\
-s\x01\0}\x04\0\x03run\x01\x02\x04\0\x11icp:cli/cli@0.1.0\x05\x03\x04\0\x1bicp:pr\
-oject/extension@0.1.0\x04\0\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09producers\x01\
-\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 619] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xeb\x03\x01A\x02\x01\
+A\x0a\x01B\x03\x01j\0\x01s\x01@\x01\x0ccanister-dirs\0\0\x04\0\x0ebuild-canister\
+\x01\x01\x03\0\x13icp:build/lib@0.1.0\x05\0\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05\
+print\x01\0\x01@\0\0}\x04\0\x04rand\x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\
+\x12icp:cli/misc@0.2.0\x05\x01\x01B\x09\x01j\0\x01s\x01@\x01\x04paths\0\0\x04\0\x10\
+create-directory\x01\x01\x01p}\x01@\x02\x04paths\x08contents\x02\0\0\x04\0\x0awr\
+ite-file\x01\x03\x01j\x01\x02\x01s\x01@\x01\x04paths\0\x04\x04\0\x09read-file\x01\
+\x05\x03\0\x18icp:cli/filesystem@0.2.0\x05\x02\x01B\x06\x01r\x03\x04names\x04pat\
+hs\x0dcanister-types\x04\0\x0dcanister-info\x03\0\0\x01p\x01\x01j\x01\x02\x01s\x01\
+@\0\0\x03\x04\0\x0elist-canisters\x01\x04\x04\0\x15icp:project/lib@0.3.0\x05\x03\
+\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\0\x03r\
+un\x01\x02\x04\0\x11icp:cli/cli@0.2.0\x05\x04\x04\0\x1bicp:project/extension@0.3\
+.0\x04\0\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\
+\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

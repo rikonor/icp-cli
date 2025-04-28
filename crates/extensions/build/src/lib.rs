@@ -17,14 +17,24 @@ const CLI_SPEC: &str = r#"{
     "subcommands": []
 }"#;
 
-fn build() -> u32 {
-    print(&format!("[build] building"));
-    0
-}
+// Removed old build() function as it's replaced by build_canister
 
 impl Guest for Component {
-    fn build() -> u32 {
-        build()
+    // Implement the new function from the WIT interface
+    fn build_canister(canister_dir: String) -> Result<(), String> {
+        // Mock implementation: Just print the received path
+        print(&format!(
+            "[build extension] Received build request for canister at: {}",
+            canister_dir
+        ));
+
+        // TODO: Implement actual build logic here in the future.
+        // This might involve:
+        // - Reading canister.toml from canister_dir
+        // - Determining build steps based on canister type
+        // - Executing build commands (e.g., dfx build, cargo build)
+
+        Ok(()) // Simulate success for now
     }
 }
 
@@ -44,9 +54,13 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
         // Parse the command-line arguments
         let _m = c.get_matches_from(args);
 
-        build();
+        // The standalone `icp build` command is less useful now.
+        // Building is primarily driven by `icp project build`.
+        // Print a message and exit.
+        print("Executing standalone `icp build` is not the standard workflow.");
+        print("Use `icp project build` to build canisters defined in your project.");
 
-        0
+        1 // Return error code
     }
 }
 
