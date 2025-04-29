@@ -1,27 +1,56 @@
 use clap::Command;
 use once_cell::sync::OnceCell;
+use ops::build::{Build, Builder};
+use ops::create::{Create, Creator};
 use serde::Deserialize;
+use std::thread::LocalKey;
 use std::thread_local;
 
 #[allow(warnings)]
 mod bindings;
-
-use bindings::{
-    exports::icp::project::lib::CanisterInfo, icp::cli::filesystem, icp::cli::misc::print,
-};
-
 mod ops;
-use ops::list::{List, Lister};
 
 mod spec;
 use spec::CommandSpec;
 
+use bindings::exports::icp::project::lib::CanisterInfo;
+use bindings::{icp::build::lib::build_canister, icp::cli::filesystem, icp::cli::misc::print};
+
+use ops::list::{List, Lister};
+
+pub type LocalRef<T> = &'static LocalKey<OnceCell<T>>;
+
 struct Component;
 
 thread_local! {
-    static LISTER: OnceCell<Lister> = OnceCell::with_value(Lister::new(
-        Box::new(filesystem::read_file),
-    ));
+    static CREATOR: OnceCell<Box<dyn Create>> = OnceCell::with_value({
+        let v = Creator::new(
+            Box::new(filesystem::read_file),
+        );
+
+        Box::new(v)
+    });
+}
+
+thread_local! {
+    static LISTER: OnceCell<Box<dyn List>> = OnceCell::with_value({
+        let v = Lister::new(
+            Box::new(filesystem::read_file),
+        );
+
+        Box::new(v)
+    });
+}
+
+thread_local! {
+    static BUILDER: OnceCell<Box<dyn Build>> = OnceCell::with_value({
+        let v = Builder::new(
+            &LISTER,
+            Box::new(build_canister),
+        );
+
+        Box::new(v)
+    });
 }
 
 #[derive(Deserialize, Debug)]
@@ -79,19 +108,34 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
 
         match ms.subcommand() {
             Some(("create", _m)) => {
-                print("Create command not implemented with new structure yet.");
-                1
+                match CREATOR.with(|v| v.get().expect("creator not initialized").create()) {
+                    // Success
+                    Ok(_) => 0,
+
+                    // Failure
+                    Err(_) => 1,
+                }
             }
 
             Some(("build", _m)) => {
-                print("Build command not implemented with new structure yet.");
-                1
+                match BUILDER.with(|v| v.get().expect("builder not initialized").build()) {
+                    // Success
+                    Ok(_) => 0,
+
+                    // Failure
+                    Err(_) => 1,
+                }
             }
 
             Some(("list-canisters", _m)) => {
                 let cs = match LISTER.with(|v| v.get().expect("lister not initialized").list()) {
                     Ok(cs) => cs,
-                    Err(err) => return err.into(),
+
+                    // Failure
+                    Err(err) => {
+                        print(&format!("{err:?}"));
+                        return err.into();
+                    }
                 };
 
                 match cs.is_empty() {
@@ -112,7 +156,8 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
 
             _ => {
                 print("Unknown command or arguments.");
-                1
+
+                1 // Failure
             }
         }
     }

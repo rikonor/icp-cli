@@ -113,8 +113,6 @@ impl Lister {
     }
 }
 
-// Remove the old standalone function
-
 #[cfg(test)]
 mod tests {
     use anyhow::{Context, Error};

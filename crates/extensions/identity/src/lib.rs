@@ -42,12 +42,13 @@ fn sign(blob: &str) -> u32 {
 
 impl Guest for Component {
     fn create() -> u32 {
-        unimplemented!()
+        print("creating identity");
+        0
     }
 
-    fn sign() -> u32 {
-        unimplemented!()
-    }
+    // fn sign() -> u32 {
+    //     unimplemented!()
+    // }
 }
 
 impl bindings::exports::icp::cli::cli::Guest for Component {

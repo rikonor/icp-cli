@@ -1,11 +1,10 @@
-package icp:identity@0.0.1;
+package icp:identity@0.3.0;
 
 interface lib {
   create: func() -> u32;
-  sign: func() -> u32;
 }
 
 world extension {
-  include icp:cli/extension@0.0.1;
+  include icp:cli/extension@0.2.0;
   export lib;
 }

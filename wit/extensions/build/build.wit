@@ -1,4 +1,4 @@
-package icp:build@0.1.0; // Updated version
+package icp:build@0.3.0;
 
 /// Interface for building canisters.
 interface lib {
@@ -14,7 +14,7 @@ world extension {
   // Include the standard CLI extension world which provides
   // access to things like printing and the custom filesystem.
   // Note: Ensure this version is compatible or update as needed.
-  include icp:cli/extension@0.1.0;
+  include icp:cli/extension@0.2.0;
 
   // Export the build library interface for other extensions to use.
   export lib;

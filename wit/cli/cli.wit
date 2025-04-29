@@ -1,4 +1,4 @@
-package icp:cli@0.2.0; // Bumped version due to adding read-file to filesystem
+package icp:cli@0.2.0;
 
 interface misc {
   print: func(s: string);
