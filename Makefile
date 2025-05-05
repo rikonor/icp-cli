@@ -8,8 +8,12 @@ CARGO_ARTIFACT_DIR ?= $(CARGO_TARGET_DIR)/$(if $(CARGO_RELEASE),release,debug)
 
 COMPONENT_OUT_DIR ?= $(CARGO_ARTIFACT_DIR)
 
+# --- Extension Building (Requires EXTENSION_NAME to be set) ---
+
+# Default target: Build the extension component and print its path
 all: component output-path
 
+# Build the extension crate (Wasm binary)
 build:
 	@cargo build \
 		--package $(EXTENSION_NAME) \
@@ -21,8 +25,25 @@ component: build
 		$(CARGO_ARTIFACT_DIR)/$(EXTENSION_NAME).wasm \
 		> $(COMPONENT_OUT_DIR)/$(EXTENSION_NAME).component.wasm \
 
+# Print the real path to the built extension component
 output-path:
 	@realpath $(COMPONENT_OUT_DIR)/$(EXTENSION_NAME).component.wasm
+
+# --- End Extension Building ---
+
+# --- Local CLI Development ---
+
+# Build and install the icp-cli binary locally
+# Usage:
+#   make install-cli          (Debug build)
+#   make install-cli CARGO_RELEASE=1 (Release build)
+.PHONY: install-cli
+install-cli:
+	@echo "--- Building and installing icp-cli locally ---"
+	@cargo install --path crates/icp-cli $(if $(CARGO_RELEASE),--release) --force
+	@echo "--- icp-cli installed successfully ---"
+
+# --- End Local CLI Development ---
 
 # --- WIT Package Management ---
 
