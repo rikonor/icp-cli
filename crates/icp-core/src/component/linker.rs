@@ -273,8 +273,13 @@ mod tests {
             ],
         };
 
+        dynlnk.link(
+            &mut lnk,
+            vec![imp], // interfaces
+        )?;
+
         let exp = Interface {
-            name: "my-namespace:my-package-2/lib@0.0.1".to_string(),
+            name: "my-namespace:my-package-1/lib@0.0.1".to_string(),
             funcs: vec![
                 "fn-1".to_string(), //
                 "fn-2".to_string(),
@@ -283,7 +288,7 @@ mod tests {
 
         dynlnk.link(
             &mut lnk,
-            vec![imp, exp], // interfaces
+            vec![exp], // interfaces
         )?;
 
         Ok(())

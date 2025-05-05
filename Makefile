@@ -31,6 +31,42 @@ output-path:
 
 # --- End Extension Building ---
 
+# --- Local Extension Development ---
+
+# List of extensions to manage locally (order matters if dependencies exist)
+LOCAL_EXTENSIONS := build identity project
+
+# Build and install a specific extension locally using the currently installed icp CLI
+# Requires EXTENSION_NAME to be set.
+# Usage: make install-extension EXTENSION_NAME=<name>
+# Example: make install-extension EXTENSION_NAME=project
+.PHONY: install-extension
+install-extension:
+ifndef EXTENSION_NAME
+	$(error EXTENSION_NAME is not set. Usage: make install-extension EXTENSION_NAME=<name>)
+endif
+	@echo "--- Building extension component: $(EXTENSION_NAME) ---"
+	@$(MAKE) component EXTENSION_NAME=$(EXTENSION_NAME) # Ensure component is built first
+	@COMPONENT_PATH=$$($(MAKE) output-path EXTENSION_NAME=$(EXTENSION_NAME)); \
+	 echo "--- Installing extension $(EXTENSION_NAME) from $$COMPONENT_PATH ---"; \
+	 icp extension add --name $(EXTENSION_NAME) $$COMPONENT_PATH --force
+	@echo "--- Extension $(EXTENSION_NAME) installed successfully ---"
+
+# Build and install all extensions listed in LOCAL_EXTENSIONS
+# Usage: make install-all-extensions
+.PHONY: install-all-extensions
+install-all-extensions:
+	@echo "--- Installing all local extensions: $(LOCAL_EXTENSIONS) ---"
+	@for ext_name in $(LOCAL_EXTENSIONS); do \
+	 echo ""; \
+	 echo ">>> Installing extension: $$ext_name <<<"; \
+	 $(MAKE) install-extension EXTENSION_NAME=$$ext_name || exit 1; \
+	done
+	@echo ""
+	@echo "--- All local extensions installed successfully ---"
+
+# --- End Local Extension Development ---
+
 # --- Local CLI Development ---
 
 # Build and install the icp-cli binary locally
