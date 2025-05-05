@@ -1,4 +1,5 @@
 use std::{
+    collections::HashMap,
     env::args_os,
     ffi::OsString,
     fs::{create_dir_all, read},
@@ -23,6 +24,7 @@ use icp_core::{
     dependency::DependencyGraph,
     interface::IfaceDetector,
     manifest::{Load, LoadError, Manifest, ManifestHandle, Store as _},
+    Interface,
 };
 use icp_distribution::Distribution;
 
@@ -363,21 +365,23 @@ async fn main() -> Result<(), Error> {
     // Create dynamic linker
     let mut dynlnk = DynamicLinker::new(reg);
 
-    // Link imports for each extension
+    // Collect unique interfaces
+    let mut ifaces: HashMap<String, Interface> = HashMap::new();
     for name in &loading_order {
         if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
-            let ifaces = vec![
-                extension.imports.clone(), // imports
-                extension.exports.clone(), // exports
-            ]
-            .concat();
-
-            dynlnk.link(
-                &mut lnk, // linker
-                ifaces,   // interfaces
-            )?;
+            for iface in extension.imports.iter().chain(extension.exports.iter()) {
+                ifaces
+                    .entry(iface.name.clone())
+                    .or_insert_with(|| iface.clone());
+            }
         }
     }
+
+    // Link all unique interfaces at once
+    dynlnk.link(
+        &mut lnk,                       // linker
+        ifaces.into_values().collect(), // interfaces
+    )?;
 
     // Components (instantiate)
     let insts: DashMap<String, Extension> = DashMap::new();

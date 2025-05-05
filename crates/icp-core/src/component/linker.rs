@@ -65,6 +65,14 @@ impl DynamicLinker {
     ///
     /// * `Ok(())` if linking succeeded
     /// * `Err(DynamicLinkingError)` if linking failed
+    ///
+    /// # Panics
+    ///
+    /// This method assumes that the provided `ifaces` vector contains interfaces
+    /// with unique names. If the same interface name appears multiple times,
+    /// this method will likely panic due to the underlying Wasmtime linker
+    /// rejecting duplicate instance definitions. The caller is responsible for
+    /// ensuring the uniqueness of interface names in the input vector.
     pub fn link<T: Send>(
         &mut self,
         lnk: &mut Linker<T>,
@@ -224,7 +232,7 @@ impl DynamicLinker {
 
 #[cfg(test)]
 mod tests {
-    use anyhow::Error;
+    use anyhow::{bail, Error};
     use wasmtime::{Config, Engine};
 
     use super::*;
@@ -248,7 +256,54 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn test_link_duplicate_function_definition_fails() -> Result<(), Error> {
+    async fn test_link_duplicate_interface_name_fails() -> Result<(), Error> {
+        // WASM Configuration
+        let mut cfg = Config::new();
+        let cfg = cfg.async_support(true);
+
+        // Engine
+        let ngn = Engine::new(cfg).unwrap();
+
+        // Linker
+        let mut lnk: Linker<()> = Linker::new(&ngn);
+
+        // Create function registry
+        let reg = FunctionRegistry::new();
+
+        // Create dynamic linker
+        let mut dynlnk = DynamicLinker::new(reg);
+
+        let iface1 = Interface {
+            name: "my-namespace:my-package-1/lib@0.0.1".to_string(),
+            funcs: vec!["fn-1".to_string(), "fn-2".to_string()],
+        };
+
+        // First call should succeed
+        dynlnk.link(
+            &mut lnk,     // linker
+            vec![iface1], // interfaces
+        )?;
+
+        let iface2 = Interface {
+            name: "my-namespace:my-package-1/lib@0.0.1".to_string(), // Same name
+            funcs: vec!["fn-3".to_string(), "fn-4".to_string()],
+        };
+
+        // Second call with the same interface name is expected to fail
+        let out = dynlnk.link(
+            &mut lnk,     // linker
+            vec![iface2], // interfaces
+        );
+
+        if !out.is_err() {
+            bail!("expected second linking call to fail because of duplicate interface name");
+        }
+
+        Ok(())
+    }
+
+    #[tokio::test]
+    async fn test_link_unique_interfaces_succeeds() -> Result<(), Error> {
         // WASM Configuration
         let mut cfg = Config::new();
         let cfg = cfg.async_support(true);
@@ -265,30 +320,25 @@ mod tests {
         // Create dynamic linker
         let mut dynlnk = DynamicLinker::new(reg);
 
-        let imp = Interface {
+        let iface1 = Interface {
             name: "my-namespace:my-package-1/lib@0.0.1".to_string(),
-            funcs: vec![
-                "fn-1".to_string(), //
-                "fn-2".to_string(),
-            ],
+            funcs: vec!["fn-1".to_string(), "fn-2".to_string()],
         };
 
+        // This call should succeed as names are unique
         dynlnk.link(
-            &mut lnk,
-            vec![imp], // interfaces
+            &mut lnk,     // linker
+            vec![iface1], // interfaces
         )?;
 
-        let exp = Interface {
-            name: "my-namespace:my-package-1/lib@0.0.1".to_string(),
-            funcs: vec![
-                "fn-1".to_string(), //
-                "fn-2".to_string(),
-            ],
+        let iface2 = Interface {
+            name: "my-namespace:my-package-2/lib@0.0.1".to_string(), // Different name
+            funcs: vec!["fn-a".to_string(), "fn-b".to_string()],
         };
 
         dynlnk.link(
-            &mut lnk,
-            vec![exp], // interfaces
+            &mut lnk,     // linker
+            vec![iface2], // interfaces
         )?;
 
         Ok(())
