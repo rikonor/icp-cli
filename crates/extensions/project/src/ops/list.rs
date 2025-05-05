@@ -88,10 +88,7 @@ impl List for Lister {
                     });
                 }
                 Err(e) => {
-                    // Log or collect errors? For now, let's propagate the first error.
-                    // A more robust implementation might collect all errors.
-                    // Or perhaps print a warning and continue?
-                    // Let's return the error for now.
+                    // Propagate the first error encountered during canister manifest processing.
                     return Err(e);
                 }
             }
