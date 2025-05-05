@@ -19,10 +19,10 @@ pub enum ListError {
 impl From<ListError> for String {
     fn from(e: ListError) -> Self {
         match e {
+            ListError::NoCanistersFound => e.to_string(),
             ListError::ManifestProcessing(msg) => {
                 format!("Error processing manifest file: {}", msg)
             }
-            ListError::NoCanistersFound => e.to_string(),
             ListError::Unexpected(err) => {
                 format!("An unexpected error occurred: {}", err)
             }

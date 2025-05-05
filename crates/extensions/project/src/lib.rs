@@ -110,7 +110,7 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
         let cspec: CommandSpec =
             serde_json::from_str(CLI_SPEC).expect("invalid command-line interface spec");
 
-        let cmd: Command = cspec.into(); // Use impl From<CommandSpec> from spec.rs
+        let cmd: Command = cspec.into();
         let ms = cmd.get_matches_from(args);
 
         match ms.subcommand() {
@@ -130,7 +130,10 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
                     Ok(_) => 0,
 
                     // Failure
-                    Err(_) => 1,
+                    Err(err) => {
+                        print(&err.to_string());
+                        err.into()
+                    }
                 }
             }
 
