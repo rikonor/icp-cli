@@ -78,6 +78,10 @@ impl DynamicLinker {
                 continue;
             }
 
+            let mut inst = lnk
+                .instance(&iface.name)
+                .context("failed to instantiate interface")?;
+
             for f in iface.funcs {
                 let k = FunctionRegistry::create_key(
                     &iface.name, // interface
@@ -96,32 +100,28 @@ impl DynamicLinker {
 
                 let fname = f.clone();
 
-                lnk.instance(&iface.name)?.func_new_async(
-                    &f,
-                    move |mut store, params, results| {
-                        let fname = fname.clone();
-                        let fref = Arc::clone(&fref);
+                inst.func_new_async(&f, move |mut store, params, results| {
+                    let fname = fname.clone();
+                    let fref = Arc::clone(&fref);
 
-                        Box::new(async move {
-                            let f = {
-                                let g = fref.lock().unwrap();
-                                *g.as_ref().ok_or_else(|| {
-                                    DynamicLinkingError::UnresolvedReference(fname)
-                                })?
-                            };
+                    Box::new(async move {
+                        let f = {
+                            let g = fref.lock().unwrap();
+                            *g.as_ref()
+                                .ok_or_else(|| DynamicLinkingError::UnresolvedReference(fname))?
+                        };
 
-                            f.call_async(&mut store, params, results)
-                                .await
-                                .context("call failed")?;
+                        f.call_async(&mut store, params, results)
+                            .await
+                            .context("call failed")?;
 
-                            f.post_return_async(&mut store)
-                                .await
-                                .context("post-return failed")?;
+                        f.post_return_async(&mut store)
+                            .await
+                            .context("post-return failed")?;
 
-                            Ok(())
-                        })
-                    },
-                )?;
+                        Ok(())
+                    })
+                })?;
             }
         }
 
@@ -135,7 +135,7 @@ impl DynamicLinker {
     /// * `store` - Wasmtime store
     /// * `extension` - Name of the extension
     /// * `inst` - Component instance
-    /// * `exports` - List of exported interfaces to resolve
+    /// * `ifaces` - List of exported interfaces to resolve
     ///
     /// # Returns
     ///
@@ -146,7 +146,7 @@ impl DynamicLinker {
         mut store: &mut Store<T>,
         extension: &str,
         inst: &Instance,
-        exports: &[Interface],
+        ifaces: &[Interface],
     ) -> Result<(), DynamicLinkingError> {
         // Skip if already resolved
         if self
@@ -158,19 +158,19 @@ impl DynamicLinker {
             return Ok(());
         }
 
-        for exp in exports {
+        for iface in ifaces {
             let e = inst
                 .get_export(
-                    &mut store, // store
-                    None,       // instance
-                    &exp.name,  // name
+                    &mut store,  // store
+                    None,        // instance
+                    &iface.name, // name
                 )
                 .ok_or(anyhow!("missing export"))?;
 
-            for fname in &exp.funcs {
+            for fname in &iface.funcs {
                 let k = FunctionRegistry::create_key(
-                    &exp.name, // interface
-                    fname,     // function
+                    &iface.name, // interface
+                    fname,       // function
                 );
 
                 let e = inst
