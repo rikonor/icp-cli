@@ -7,9 +7,10 @@ use anyhow::{anyhow, Context};
 use wasmtime::component::{Instance, Linker};
 use wasmtime::Store;
 
-use super::function_registry::{FunctionRegistry, FunctionRegistryError};
-use crate::interface::{parse_interface_name, LIBRARY_SUFFIX};
-use crate::manifest::{ExportedInterface, ImportedInterface};
+use crate::{
+    interface::{parse_interface_name, LIBRARY_SUFFIX},
+    FunctionRegistry, FunctionRegistryError, Interface,
+};
 
 /// Errors that can occur during dynamic linking operations
 #[derive(Debug, thiserror::Error)]
@@ -67,21 +68,20 @@ impl DynamicLinker {
     pub fn link<T: Send>(
         &mut self,
         lnk: &mut Linker<T>,
-        imps: Vec<ImportedInterface>,
-        exps: Vec<ExportedInterface>,
+        ifaces: Vec<Interface>,
     ) -> Result<(), DynamicLinkingError> {
         // Link imports
-        for imp in imps {
+        for iface in ifaces {
             // Skip non-library interfaces (check base name)
-            let (name, _) = parse_interface_name(&imp.name);
+            let (name, _) = parse_interface_name(&iface.name);
             if !name.ends_with(LIBRARY_SUFFIX) {
                 continue;
             }
 
-            for f in imp.functions {
+            for f in iface.funcs {
                 let k = FunctionRegistry::create_key(
-                    &imp.name, // interface
-                    &f,        // function
+                    &iface.name, // interface
+                    &f,          // function
                 );
 
                 if self.registry.contains(k.as_str()) {
@@ -96,62 +96,7 @@ impl DynamicLinker {
 
                 let fname = f.clone();
 
-                lnk.instance(&imp.name)?.func_new_async(
-                    &f,
-                    move |mut store, params, results| {
-                        let fname = fname.clone();
-                        let fref = Arc::clone(&fref);
-
-                        Box::new(async move {
-                            let f = {
-                                let g = fref.lock().unwrap();
-                                *g.as_ref().ok_or_else(|| {
-                                    DynamicLinkingError::UnresolvedReference(fname)
-                                })?
-                            };
-
-                            f.call_async(&mut store, params, results)
-                                .await
-                                .context("call failed")?;
-
-                            f.post_return_async(&mut store)
-                                .await
-                                .context("post-return failed")?;
-
-                            Ok(())
-                        })
-                    },
-                )?;
-            }
-        }
-
-        // Link exports
-        for exp in exps {
-            // Skip non-library interfaces (check base name)
-            let (name, _) = parse_interface_name(&exp.name);
-            if !name.ends_with(LIBRARY_SUFFIX) {
-                continue;
-            }
-
-            for f in exp.funcs {
-                let k = FunctionRegistry::create_key(
-                    &exp.name, // interface
-                    &f,        // function
-                );
-
-                if self.registry.contains(k.as_str()) {
-                    continue;
-                }
-
-                // Create a function reference
-                let fref = Arc::new(Mutex::new(None));
-
-                // Register the function reference
-                self.registry.register(k.clone(), Arc::clone(&fref))?;
-
-                let fname = f.clone();
-
-                lnk.instance(&exp.name)?.func_new_async(
+                lnk.instance(&iface.name)?.func_new_async(
                     &f,
                     move |mut store, params, results| {
                         let fname = fname.clone();
@@ -201,7 +146,7 @@ impl DynamicLinker {
         mut store: &mut Store<T>,
         extension: &str,
         inst: &Instance,
-        exports: &[ExportedInterface],
+        exports: &[Interface],
     ) -> Result<(), DynamicLinkingError> {
         // Skip if already resolved
         if self
@@ -320,24 +265,25 @@ mod tests {
         // Create dynamic linker
         let mut dynlnk = DynamicLinker::new(reg);
 
-        let imp = ImportedInterface {
+        let imp = Interface {
             name: "my-namespace:my-package-1/lib@0.0.1".to_string(),
-            provider: "N/A".to_string(),
-            functions: vec![
+            funcs: vec![
                 "fn-1".to_string(), //
-                "fn-2".to_string(), //
+                "fn-2".to_string(),
             ],
         };
 
-        let exp = ExportedInterface {
+        let exp = Interface {
             name: "my-namespace:my-package-2/lib@0.0.1".to_string(),
-            funcs: vec!["fn-1".to_string(), "fn-2".to_string()],
+            funcs: vec![
+                "fn-1".to_string(), //
+                "fn-2".to_string(),
+            ],
         };
 
         dynlnk.link(
             &mut lnk,
-            vec![imp], // imports
-            vec![exp], // exports
+            vec![imp, exp], // interfaces
         )?;
 
         Ok(())

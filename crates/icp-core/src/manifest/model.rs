@@ -12,25 +12,12 @@ use serde_json::{from_slice, to_vec_pretty};
 
 /// Represents an interface exported by an extension
 #[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ExportedInterface {
+pub struct Interface {
     /// Name of the interface (e.g., "math/lib")
     pub name: String,
 
     /// Names of functions provided by this interface
     pub funcs: Vec<String>,
-}
-
-/// Represents an interface imported by an extension
-#[derive(Debug, Clone, Deserialize, Serialize)]
-pub struct ImportedInterface {
-    /// Name of the interface (e.g., "math/lib")
-    pub name: String,
-
-    /// Name of the extension providing this interface
-    pub provider: String,
-
-    /// Names of functions used from this interface
-    pub functions: Vec<String>,
 }
 
 /// Represents an extension in the manifest
@@ -47,11 +34,11 @@ pub struct Extension {
 
     /// Interfaces imported by this extension
     #[serde(default)]
-    pub imports: Vec<ImportedInterface>,
+    pub imports: Vec<Interface>,
 
     /// Interfaces exported by this extension
     #[serde(default)]
-    pub exports: Vec<ExportedInterface>,
+    pub exports: Vec<Interface>,
 
     /// Expected SHA256 checksum for verification
     #[serde(skip_serializing_if = "Option::is_none")]

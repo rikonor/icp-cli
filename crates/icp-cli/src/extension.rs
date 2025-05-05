@@ -14,9 +14,8 @@ use wasmtime::{component::Component, Engine};
 use icp_core::{
     dependency::{DependencyError, DependencyGraph},
     interface::{parse_interface_name, ComponentInterfaces, DetectIfaces, LIBRARY_SUFFIX},
-    manifest::{
-        self, ExportedInterface, Extension, ImportedInterface, Load, ManifestHandle, Store,
-    },
+    manifest::{self, Extension, Load, ManifestHandle, Store},
+    Interface,
 };
 
 enum AdditionType {
@@ -190,16 +189,15 @@ impl AddExtension for ExtensionAdder {
         // Create a new extension with detected library interfaces
         let imports = imports
             .into_iter()
-            .map(|imp| ImportedInterface {
+            .map(|imp| Interface {
                 name: imp.name,
-                provider: "TODO".to_string(),
-                functions: imp.funcs,
+                funcs: imp.funcs,
             })
             .collect();
 
         let exports = exports
             .into_iter()
-            .map(|exp| ExportedInterface {
+            .map(|exp| Interface {
                 name: exp.name,
                 funcs: exp.funcs,
             })

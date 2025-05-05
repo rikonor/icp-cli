@@ -13,11 +13,8 @@ pub mod manifest;
 pub use component::{DynamicLinker, DynamicLinkingError, FunctionRegistry, FunctionRegistryError};
 pub use dependency::{DependencyError, DependencyGraph};
 pub use error::Error;
-pub use interface::{ComponentInterfaces, DetectIfaces, Interface};
-pub use manifest::{
-    ExportedInterface, Extension, ImportedInterface, Load, LoadError, Manifest, ManifestHandle,
-    Store,
-};
+pub use interface::{ComponentInterfaces, DetectIfaces};
+pub use manifest::{Extension, Interface, Load, LoadError, Manifest, ManifestHandle, Store};
 
 /// Version of the icp-core crate
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");

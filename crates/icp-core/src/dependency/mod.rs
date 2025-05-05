@@ -308,7 +308,7 @@ impl DependencyGraph {
                 match self.interface_providers.get(&imp.name) {
                     Some(p) => {
                         if let Some(fs) = self.interface_functions.get(&imp.name) {
-                            for f in &imp.functions {
+                            for f in &imp.funcs {
                                 if !fs.contains(f) {
                                     return Err(DependencyError::MissingFunction {
                                         importer: x.name.clone(),
@@ -350,7 +350,7 @@ impl DependencyGraph {
                         provider_found = true;
 
                         // Check if all required functions are provided
-                        for function in &imp.functions {
+                        for function in &imp.funcs {
                             if !exp.funcs.contains(function) {
                                 return Err(DependencyError::MissingFunction {
                                     importer: x.name.clone(),
@@ -461,7 +461,7 @@ mod tests {
     use anyhow::Error;
 
     use super::*;
-    use crate::manifest::{ExportedInterface, ImportedInterface};
+    use crate::manifest::Interface;
 
     fn create_test_manifest() -> Manifest {
         let mut m = Manifest::default();
@@ -471,7 +471,7 @@ mod tests {
             pre: "ext-a.bin".into(),
             checksum: None,
             imports: Vec::new(),
-            exports: vec![ExportedInterface {
+            exports: vec![Interface {
                 name: "math/lib".to_string(),
                 funcs: vec!["add".to_string(), "subtract".to_string()],
             }],
@@ -483,12 +483,11 @@ mod tests {
             wasm: "ext-b.wasm".into(),
             pre: "ext-b.bin".into(),
             checksum: None,
-            imports: vec![ImportedInterface {
+            imports: vec![Interface {
                 name: "math/lib".to_string(),
-                provider: "ext-a".to_string(),
-                functions: vec!["add".to_string()],
+                funcs: vec!["add".to_string()],
             }],
-            exports: vec![ExportedInterface {
+            exports: vec![Interface {
                 name: "calc/lib".to_string(),
                 funcs: vec!["calculate".to_string()],
             }],
@@ -500,10 +499,9 @@ mod tests {
             wasm: "ext-c.wasm".into(),
             pre: "ext-c.bin".into(),
             checksum: None,
-            imports: vec![ImportedInterface {
+            imports: vec![Interface {
                 name: "calc/lib".to_string(),
-                provider: "ext-b".to_string(),
-                functions: vec!["calculate".to_string()],
+                funcs: vec!["calculate".to_string()],
             }],
             exports: Vec::new(),
         });
@@ -518,14 +516,13 @@ mod tests {
             wasm: "ext-a.wasm".into(),
             pre: "ext-a.bin".into(),
             checksum: None,
-            exports: vec![ExportedInterface {
+            exports: vec![Interface {
                 name: "a/lib".to_string(),
                 funcs: vec!["func_a".to_string()],
             }],
-            imports: vec![ImportedInterface {
+            imports: vec![Interface {
                 name: "c/lib".to_string(),
-                provider: "ext-c".to_string(),
-                functions: vec!["func_c".to_string()],
+                funcs: vec!["func_c".to_string()],
             }],
         });
 
@@ -535,12 +532,11 @@ mod tests {
             wasm: "ext-b.wasm".into(),
             pre: "ext-b.bin".into(),
             checksum: None,
-            imports: vec![ImportedInterface {
+            imports: vec![Interface {
                 name: "a/lib".to_string(),
-                provider: "ext-a".to_string(),
-                functions: vec!["func_a".to_string()],
+                funcs: vec!["func_a".to_string()],
             }],
-            exports: vec![ExportedInterface {
+            exports: vec![Interface {
                 name: "b/lib".to_string(),
                 funcs: vec!["func_b".to_string()],
             }],
@@ -552,12 +548,11 @@ mod tests {
             wasm: "ext-c.wasm".into(),
             pre: "ext-c.bin".into(),
             checksum: None,
-            imports: vec![ImportedInterface {
+            imports: vec![Interface {
                 name: "b/lib".to_string(),
-                provider: "ext-b".to_string(),
-                functions: vec!["func_b".to_string()],
+                funcs: vec!["func_b".to_string()],
             }],
-            exports: vec![ExportedInterface {
+            exports: vec![Interface {
                 name: "c/lib".to_string(),
                 funcs: vec!["func_c".to_string()],
             }],
@@ -645,10 +640,9 @@ mod tests {
             wasm: "ext-d.wasm".into(),
             pre: "ext-d.bin".into(),
             checksum: None,
-            imports: vec![ImportedInterface {
+            imports: vec![Interface {
                 name: "missing/lib".to_string(),
-                provider: "unknown".to_string(),
-                functions: vec!["func".to_string()],
+                funcs: vec!["func".to_string()],
             }],
             exports: Vec::new(),
         });

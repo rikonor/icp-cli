@@ -1,0 +1,17 @@
+package icp:network@0.1.0;
+
+interface lib {
+  /// Start a network defined by a given configuration
+  ///
+  /// Takes the relative path to the canister directory (containing canister.toml)
+  /// as input. Returns `ok()` on success or `err(string)` with an error message
+  /// on failure.
+  start-network: func() -> result<_, string>;
+}
+
+world extension {
+  include icp:cli/extension@0.2.0;
+
+  // Export the network library interface for other extensions to use.
+  export lib;
+}

@@ -366,10 +366,15 @@ async fn main() -> Result<(), Error> {
     // Link imports for each extension
     for name in &loading_order {
         if let Some(extension) = m.xs.iter().find(|x| &x.name == name) {
-            dynlnk.link(
-                &mut lnk,                  // linker
+            let ifaces = vec![
                 extension.imports.clone(), // imports
                 extension.exports.clone(), // exports
+            ]
+            .concat();
+
+            dynlnk.link(
+                &mut lnk, // linker
+                ifaces,   // interfaces
             )?;
         }
     }

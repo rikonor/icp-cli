@@ -115,9 +115,8 @@ impl Lister {
 
 #[cfg(test)]
 mod tests {
-    use anyhow::{Context, Error};
-
     use super::*;
+    use anyhow::{Context, Error};
 
     #[test]
     fn test_list_no_canisters_found() -> Result<(), Error> {

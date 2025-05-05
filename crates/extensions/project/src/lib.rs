@@ -1,22 +1,24 @@
+use std::{thread::LocalKey, thread_local};
+
 use clap::Command;
 use once_cell::sync::OnceCell;
-use ops::build::{Build, Builder};
-use ops::create::{Create, Creator};
+use ops::list::ListError;
 use serde::Deserialize;
-use std::thread::LocalKey;
-use std::thread_local;
 
 #[allow(warnings)]
 mod bindings;
-mod ops;
-
-mod spec;
-use spec::CommandSpec;
-
 use bindings::exports::icp::project::lib::CanisterInfo;
 use bindings::{icp::build::lib::build_canister, icp::cli::filesystem, icp::cli::misc::print};
 
-use ops::list::{List, Lister};
+mod ops;
+use ops::{
+    build::{Build, Builder},
+    create::{Create, Creator},
+    list::{List, Lister},
+};
+
+mod spec;
+use spec::CommandSpec;
 
 pub type LocalRef<T> = &'static LocalKey<OnceCell<T>>;
 
@@ -128,30 +130,31 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
             }
 
             Some(("list-canisters", _m)) => {
-                let cs = match LISTER.with(|v| v.get().expect("lister not initialized").list()) {
-                    Ok(cs) => cs,
-
-                    // Failure
-                    Err(err) => {
-                        print(&format!("{err:?}"));
-                        return err.into();
-                    }
-                };
-
-                match cs.is_empty() {
-                    // empty
-                    true => print("No canisters found in the project."),
-
-                    //
-                    false => {
+                match LISTER.with(|v| v.get().expect("lister not initialized").list()) {
+                    // Success
+                    Ok(cs) => {
                         print("Found canisters:");
                         for canister in cs {
                             print(&format!("  - {:?}", canister));
                         }
-                    }
-                }
 
-                0 // Success
+                        0
+                    }
+
+                    // Failure
+                    Err(err) => match err {
+                        ListError::ManifestProcessing(_) => todo!(), // ?
+                        // ListError::EmptyProject => {
+                        //     print("No canisters found in the project.");
+                        //     0
+                        // }
+                        ListError::Unexpected(err) => {
+                            // print(&format!("{err:?}"));
+                            // return err.into(); // ?
+                            todo!()
+                        }
+                    },
+                }
             }
 
             _ => {

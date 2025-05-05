@@ -3,6 +3,5 @@
 mod model;
 
 pub use model::{
-    ExportedInterface, Extension, ImportedInterface, Load, LoadError, Manifest, ManifestHandle,
-    Store, StoreError,
+    Extension, Interface, Load, LoadError, Manifest, ManifestHandle, Store, StoreError,
 };
