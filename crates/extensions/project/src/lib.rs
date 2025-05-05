@@ -66,10 +66,15 @@ struct Workspace {
 }
 
 #[derive(Deserialize, Debug)]
-struct CanisterManifest {
+struct CanisterProperties {
     name: String,
     #[serde(rename = "type")]
     canister_type: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct CanisterManifest {
+    canister: CanisterProperties,
 }
 
 const CLI_SPEC: &str = r#"{
@@ -142,18 +147,17 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
                     }
 
                     // Failure
-                    Err(err) => match err {
-                        ListError::ManifestProcessing(_) => todo!(), // ?
-                        // ListError::EmptyProject => {
-                        //     print("No canisters found in the project.");
-                        //     0
-                        // }
-                        ListError::Unexpected(err) => {
-                            // print(&format!("{err:?}"));
-                            // return err.into(); // ?
-                            todo!()
+                    Err(err) => {
+                        // Print the specific error message
+                        print(&err.to_string());
+
+                        // Return the appropriate exit code based on the error type
+                        match err {
+                            ListError::NoCanistersFound => 3,
+                            ListError::ManifestProcessing(_) => 2,
+                            ListError::Unexpected(_) => 1,
                         }
-                    },
+                    }
                 }
             }
 

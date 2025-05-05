@@ -9,6 +9,9 @@ pub enum ListError {
     #[error("Failed to process project or canister manifest: {0}")]
     ManifestProcessing(String),
 
+    #[error("No canisters found in the project based on icp.toml members")]
+    NoCanistersFound,
+
     #[error(transparent)]
     Unexpected(#[from] anyhow::Error),
 }
@@ -19,6 +22,7 @@ impl From<ListError> for String {
             ListError::ManifestProcessing(msg) => {
                 format!("Error processing manifest file: {}", msg)
             }
+            ListError::NoCanistersFound => e.to_string(),
             ListError::Unexpected(err) => {
                 format!("An unexpected error occurred: {}", err)
             }
@@ -31,6 +35,7 @@ impl From<ListError> for u8 {
         match e {
             ListError::ManifestProcessing(_) => 1,
             ListError::Unexpected(_) => 2,
+            ListError::NoCanistersFound => 3,
         }
     }
 }
@@ -77,9 +82,9 @@ impl List for Lister {
             match self.read_and_parse_canister_toml(&canister_toml_path_str) {
                 Ok(canister_manifest) => {
                     canister_infos.push(CanisterInfo {
-                        name: canister_manifest.name,
-                        canister_type: canister_manifest.canister_type,
-                        path: member_path_str.clone(), // Use the path from members
+                        name: canister_manifest.canister.name,
+                        canister_type: canister_manifest.canister.canister_type,
+                        path: member_path_str.clone(),
                     });
                 }
                 Err(e) => {
@@ -90,6 +95,10 @@ impl List for Lister {
                     return Err(e);
                 }
             }
+        }
+
+        if canister_infos.is_empty() {
+            return Err(ListError::NoCanistersFound);
         }
 
         Ok(canister_infos)
@@ -119,7 +128,7 @@ mod tests {
     use anyhow::{Context, Error};
 
     #[test]
-    fn test_list_no_canisters_found() -> Result<(), Error> {
+    fn test_list_no_canisters_found() {
         let mock_read_file = |path: &str| -> Result<Vec<u8>, String> {
             match path {
                 "icp.toml" => Ok(b"[workspace]\nmembers = []\n".to_vec()),
@@ -127,13 +136,13 @@ mod tests {
             }
         };
 
-        let out = Lister::new(Box::new(mock_read_file))
-            .list()
-            .context("failed to list canisters")?;
+        let result = Lister::new(Box::new(mock_read_file)).list();
 
-        assert!(out.is_empty(), "Expected an empty vector of canisters");
-
-        Ok(())
+        assert!(
+            matches!(result, Err(ListError::NoCanistersFound)),
+            "Expected NoCanistersFound error, got {:?}",
+            result
+        );
     }
 
     #[test]
@@ -144,10 +153,10 @@ mod tests {
                     b"[workspace]\nmembers = [\"canisters/canister-1\", \"canisters/canister-2\"]\n".to_vec(),
                 ),
                 "canisters/canister-1/canister.toml" => {
-                    Ok(b"name = \"canister-1\"\ntype = \"rust\"\n".to_vec())
+                    Ok(b"[canister]\nname = \"canister-1\"\ntype = \"rust\"\n".to_vec())
                 }
                 "canisters/canister-2/canister.toml" => {
-                    Ok(b"name = \"canister-2\"\ntype = \"motoko\"\n".to_vec())
+                    Ok(b"[canister]\nname = \"canister-2\"\ntype = \"motoko\"\n".to_vec())
                 }
                 _ => Err(format!("Mock: Unexpected file read '{}'", path)),
             }
