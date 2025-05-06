@@ -8,7 +8,9 @@ use serde::Deserialize;
 #[allow(warnings)]
 mod bindings;
 use bindings::exports::icp::project::lib::CanisterInfo;
-use bindings::{icp::build::lib::build_canister, icp::cli::filesystem, icp::cli::misc::print};
+use bindings::{
+    icp::build::canister_build::build_canister, icp::cli::filesystem, icp::cli::misc::print,
+};
 
 mod ops;
 use ops::{

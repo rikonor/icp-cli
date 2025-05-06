@@ -4,8 +4,8 @@ use clap::Command;
 mod bindings;
 
 use bindings::{
-    exports::icp::build::{canister_build, registry},
-    icp::cli::misc::print,
+    exports::icp::{build::canister_build, cli::cli},
+    icp::{build::registry::register_provider, cli::misc::print},
 };
 
 mod spec;
@@ -20,16 +20,8 @@ const CLI_SPEC: &str = r#"{
     "subcommands": []
 }"#;
 
-impl registry::Guest for Component {
-    fn register_provider(canister_type: String) -> Result<(), String> {
-        todo!()
-    }
-}
-
 impl canister_build::Guest for Component {
-    // Implement the new function from the WIT interface
     fn build_canister(canister_dir: String) -> Result<(), String> {
-        // Mock implementation: Just print the received path
         print(&format!(
             "[build extension] Received build request for canister at: {}",
             canister_dir
@@ -45,7 +37,7 @@ impl canister_build::Guest for Component {
     }
 }
 
-impl bindings::exports::icp::cli::cli::Guest for Component {
+impl cli::Guest for Component {
     fn spec() -> String {
         CLI_SPEC.to_string()
     }

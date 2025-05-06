@@ -29,12 +29,12 @@ use icp_core::{
 use icp_distribution::Distribution;
 
 mod extension;
-mod spec;
-
 use extension::{
     AddExtension, ExtensionAdder, ExtensionLister, ExtensionRemover, ListExtensions,
     RemoveExtension,
 };
+
+mod spec;
 use spec::CommandSpec;
 
 // Service configuration
