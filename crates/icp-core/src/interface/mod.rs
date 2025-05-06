@@ -52,10 +52,18 @@
 //! }
 //! ```
 //!
-//! # Library Interfaces
+//! # Inter-Extension and Host Interfaces
 //!
-//! Library interfaces are identified by the suffix [`LIBRARY_SUFFIX`], which is currently defined as "/lib".
-//! These interfaces are used for cross-extension communication and dependency resolution.
+//! Extensions can import and export interfaces for several purposes:
+//! - **Inter-extension communication:** Extensions can export interfaces (e.g., `my-package:my-iface/api`)
+//!   that other extensions can import and use. The system facilitates dynamic linking for these.
+//!   Previously, a "/lib" suffix was a convention for identifying such interfaces,
+//!   but the system now considers all non-host interfaces for potential inter-extension linking.
+//! - **Host-provided interfaces:** Extensions can import interfaces provided by the host CLI application
+//!   itself (e.g., "icp:cli/misc", "icp:cli/filesystem"). These are identified by the
+//!   [`HOST_INTERFACE_PREFIX`] and are linked directly by the host.
+//! - **CLI command definition:** Extensions export a specific interface (typically `icp:cli/cli`)
+//!   that the host uses to integrate the extension's commands.
 //!
 //! # Error Handling
 //!
@@ -73,20 +81,12 @@ mod detector;
 
 pub use detector::{ComponentInterfaces, DetectIfaces, IfaceDetector, Interface};
 
-/// Suffix used for library interfaces
+/// Prefix used to identify interfaces provided by the host CLI application.
 ///
-/// This constant defines the suffix that identifies library interfaces, which are used for
-/// cross-extension communication and dependency resolution. Currently, this is set to "/lib".
-///
-/// # Example
-///
-/// ```
-/// use icp_core::interface::LIBRARY_SUFFIX;
-///
-/// let interface_name = "math/lib";
-/// assert!(interface_name.ends_with(LIBRARY_SUFFIX));
-/// ```
-pub const LIBRARY_SUFFIX: &str = "/lib";
+/// These interfaces (e.g., "icp:cli/misc", "icp:cli/filesystem") are implemented
+/// by the icp-cli host and imported by extensions. They are handled differently
+/// during dependency validation and linking compared to inter-extension interfaces.
+pub const HOST_INTERFACE_PREFIX: &str = "icp:cli/";
 
 /// Parse an interface name into its base name and version components
 ///

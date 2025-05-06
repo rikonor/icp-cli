@@ -7,10 +7,7 @@ use anyhow::{anyhow, Context};
 use wasmtime::component::{Instance, Linker};
 use wasmtime::Store;
 
-use crate::{
-    interface::{parse_interface_name, LIBRARY_SUFFIX},
-    FunctionRegistry, FunctionRegistryError, Interface,
-};
+use crate::{interface::parse_interface_name, FunctionRegistry, FunctionRegistryError, Interface};
 
 /// Errors that can occur during dynamic linking operations
 #[derive(Debug, thiserror::Error)]
@@ -80,12 +77,6 @@ impl DynamicLinker {
     ) -> Result<(), DynamicLinkingError> {
         // Link imports
         for iface in ifaces {
-            // Skip non-library interfaces (check base name)
-            let (name, _) = parse_interface_name(&iface.name);
-            if !name.ends_with(LIBRARY_SUFFIX) {
-                continue;
-            }
-
             let mut inst = lnk
                 .instance(&iface.name)
                 .context("failed to instantiate interface")?;

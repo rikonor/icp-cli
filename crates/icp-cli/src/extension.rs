@@ -13,7 +13,7 @@ use wasmtime::{component::Component, Engine};
 
 use icp_core::{
     dependency::{DependencyError, DependencyGraph},
-    interface::{parse_interface_name, ComponentInterfaces, DetectIfaces, LIBRARY_SUFFIX},
+    interface::{parse_interface_name, ComponentInterfaces, DetectIfaces, HOST_INTERFACE_PREFIX},
     manifest::{self, Extension, Load, ManifestHandle, Store},
     Interface,
 };
@@ -178,10 +178,14 @@ impl AddExtension for ExtensionAdder {
         let [imports, exports] = [imports, exports].map(|ifaces| {
             ifaces
                 .into_iter()
+                // Filter out host-provided interfaces (e.g., "icp:cli/...").
+                // These are linked directly by the host application (main.rs)
+                // and should not be part of the inter-extension dependency graph
+                // or dynamic linking process managed by DynamicLinker.
                 .filter(|x| {
                     // Extract base name without version
                     let (base_name, _) = parse_interface_name(&x.name);
-                    base_name.ends_with(LIBRARY_SUFFIX)
+                    !base_name.starts_with(HOST_INTERFACE_PREFIX)
                 })
                 .collect::<Vec<_>>()
         });
