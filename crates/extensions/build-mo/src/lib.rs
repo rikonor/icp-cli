@@ -4,7 +4,10 @@ use clap::Command;
 mod bindings;
 
 use bindings::{
-    exports::icp::{build::canister_build, cli::cli},
+    exports::icp::{
+        build::canister_build,
+        cli::{cli, init},
+    },
     icp::{build::registry::register_provider, cli::misc::print},
 };
 
@@ -20,20 +23,10 @@ const CLI_SPEC: &str = r#"{
     "subcommands": []
 }"#;
 
-impl canister_build::Guest for Component {
-    fn build_canister(canister_dir: String) -> Result<(), String> {
-        print(&format!(
-            "[build extension] Received build request for canister at: {}",
-            canister_dir
-        ));
-
-        // TODO: Implement actual build logic here in the future.
-        // This might involve:
-        // - Reading canister.toml from canister_dir
-        // - Determining build steps based on canister type
-        // - Executing build commands (e.g., dfx build, cargo build)
-
-        Ok(()) // Simulate success for now
+impl init::Guest for Component {
+    fn init() -> Result<(), String> {
+        register_provider("motoko")?;
+        Ok(())
     }
 }
 
@@ -60,6 +53,23 @@ impl cli::Guest for Component {
         print("Use `icp project build` to build canisters defined in your project.");
 
         1 // Return error code
+    }
+}
+
+impl canister_build::Guest for Component {
+    fn build_canister(canister_dir: String) -> Result<(), String> {
+        print(&format!(
+            "[build extension] Received build request for canister at: {}",
+            canister_dir
+        ));
+
+        // TODO: Implement actual build logic here in the future.
+        // This might involve:
+        // - Reading canister.toml from canister_dir
+        // - Determining build steps based on canister type
+        // - Executing build commands (e.g., dfx build, cargo build)
+
+        Ok(()) // Simulate success for now
     }
 }
 

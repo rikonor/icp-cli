@@ -1,0 +1,5 @@
+interface misc {
+  print: func(s: string);
+  rand: func() -> u8;
+  time: func() -> u64;
+}

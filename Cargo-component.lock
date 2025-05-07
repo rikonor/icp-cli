@@ -6,22 +6,22 @@ version = 1
 name = "icp:build"
 
 [[package.version]]
-requirement = "^0.4.0"
-version = "0.4.0"
-digest = "sha256:69b366ec9c794134fdcf6b3a02c7a7f3d1c5f37b4a50ebb18ad22d2808c16bc4"
+requirement = "^0.5.0"
+version = "0.5.0"
+digest = "sha256:42dbf83b93ea839fa7ba9d2e55beda075f83931ea212216aa9a53d77e58b73f4"
 
 [[package]]
 name = "icp:identity"
 
 [[package.version]]
-requirement = "^0.3.0"
-version = "0.3.0"
-digest = "sha256:274ef756f0f9ef7436767a9e006dfb2ef95ae994b865787a9d05810c8df20b36"
+requirement = "^0.4.0"
+version = "0.4.0"
+digest = "sha256:5eb432f229bb568ecd69f6b962cf369653f4672b43848f42b65cde7d2c7447cb"
 
 [[package]]
 name = "icp:project"
 
 [[package.version]]
-requirement = "^0.5.0"
-version = "0.5.0"
-digest = "sha256:407a2e75020680b5002c4fdef0bb27543e402a0656ee319a190c4d2c8a3bd369"
+requirement = "^0.7.0"
+version = "0.7.0"
+digest = "sha256:19cb3dacbd1bfaf167d25db657dcde0a9b2a819c626e708cac3d35d73dbf98a7"

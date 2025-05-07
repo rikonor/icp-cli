@@ -3,7 +3,13 @@ use clap::Command;
 #[allow(warnings)]
 mod bindings;
 
-use bindings::{exports::icp::identity::lib::Guest, icp::cli::misc::print};
+use bindings::{
+    exports::icp::{
+        cli::{cli, init},
+        identity::{self, lib::Guest},
+    },
+    icp::cli::misc::print,
+};
 
 mod spec;
 use spec::CommandSpec;
@@ -40,7 +46,13 @@ fn sign(blob: &str) -> u32 {
     0
 }
 
-impl Guest for Component {
+impl init::Guest for Component {
+    fn init() -> Result<(), String> {
+        Ok(())
+    }
+}
+
+impl identity::lib::Guest for Component {
     fn create() -> u32 {
         print("creating identity");
         0
@@ -51,7 +63,7 @@ impl Guest for Component {
     // }
 }
 
-impl bindings::exports::icp::cli::cli::Guest for Component {
+impl cli::Guest for Component {
     fn spec() -> String {
         CLI_SPEC.to_string()
     }

@@ -1,4 +1,4 @@
-package icp:network@0.1.0;
+package icp:network@0.2.0;
 
 interface lib {
   /// Start a network defined by a given configuration
@@ -10,7 +10,7 @@ interface lib {
 }
 
 world extension {
-  include icp:cli/extension@0.2.0;
+  include icp:cli/extension@0.3.0;
 
   // Export the network library interface for other extensions to use.
   export lib;

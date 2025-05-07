@@ -4,7 +4,10 @@ use clap::Command;
 mod bindings;
 
 use bindings::{
-    exports::icp::build::{canister_build, registry},
+    exports::icp::{
+        build::{canister_build, registry},
+        cli::{cli, init},
+    },
     icp::cli::misc::print,
 };
 
@@ -20,32 +23,13 @@ const CLI_SPEC: &str = r#"{
     "subcommands": []
 }"#;
 
-impl registry::Guest for Component {
-    fn register_provider(canister_type: String) -> Result<(), String> {
-        todo!()
+impl init::Guest for Component {
+    fn init() -> Result<(), String> {
+        Ok(())
     }
 }
 
-impl canister_build::Guest for Component {
-    // Implement the new function from the WIT interface
-    fn build_canister(canister_dir: String) -> Result<(), String> {
-        // Mock implementation: Just print the received path
-        print(&format!(
-            "[build extension] Received build request for canister at: {}",
-            canister_dir
-        ));
-
-        // TODO: Implement actual build logic here in the future.
-        // This might involve:
-        // - Reading canister.toml from canister_dir
-        // - Determining build steps based on canister type
-        // - Executing build commands (e.g., dfx build, cargo build)
-
-        Ok(()) // Simulate success for now
-    }
-}
-
-impl bindings::exports::icp::cli::cli::Guest for Component {
+impl cli::Guest for Component {
     fn spec() -> String {
         CLI_SPEC.to_string()
     }
@@ -68,6 +52,33 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
         print("Use `icp project build` to build canisters defined in your project.");
 
         1 // Return error code
+    }
+}
+
+impl registry::Guest for Component {
+    fn register_provider(canister_type: String) -> Result<(), String> {
+        print(&format!("register_provider called with {canister_type}"));
+
+        Ok(())
+    }
+}
+
+impl canister_build::Guest for Component {
+    // Implement the new function from the WIT interface
+    fn build_canister(canister_dir: String) -> Result<(), String> {
+        // Mock implementation: Just print the received path
+        print(&format!(
+            "[build extension] Received build request for canister at: {}",
+            canister_dir
+        ));
+
+        // TODO: Implement actual build logic here in the future.
+        // This might involve:
+        // - Reading canister.toml from canister_dir
+        // - Determining build steps based on canister type
+        // - Executing build commands (e.g., dfx build, cargo build)
+
+        Ok(()) // Simulate success for now
     }
 }
 

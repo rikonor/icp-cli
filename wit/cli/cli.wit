@@ -1,10 +1,4 @@
-package icp:cli@0.2.0;
-
-interface misc {
-  print: func(s: string);
-  rand: func() -> u8;
-  time: func() -> u64;
-}
+package icp:cli@0.3.0;
 
 interface cli {
   // spec provides a schema a for the cli
@@ -14,9 +8,14 @@ interface cli {
   run: func(args: list<string>) -> u8;
 }
 
+interface init {
+  init: func() -> result<_, string>;
+}
+
 world extension {
   import misc;
   import filesystem;
 
+  export init;
   export cli;
 }

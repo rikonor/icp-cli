@@ -7,15 +7,15 @@ name = "icp:build"
 registry = "ghcr.io"
 
 [[packages.versions]]
-requirement = "=0.4.0"
-version = "0.4.0"
-digest = "sha256:69b366ec9c794134fdcf6b3a02c7a7f3d1c5f37b4a50ebb18ad22d2808c16bc4"
+requirement = "=0.5.0"
+version = "0.5.0"
+digest = "sha256:42dbf83b93ea839fa7ba9d2e55beda075f83931ea212216aa9a53d77e58b73f4"
 
 [[packages]]
 name = "icp:cli"
 registry = "ghcr.io"
 
 [[packages.versions]]
-requirement = "=0.2.0"
-version = "0.2.0"
-digest = "sha256:25ba1aafd32eab9d8fd3d40c90054c0b5233edee25d176966ed5f19fd0c032ee"
+requirement = "=0.3.0"
+version = "0.3.0"
+digest = "sha256:eeaed10be6ddb55de0a94298ccdfb9e6c9164971273708be8148bc93478d2608"

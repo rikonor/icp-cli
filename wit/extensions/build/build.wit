@@ -1,4 +1,4 @@
-package icp:build@0.4.0; // Defines build contracts and worlds
+package icp:build@0.5.0; // Defines build contracts and worlds
 
 /// Common interface for building a canister.
 /// This contract is implemented by:
@@ -37,8 +37,8 @@ interface registry {
 /// entry point for clients (e.g., `project` extension, direct `icp build` CLI calls).
 world facade {
   // Includes standard CLI functionalities like printing and filesystem access.
-  // Ensure icp:cli/extension@0.2.0 is the correct version.
-  include icp:cli/extension@0.2.0;
+  // Ensure icp:cli/extension@0.3.0 is the correct version.
+  include icp:cli/extension@0.3.0;
 
   /// The facade exports the `registry` interface for build providers to call.
   export registry;
@@ -55,7 +55,7 @@ world facade {
 /// This world is named 'extension' for consistency with other extension WIT files.
 world extension {
   // Includes standard CLI functionalities.
-  include icp:cli/extension@0.2.0;
+  include icp:cli/extension@0.3.0;
 
   /// Providers import the `registry` interface from the facade to register.
   import registry;

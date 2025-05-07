@@ -422,6 +422,18 @@ async fn main() -> Result<(), Error> {
         );
     }
 
+    // Extensions (init)
+    for name in &loading_order {
+        let inst = insts
+            .get(name)
+            .context("extension not initialized properly")?;
+
+        inst.icp_cli_init()
+            .call_init(&mut store)
+            .await?
+            .map_err(|err| anyhow!("failed to initialize extension {name}: {err}"))?;
+    }
+
     // Extensions (hydrate)
     let mut c = c;
 

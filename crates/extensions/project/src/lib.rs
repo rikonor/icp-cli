@@ -1,5 +1,7 @@
 use std::{thread::LocalKey, thread_local};
 
+use bindings::exports::icp::cli::{cli, init};
+use bindings::exports::icp::project;
 use clap::Command;
 use once_cell::sync::OnceCell;
 use ops::list::ListError;
@@ -103,7 +105,13 @@ const CLI_SPEC: &str = r#"{
     ]
 }"#;
 
-impl bindings::exports::icp::cli::cli::Guest for Component {
+impl init::Guest for Component {
+    fn init() -> Result<(), String> {
+        Ok(())
+    }
+}
+
+impl cli::Guest for Component {
     fn spec() -> String {
         CLI_SPEC.to_string()
     }
@@ -175,7 +183,7 @@ impl bindings::exports::icp::cli::cli::Guest for Component {
     }
 }
 
-impl bindings::exports::icp::project::lib::Guest for Component {
+impl project::lib::Guest for Component {
     fn list_canisters() -> Result<Vec<CanisterInfo>, String> {
         Ok(LISTER.with(|v| v.get().expect("lister not initialized").list())?)
     }
