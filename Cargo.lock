@@ -170,11 +170,14 @@ dependencies = [
 name = "build"
 version = "0.1.3"
 dependencies = [
+ "anyhow",
  "clap",
  "dashmap",
  "once_cell",
  "serde",
  "serde_json",
+ "thiserror 2.0.12",
+ "toml",
  "wit-bindgen-rt 0.41.0",
 ]
 

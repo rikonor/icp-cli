@@ -1,4 +1,7 @@
 use clap::Command;
+use dashmap::DashMap;
+use once_cell::sync::{Lazy, OnceCell};
+use serde::Deserialize;
 
 #[allow(warnings)]
 mod bindings;
@@ -8,20 +11,45 @@ use bindings::{
         build::{canister_build, registry},
         cli::{cli, init},
     },
-    icp::cli::misc::print,
+    icp::cli::{filesystem::read_file, misc::print},
 };
 
+mod ops;
+use ops::build::{Build, Builder};
+
 mod spec;
-use dashmap::DashMap;
-use once_cell::sync::Lazy;
 use spec::CommandSpec;
 
 struct Component;
 
+thread_local! {
+    static BUILDER: OnceCell<Box<dyn Build>> = OnceCell::with_value({
+        let v = Builder::new(
+            Box::new(read_file), //
+        );
+
+        Box::new(v)
+    });
+}
+
+#[derive(Deserialize, Debug)]
+struct CanisterProperties {
+    name: String,
+    #[serde(rename = "type")]
+    canister_type: String,
+}
+
+#[derive(Deserialize, Debug)]
+struct CanisterManifest {
+    canister: CanisterProperties,
+}
+
 const CLI_SPEC: &str = r#"{
     "name": "build",
-    "help": "build stuff",
-    "args": [],
+    "help": "Canister builder",
+    "args": [
+        { "name": "dir", "required": true }
+    ],
     "subcommands": []
 }"#;
 
@@ -47,20 +75,28 @@ impl cli::Guest for Component {
         let c: Command = cspec.into();
 
         // Parse the command-line arguments
-        let _m = c.get_matches_from(args);
-
-        // The standalone `icp build` command is less useful now.
-        // Building is primarily driven by `icp project build`.
-        // Print a message and exit.
-        print("Executing standalone `icp build` is not the standard workflow.");
-        print("Use `icp project build` to build canisters defined in your project.");
+        let m = c.get_matches_from(args);
+        let canister_dir = m.try_get_one::<String>("dir").unwrap().unwrap();
 
         print("available builders are:");
         BUILDERS.iter().for_each(|v| {
             print(&format!("  - {}", v.key()));
         });
 
-        1 // Return error code
+        match BUILDER.with(|v| {
+            v.get()
+                .expect("builder not initialized")
+                .build(&canister_dir)
+        }) {
+            // Ok
+            Ok(_) => 0,
+
+            // Failure
+            Err(err) => {
+                print(&format!("{err}"));
+                err.into()
+            }
+        }
     }
 }
 
@@ -73,21 +109,14 @@ impl registry::Guest for Component {
 }
 
 impl canister_build::Guest for Component {
-    // Implement the new function from the WIT interface
     fn build_canister(canister_dir: String) -> Result<(), String> {
-        // Mock implementation: Just print the received path
-        print(&format!(
-            "[build extension] Received build request for canister at: {}",
-            canister_dir
-        ));
-
-        // TODO: Implement actual build logic here in the future.
-        // This might involve:
-        // - Reading canister.toml from canister_dir
-        // - Determining build steps based on canister type
-        // - Executing build commands (e.g., dfx build, cargo build)
-
-        Ok(()) // Simulate success for now
+        BUILDER
+            .with(|v| {
+                v.get()
+                    .expect("builder not initialized")
+                    .build(&canister_dir)
+            })
+            .map_err(|err| format!("{err}"))
     }
 }
 

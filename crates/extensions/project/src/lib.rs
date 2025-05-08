@@ -1,7 +1,5 @@
 use std::{thread::LocalKey, thread_local};
 
-use bindings::exports::icp::cli::{cli, init};
-use bindings::exports::icp::project;
 use clap::Command;
 use once_cell::sync::OnceCell;
 use ops::list::ListError;
@@ -9,9 +7,15 @@ use serde::Deserialize;
 
 #[allow(warnings)]
 mod bindings;
-use bindings::exports::icp::project::lib::CanisterInfo;
 use bindings::{
-    icp::build::canister_build::build_canister, icp::cli::filesystem, icp::cli::misc::print,
+    exports::icp::{
+        cli::{cli, init},
+        project::{self, lib::CanisterInfo},
+    },
+    icp::{
+        build::canister_build::build_canister,
+        cli::{filesystem, misc::print},
+    },
 };
 
 mod ops;
