@@ -171,6 +171,8 @@ name = "build"
 version = "0.1.3"
 dependencies = [
  "clap",
+ "dashmap",
+ "once_cell",
  "serde",
  "serde_json",
  "wit-bindgen-rt 0.41.0",
@@ -178,6 +180,16 @@ dependencies = [
 
 [[package]]
 name = "build-mo"
+version = "0.1.0"
+dependencies = [
+ "clap",
+ "serde",
+ "serde_json",
+ "wit-bindgen-rt 0.41.0",
+]
+
+[[package]]
+name = "build-rs"
 version = "0.1.0"
 dependencies = [
  "clap",

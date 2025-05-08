@@ -5,30 +5,27 @@ mod bindings;
 
 use bindings::{
     exports::icp::{
-        build::{canister_build, registry},
+        build::canister_build,
         cli::{cli, init},
     },
-    icp::cli::misc::print,
+    icp::{build::registry::register_provider, cli::misc::print},
 };
 
 mod spec;
-use dashmap::DashMap;
-use once_cell::sync::Lazy;
 use spec::CommandSpec;
 
 struct Component;
 
 const CLI_SPEC: &str = r#"{
-    "name": "build",
-    "help": "build stuff",
+    "name": "build-rs",
+    "help": "Builder for Rust canisters",
     "args": [],
     "subcommands": []
 }"#;
 
-static BUILDERS: Lazy<DashMap<String, ()>> = Lazy::new(|| DashMap::new());
-
 impl init::Guest for Component {
     fn init() -> Result<(), String> {
+        register_provider("rust")?;
         Ok(())
     }
 }
@@ -55,29 +52,14 @@ impl cli::Guest for Component {
         print("Executing standalone `icp build` is not the standard workflow.");
         print("Use `icp project build` to build canisters defined in your project.");
 
-        print("available builders are:");
-        BUILDERS.iter().for_each(|v| {
-            print(&format!("  - {}", v.key()));
-        });
-
         1 // Return error code
     }
 }
 
-impl registry::Guest for Component {
-    fn register_provider(canister_type: String) -> Result<(), String> {
-        BUILDERS.insert(canister_type, ());
-
-        Ok(())
-    }
-}
-
 impl canister_build::Guest for Component {
-    // Implement the new function from the WIT interface
     fn build_canister(canister_dir: String) -> Result<(), String> {
-        // Mock implementation: Just print the received path
         print(&format!(
-            "[build extension] Received build request for canister at: {}",
+            "[build-rs] Received build request for canister at: {}",
             canister_dir
         ));
 

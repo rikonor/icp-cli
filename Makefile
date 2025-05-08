@@ -34,7 +34,7 @@ output-path:
 # --- Local Extension Development ---
 
 # List of extensions to manage locally (order matters if dependencies exist)
-LOCAL_EXTENSIONS := build-mo build identity project
+LOCAL_EXTENSIONS := build-mo build-rs build identity project
 
 # Build and install a specific extension locally using the currently installed icp CLI
 # Requires EXTENSION_NAME to be set.

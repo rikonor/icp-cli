@@ -1,6 +1,6 @@
 [package]
-name = "identity"
-version = "0.1.1"
+name = "build-rs"
+version = "0.1.0"
 edition = "2024"
 
 [dependencies]
@@ -13,7 +13,7 @@ wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
 crate-type = ["cdylib"]
 
 [package.metadata.component]
-package = "component:identity"
-target = "icp:identity/extension@0.4.0"
+package = "component:build-rs"
+target = "icp:build/extension@0.5.0"
 
 [package.metadata.component.dependencies]

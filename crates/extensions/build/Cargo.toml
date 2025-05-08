@@ -4,9 +4,11 @@ version = "0.1.3"
 edition = "2024"
 
 [dependencies]
-clap = { workspace = true }
-serde = { workspace = true }
-serde_json = { workspace = true }
+clap.workspace = true
+dashmap.workspace = true
+once_cell.workspace = true
+serde_json.workspace = true
+serde.workspace = true
 wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
 
 [lib]

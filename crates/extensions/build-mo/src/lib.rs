@@ -17,8 +17,8 @@ use spec::CommandSpec;
 struct Component;
 
 const CLI_SPEC: &str = r#"{
-    "name": "build",
-    "help": "build stuff",
+    "name": "build-mo",
+    "help": "Builder for Motoko canisters",
     "args": [],
     "subcommands": []
 }"#;
@@ -59,7 +59,7 @@ impl cli::Guest for Component {
 impl canister_build::Guest for Component {
     fn build_canister(canister_dir: String) -> Result<(), String> {
         print(&format!(
-            "[build extension] Received build request for canister at: {}",
+            "[build-mo] Received build request for canister at: {}",
             canister_dir
         ));
 
