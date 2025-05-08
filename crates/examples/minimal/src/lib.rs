@@ -3,17 +3,15 @@
 mod bindings;
 
 // Import the host function we declared in WIT
-use bindings::local::host::misc::print;
+use bindings::icp::cli::misc::print;
 
 // Import the Guest traits for the interfaces we are exporting
-use bindings::exports::local::extension::cli;
-use bindings::exports::local::minimal::lib;
+use bindings::exports::icp::cli::{cli, init};
+use bindings::exports::icp::minimal::lib;
 
 // Define a struct to implement the guest traits
-struct MinimalComponent;
+struct Component;
 
-// Minimal CLI specification: no arguments, no subcommands.
-// Represented as a JSON string conforming to the expected schema.
 const MINIMAL_CLI_SPEC: &str = r#"{
     "name": "minimal",
     "help": "A minimal extension example.",
@@ -21,8 +19,15 @@ const MINIMAL_CLI_SPEC: &str = r#"{
     "subcommands": []
 }"#;
 
+// Implement initialization functionality for the extension
+impl init::Guest for Component {
+    fn init() -> Result<(), String> {
+        Ok(())
+    }
+}
+
 // Implement the standard CLI extension interface
-impl cli::Guest for MinimalComponent {
+impl cli::Guest for Component {
     // Return the JSON spec string
     fn spec() -> String {
         MINIMAL_CLI_SPEC.to_string()
@@ -38,13 +43,12 @@ impl cli::Guest for MinimalComponent {
 }
 
 // Implement the custom minimal library interface
-impl lib::Guest for MinimalComponent {
-    // Implement the ping function
-    fn ping() -> String {
+impl lib::Guest for Component {
+    fn greet(name: String) -> String {
         print("[minimal extension] ping called.");
-        "pong".to_string()
+        format!("Hello, {name}")
     }
 }
 
 // Export the component implementation using the bindings macro
-bindings::export!(MinimalComponent with_types_in bindings);
+bindings::export!(Component with_types_in bindings);
