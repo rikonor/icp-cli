@@ -10,6 +10,11 @@ requirement = "^0.5.0"
 version = "0.5.0"
 digest = "sha256:42dbf83b93ea839fa7ba9d2e55beda075f83931ea212216aa9a53d77e58b73f4"
 
+[[package.version]]
+requirement = "^0.6.4"
+version = "0.6.4"
+digest = "sha256:c25d550c67a22df991e35d67855c9731e921aeaf86aa6e6ed049c5984a86f3b8"
+
 [[package]]
 name = "icp:cli"
 

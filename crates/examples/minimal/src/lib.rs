@@ -45,8 +45,7 @@ impl cli::Guest for Component {
 // Implement the custom minimal library interface
 impl lib::Guest for Component {
     fn greet(name: String) -> String {
-        print("[minimal extension] ping called.");
-        format!("Hello, {name}")
+        format!("hello, {name}!")
     }
 }
 

@@ -1,4 +1,4 @@
-package icp:build@0.5.0; // Defines build contracts and worlds
+package icp:build@0.6.4; // Defines build contracts and worlds
 
 /// Common interface for building a canister.
 /// This contract is implemented by:
@@ -15,9 +15,17 @@ interface canister-build {
   build-canister: func(canister-dir: string) -> result<_, string>;
 }
 
+interface types {
+  resource builder {
+    build-canister: func(canister-dir: string) -> result<_, string>;
+  }
+}
+
 /// Interface for build providers to register themselves with the Build Facade.
 /// This interface is implemented and exported by the Build Facade.
 interface registry {
+  use types.{builder};
+
   /// Registers a build provider for a specific canister type.
   ///
   /// - `canister-type`: A string identifying the type of canister this provider
@@ -28,7 +36,7 @@ interface registry {
   /// For now, this function primarily signals the provider's availability.
   ///
   /// Returns `ok()` on successful registration, or `err(string)` on failure.
-  register-provider: func(canister-type: string) -> result<_, string>;
+  register-provider: func(canister-type: string, canister-builder: builder) -> result<_, string>;
 }
 
 /// World implemented by the main Build Facade extension (`crates/extensions/build`).
@@ -56,6 +64,9 @@ world facade {
 world extension {
   // Includes standard CLI functionalities.
   include icp:cli/extension@0.3.0;
+
+  ///
+  export types;
 
   /// Providers import the `registry` interface from the facade to register.
   import registry;

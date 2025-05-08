@@ -1,14 +1,19 @@
 use std::path::Path;
 
-use crate::{CanisterManifest, bindings::icp::cli::misc::print};
+use dashmap::DashMap;
+
+use crate::{
+    CanisterManifest, LazyRef,
+    bindings::icp::{build::types, cli::misc::print},
+};
 
 #[derive(Debug, thiserror::Error)]
 pub enum BuildError {
-    #[error("Failed to process canister manifest: {0}")]
+    #[error("failed to process canister manifest: {0}")]
     ManifestProcessing(String),
 
-    #[error("One or more canisters failed to build.")]
-    BuildFailed,
+    #[error("failed to build canister: {0}")]
+    BuildFailed(String),
 
     #[error(transparent)]
     Unexpected(#[from] anyhow::Error),
@@ -17,8 +22,8 @@ pub enum BuildError {
 impl From<BuildError> for String {
     fn from(e: BuildError) -> Self {
         match e {
-            BuildError::ManifestProcessing(e) => e,
-            BuildError::BuildFailed => e.to_string(),
+            BuildError::ManifestProcessing(err) => err,
+            BuildError::BuildFailed(err) => err,
             BuildError::Unexpected(err) => {
                 format!("An unexpected error occurred: {}", err)
             }
@@ -30,7 +35,7 @@ impl From<BuildError> for u8 {
     fn from(e: BuildError) -> Self {
         match e {
             BuildError::ManifestProcessing(_) => 3,
-            BuildError::BuildFailed => 4,
+            BuildError::BuildFailed(_) => 4,
             BuildError::Unexpected(_) => 2,
         }
     }
@@ -42,11 +47,18 @@ pub trait Build {
 
 pub struct Builder {
     read_file: Box<dyn Fn(&str) -> Result<Vec<u8>, String>>,
+    builders: LazyRef<DashMap<String, types::Builder>>,
 }
 
 impl Builder {
-    pub fn new(read_file: Box<dyn Fn(&str) -> Result<Vec<u8>, String>>) -> Self {
-        Builder { read_file }
+    pub fn new(
+        read_file: Box<dyn Fn(&str) -> Result<Vec<u8>, String>>,
+        builders: LazyRef<DashMap<String, types::Builder>>,
+    ) -> Self {
+        Builder {
+            read_file,
+            builders,
+        }
     }
 }
 
@@ -77,6 +89,26 @@ impl Build for Builder {
             cm.canister.name, cm.canister.canister_type
         ));
 
-        Ok(())
+        let b = match self.builders.get(&cm.canister.canister_type) {
+            // Ok
+            Some(b) => b,
+
+            // No such builder
+            None => {
+                print("Available builders:");
+                self.builders.iter().for_each(|v| {
+                    print(&format!("  - {}", v.key()));
+                });
+
+                return Err(BuildError::BuildFailed(format!(
+                    "Canister builder for '{}' not available",
+                    cm.canister.canister_type
+                )));
+            }
+        };
+
+        b.value()
+            .build_canister(canister_dir)
+            .map_err(|err| BuildError::BuildFailed(err))
     }
 }

@@ -8,10 +8,16 @@ mod bindings;
 
 use bindings::{
     exports::icp::{
-        build::{canister_build, registry},
+        build::{
+            canister_build,
+            registry::{self},
+        },
         cli::{cli, init},
     },
-    icp::cli::{filesystem::read_file, misc::print},
+    icp::{
+        build::types::{self},
+        cli::{filesystem::read_file, misc::print},
+    },
 };
 
 mod ops;
@@ -22,10 +28,15 @@ use spec::CommandSpec;
 
 struct Component;
 
+pub type LazyRef<T> = &'static Lazy<T>;
+
+static BUILDERS: Lazy<DashMap<String, types::Builder>> = Lazy::new(|| DashMap::new());
+
 thread_local! {
     static BUILDER: OnceCell<Box<dyn Build>> = OnceCell::with_value({
         let v = Builder::new(
             Box::new(read_file), //
+            &BUILDERS,
         );
 
         Box::new(v)
@@ -53,8 +64,6 @@ const CLI_SPEC: &str = r#"{
     "subcommands": []
 }"#;
 
-static BUILDERS: Lazy<DashMap<String, ()>> = Lazy::new(|| DashMap::new());
-
 impl init::Guest for Component {
     fn init() -> Result<(), String> {
         Ok(())
@@ -78,11 +87,6 @@ impl cli::Guest for Component {
         let m = c.get_matches_from(args);
         let canister_dir = m.try_get_one::<String>("dir").unwrap().unwrap();
 
-        print("available builders are:");
-        BUILDERS.iter().for_each(|v| {
-            print(&format!("  - {}", v.key()));
-        });
-
         match BUILDER.with(|v| {
             v.get()
                 .expect("builder not initialized")
@@ -101,8 +105,14 @@ impl cli::Guest for Component {
 }
 
 impl registry::Guest for Component {
-    fn register_provider(canister_type: String) -> Result<(), String> {
-        BUILDERS.insert(canister_type, ());
+    fn register_provider(
+        canister_type: String,
+        canister_builder: types::Builder,
+    ) -> Result<(), String> {
+        BUILDERS.insert(
+            canister_type,    // type
+            canister_builder, // builder
+        );
 
         Ok(())
     }

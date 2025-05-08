@@ -19,6 +19,6 @@ crate-type = ["cdylib"]
 
 [package.metadata.component]
 package = "component:build"
-target = "icp:build/facade@0.5.0"
+target = "icp:build/facade@0.6.4"
 
 [package.metadata.component.dependencies]
