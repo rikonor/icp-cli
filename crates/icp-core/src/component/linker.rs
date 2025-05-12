@@ -7,7 +7,7 @@ use anyhow::{anyhow, Context};
 use wasmtime::component::{Instance, Linker};
 use wasmtime::Store;
 
-use crate::{interface::parse_interface_name, FunctionRegistry, FunctionRegistryError, Interface};
+use crate::{FunctionRegistry, FunctionRegistryError, Interface};
 
 /// Errors that can occur during dynamic linking operations
 #[derive(Debug, thiserror::Error)]

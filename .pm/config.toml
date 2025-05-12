@@ -3,6 +3,7 @@ active = [
     "pm",
     "codebase-purpose",
     "extension-development",
+    "task-delegation",
     "coding",
     "concise-comments",
     "testing",

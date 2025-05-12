@@ -3,13 +3,6 @@ metadata:
   description: Comprehensive guide for creating, building, and testing ICP CLI extensions.
 ---
 
----
-
-metadata:
-description: Comprehensive guide for creating, building, and testing ICP CLI extensions.
-
----
-
 # ICP CLI Extension Development
 
 **Purpose:** To provide a complete guide for developing extensions for the ICP CLI, covering conventions, building, and testing.
