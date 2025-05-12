@@ -5,7 +5,7 @@ mod bindings;
 
 use bindings::{
     exports::icp::{
-        build::{canister_build, types},
+        build_mo::canister_build,
         cli::{cli, init},
     },
     icp::{build::registry::register_provider, cli::misc::print},
@@ -25,10 +25,7 @@ const CLI_SPEC: &str = r#"{
 
 impl init::Guest for Component {
     fn init() -> Result<(), String> {
-        let b = bindings::exports::icp::build::types::Builder::new(Tmp);
-        let b = unsafe { bindings::icp::build::registry::Builder::from_handle(b.handle()) };
-
-        register_provider("motoko", b)?;
+        register_provider("motoko")?;
 
         Ok(())
     }
@@ -58,19 +55,6 @@ impl cli::Guest for Component {
 
         1 // Return error code
     }
-}
-
-struct Tmp;
-
-impl types::GuestBuilder for Tmp {
-    fn build_canister(&self, canister_dir: String) -> Result<(), String> {
-        print(&format!("no fucking way it worked! {}", canister_dir));
-        Ok(())
-    }
-}
-
-impl types::Guest for Component {
-    type Builder = Tmp;
 }
 
 impl canister_build::Guest for Component {

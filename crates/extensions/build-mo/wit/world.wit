@@ -1,0 +1,11 @@
+package icp:build-mo;
+
+interface canister-build {
+  build-canister: func(canister-dir: string) -> result<_, string>;
+}
+
+world extension {
+  include icp:cli/extension@0.3.2;
+  import icp:build/registry@0.6.9;
+  export canister-build;
+}

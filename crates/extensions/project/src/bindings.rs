@@ -30,7 +30,7 @@ pub mod icp {
                     let len0 = vec0.len();
                     let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:build/canister-build@0.5.0")]
+                    #[link(wasm_import_module = "icp:build/canister-build@0.6.7")]
                     unsafe extern "C" {
                         #[link_name = "build-canister"]
                         fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
@@ -695,21 +695,21 @@ pub mod exports {
                     fn list_canisters() -> Result<_rt::Vec<CanisterInfo>, _rt::String>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_project_lib_0_7_0_cabi {
+                macro_rules! __export_icp_project_lib_0_7_1_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:project/lib@0.7.0#list-canisters")] unsafe extern "C" fn
+                        "icp:project/lib@0.7.1#list-canisters")] unsafe extern "C" fn
                         export_list_canisters() -> * mut u8 { unsafe {
                         $($path_to_types)*:: _export_list_canisters_cabi::<$ty > () } }
                         #[unsafe (export_name =
-                        "cabi_post_icp:project/lib@0.7.0#list-canisters")] unsafe extern
+                        "cabi_post_icp:project/lib@0.7.1#list-canisters")] unsafe extern
                         "C" fn _post_return_list_canisters(arg0 : * mut u8,) { unsafe {
                         $($path_to_types)*:: __post_return_list_canisters::<$ty > (arg0)
                         } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_project_lib_0_7_0_cabi;
+                pub(crate) use __export_icp_project_lib_0_7_1_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -841,7 +841,7 @@ macro_rules! __export_extension_impl {
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::icp::project::lib::__export_icp_project_lib_0_7_0_cabi!($ty
+        exports::icp::project::lib::__export_icp_project_lib_0_7_1_cabi!($ty
         with_types_in $($path_to_types_root)*:: exports::icp::project::lib);
         $($path_to_types_root)*::
         exports::icp::cli::init::__export_icp_cli_init_0_3_0_cabi!($ty with_types_in
@@ -854,14 +854,14 @@ macro_rules! __export_extension_impl {
 pub(crate) use __export_extension_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:icp:project@0.7.0:extension:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:icp:project@0.7.1:extension:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
 pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 675] = *b"\
 \0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa3\x04\x01A\x02\x01\
 A\x0c\x01B\x03\x01j\0\x01s\x01@\x01\x0ccanister-dirs\0\0\x04\0\x0ebuild-canister\
-\x01\x01\x03\0\x1eicp:build/canister-build@0.5.0\x05\0\x01B\x06\x01@\x01\x01ss\x01\
+\x01\x01\x03\0\x1eicp:build/canister-build@0.6.7\x05\0\x01B\x06\x01@\x01\x01ss\x01\
 \0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\x01\x01\x01@\0\0w\x04\0\x04time\x01\
 \x02\x03\0\x12icp:cli/misc@0.3.0\x05\x01\x01B\x09\x01j\0\x01s\x01@\x01\x04paths\0\
 \0\x04\0\x10create-directory\x01\x01\x01p}\x01@\x02\x04paths\x08contents\x02\0\0\
@@ -869,10 +869,10 @@ A\x0c\x01B\x03\x01j\0\x01s\x01@\x01\x0ccanister-dirs\0\0\x04\0\x0ebuild-canister
 read-file\x01\x05\x03\0\x18icp:cli/filesystem@0.3.0\x05\x02\x01B\x06\x01r\x03\x04\
 names\x04paths\x0dcanister-types\x04\0\x0dcanister-info\x03\0\0\x01p\x01\x01j\x01\
 \x02\x01s\x01@\0\0\x03\x04\0\x0elist-canisters\x01\x04\x04\0\x15icp:project/lib@\
-0.7.0\x05\x03\x01B\x03\x01j\0\x01s\x01@\0\0\0\x04\0\x04init\x01\x01\x04\0\x12icp\
+0.7.1\x05\x03\x01B\x03\x01j\0\x01s\x01@\0\0\0\x04\0\x04init\x01\x01\x04\0\x12icp\
 :cli/init@0.3.0\x05\x04\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04\
 args\x01\0}\x04\0\x03run\x01\x02\x04\0\x11icp:cli/cli@0.3.0\x05\x05\x04\0\x1bicp\
-:project/extension@0.7.0\x04\0\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09producer\
+:project/extension@0.7.1\x04\0\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09producer\
 s\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.4\
 1.0";
 #[inline(never)]

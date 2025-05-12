@@ -1,0 +1,3 @@
+interface component {
+  invoke: func(interface-name: string, function-name: string) -> result<_, string>;
+}

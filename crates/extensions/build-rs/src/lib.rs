@@ -5,7 +5,7 @@ mod bindings;
 
 use bindings::{
     exports::icp::{
-        build::canister_build,
+        build_rs::canister_build,
         cli::{cli, init},
     },
     icp::{build::registry::register_provider, cli::misc::print},

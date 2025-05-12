@@ -4,7 +4,7 @@ use dashmap::DashMap;
 
 use crate::{
     CanisterManifest, LazyRef,
-    bindings::icp::{build::types, cli::misc::print},
+    bindings::icp::cli::{component::invoke, misc::print},
 };
 
 #[derive(Debug, thiserror::Error)]
@@ -47,13 +47,13 @@ pub trait Build {
 
 pub struct Builder {
     read_file: Box<dyn Fn(&str) -> Result<Vec<u8>, String>>,
-    builders: LazyRef<DashMap<String, types::Builder>>,
+    builders: LazyRef<DashMap<String, ()>>,
 }
 
 impl Builder {
     pub fn new(
         read_file: Box<dyn Fn(&str) -> Result<Vec<u8>, String>>,
-        builders: LazyRef<DashMap<String, types::Builder>>,
+        builders: LazyRef<DashMap<String, ()>>,
     ) -> Self {
         Builder {
             read_file,
@@ -64,8 +64,6 @@ impl Builder {
 
 impl Build for Builder {
     fn build(&self, canister_dir: &str) -> Result<(), BuildError> {
-        print("[build] building");
-
         let manifest_path = Path::new(canister_dir).join("canister.toml");
         let manifest_path = manifest_path.to_string_lossy();
 
@@ -83,11 +81,6 @@ impl Build for Builder {
                 manifest_path, err
             ))
         })?;
-
-        print(&format!(
-            "[build] building {} with type {}",
-            cm.canister.name, cm.canister.canister_type
-        ));
 
         let b = match self.builders.get(&cm.canister.canister_type) {
             // Ok
@@ -107,8 +100,16 @@ impl Build for Builder {
             }
         };
 
-        b.value()
-            .build_canister(canister_dir)
-            .map_err(|err| BuildError::BuildFailed(err))
+        invoke(
+            "icp:build-mo/canister-build", // interface_name
+            "build-canister",              // function_name
+        )
+        .map_err(|err| BuildError::BuildFailed(err))?;
+
+        // b.value()
+        //     .build_canister(canister_dir)
+        //     .map_err(|err| BuildError::BuildFailed(err))
+
+        Ok(())
     }
 }

@@ -1,4 +1,4 @@
-package icp:build@0.6.4; // Defines build contracts and worlds
+package icp:build@0.6.9; // Defines build contracts and worlds
 
 /// Common interface for building a canister.
 /// This contract is implemented by:
@@ -15,28 +15,21 @@ interface canister-build {
   build-canister: func(canister-dir: string) -> result<_, string>;
 }
 
-interface types {
-  resource builder {
-    build-canister: func(canister-dir: string) -> result<_, string>;
-  }
-}
-
 /// Interface for build providers to register themselves with the Build Facade.
 /// This interface is implemented and exported by the Build Facade.
 interface registry {
-  use types.{builder};
-
   /// Registers a build provider for a specific canister type.
   ///
   /// - `canister-type`: A string identifying the type of canister this provider
   ///   handles (e.g., "motoko", "rust", "javascript").
   ///
-  /// The mechanism for the facade to obtain a callable instance of the provider's
-  /// `canister-build` interface upon registration will be defined in a subsequent step.
+  /// The facade will use the provided `canister-type` to later invoke the
+  /// correct provider's `build-canister` function via a host mechanism (details TBD).
+  ///
   /// For now, this function primarily signals the provider's availability.
   ///
   /// Returns `ok()` on successful registration, or `err(string)` on failure.
-  register-provider: func(canister-type: string, canister-builder: builder) -> result<_, string>;
+  register-provider: func(canister-type: string) -> result<_, string>;
 }
 
 /// World implemented by the main Build Facade extension (`crates/extensions/build`).
@@ -45,8 +38,7 @@ interface registry {
 /// entry point for clients (e.g., `project` extension, direct `icp build` CLI calls).
 world facade {
   // Includes standard CLI functionalities like printing and filesystem access.
-  // Ensure icp:cli/extension@0.3.0 is the correct version.
-  include icp:cli/extension@0.3.0;
+  include icp:cli/extension@0.3.2;
 
   /// The facade exports the `registry` interface for build providers to call.
   export registry;
@@ -63,10 +55,7 @@ world facade {
 /// This world is named 'extension' for consistency with other extension WIT files.
 world extension {
   // Includes standard CLI functionalities.
-  include icp:cli/extension@0.3.0;
-
-  ///
-  export types;
+  include icp:cli/extension@0.3.2;
 
   /// Providers import the `registry` interface from the facade to register.
   import registry;

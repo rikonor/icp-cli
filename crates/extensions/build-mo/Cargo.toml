@@ -13,7 +13,10 @@ wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
 crate-type = ["cdylib"]
 
 [package.metadata.component]
-package = "component:build-mo"
-target = "icp:build/extension@0.6.4"
+package = "icp:build-mo"
 
 [package.metadata.component.dependencies]
+
+[package.metadata.component.target.dependencies]
+"icp:build" = "0.6.9"
+"icp:cli" = "0.3.2"

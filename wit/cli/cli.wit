@@ -1,4 +1,4 @@
-package icp:cli@0.3.0;
+package icp:cli@0.3.2;
 
 interface cli {
   // spec provides a schema a for the cli
@@ -15,6 +15,7 @@ interface init {
 world extension {
   import misc;
   import filesystem;
+  import component;
 
   export init;
   export cli;

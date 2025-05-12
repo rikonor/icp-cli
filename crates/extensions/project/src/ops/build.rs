@@ -78,8 +78,8 @@ impl Build for Builder {
         // Iterate and build each canister
         for canister in canisters {
             print(&format!(
-                "Attempting to build canister '{}' at path '{}'...",
-                canister.name, canister.path
+                "Attempting to build canister '{}' [{}] at path '{}'...",
+                canister.name, canister.canister_type, canister.path
             ));
 
             match (self.build_canister)(&canister.path) {

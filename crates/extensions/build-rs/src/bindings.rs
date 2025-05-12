@@ -19,8 +19,9 @@ pub mod icp {
             /// - `canister-type`: A string identifying the type of canister this provider
             ///   handles (e.g., "motoko", "rust", "javascript").
             ///
-            /// The mechanism for the facade to obtain a callable instance of the provider's
-            /// `canister-build` interface upon registration will be defined in a subsequent step.
+            /// The facade will use the provided `canister-type` to later invoke the
+            /// correct provider's `build-canister` function via a host mechanism (details TBD).
+            ///
             /// For now, this function primarily signals the provider's availability.
             ///
             /// Returns `ok()` on successful registration, or `err(string)` on failure.
@@ -42,7 +43,7 @@ pub mod icp {
                     let len0 = vec0.len();
                     let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:build/registry@0.5.0")]
+                    #[link(wasm_import_module = "icp:build/registry@0.6.9")]
                     unsafe extern "C" {
                         #[link_name = "register-provider"]
                         fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
@@ -96,7 +97,7 @@ pub mod icp {
                     let ptr0 = vec0.as_ptr().cast::<u8>();
                     let len0 = vec0.len();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/misc@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "print"]
                         fn wit_import1(_: *mut u8, _: usize);
@@ -112,7 +113,7 @@ pub mod icp {
             pub fn rand() -> u8 {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/misc@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "rand"]
                         fn wit_import0() -> i32;
@@ -129,7 +130,7 @@ pub mod icp {
             pub fn time() -> u64 {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/misc@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "time"]
                         fn wit_import0() -> i64;
@@ -143,6 +144,7 @@ pub mod icp {
                 }
             }
         }
+        /// A custom filesystem interface mediated by the host.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod filesystem {
             #[used]
@@ -150,6 +152,8 @@ pub mod icp {
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             #[allow(unused_unsafe, clippy::all)]
+            /// Creates a directory at the specified path relative to the current workspace.
+            /// Returns `ok()` on success, or `err(string)` with an error message on failure.
             pub fn create_directory(path: &str) -> Result<(), _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -168,7 +172,7 @@ pub mod icp {
                     let len0 = vec0.len();
                     let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "create-directory"]
                         fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
@@ -208,6 +212,9 @@ pub mod icp {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Writes the given bytes to a file at the specified path relative to the current workspace.
+            /// Creates the file if it doesn't exist, overwrites it if it does.
+            /// Returns `ok()` on success, or `err(string)` with an error message on failure.
             pub fn write_file(path: &str, contents: &[u8]) -> Result<(), _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -229,7 +236,7 @@ pub mod icp {
                     let len1 = vec1.len();
                     let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "write-file"]
                         fn wit_import3(
@@ -283,6 +290,8 @@ pub mod icp {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Reads the entire contents of a file at the specified path relative to the current workspace.
+            /// Returns `ok(list<u8>)` with the file contents on success, or `err(string)` with an error message on failure.
             pub fn read_file(path: &str) -> Result<_rt::Vec<u8>, _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -301,7 +310,7 @@ pub mod icp {
                     let len0 = vec0.len();
                     let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "read-file"]
                         fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
@@ -350,18 +359,98 @@ pub mod icp {
                 }
             }
         }
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod component {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            #[allow(unused_unsafe, clippy::all)]
+            pub fn invoke(
+                interface_name: &str,
+                function_name: &str,
+            ) -> Result<(), _rt::String> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 3 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 3
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = interface_name;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let vec1 = function_name;
+                    let ptr1 = vec1.as_ptr().cast::<u8>();
+                    let len1 = vec1.len();
+                    let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "icp:cli/component@0.3.2")]
+                    unsafe extern "C" {
+                        #[link_name = "invoke"]
+                        fn wit_import3(
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                        );
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import3(
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                    ) {
+                        unreachable!()
+                    }
+                    unsafe {
+                        wit_import3(ptr0.cast_mut(), len0, ptr1.cast_mut(), len1, ptr2)
+                    };
+                    let l4 = i32::from(*ptr2.add(0).cast::<u8>());
+                    let result8 = match l4 {
+                        0 => {
+                            let e = ();
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l5 = *ptr2
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l6 = *ptr2
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len7 = l6;
+                                let bytes7 = _rt::Vec::from_raw_parts(
+                                    l5.cast(),
+                                    len7,
+                                    len7,
+                                );
+                                _rt::string_lift(bytes7)
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result8
+                }
+            }
+        }
     }
 }
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
 pub mod exports {
     pub mod icp {
-        pub mod build {
-            /// Defines build contracts and worlds
-            /// Common interface for building a canister.
-            /// This contract is implemented by:
-            ///  1. The Build Facade: Its implementation determines canister type and delegates.
-            ///  2. Specific Build Providers (e.g., Motoko, Rust): Their implementations perform the actual build.
+        pub mod build_rs {
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
             pub mod canister_build {
                 #[used]
@@ -417,34 +506,27 @@ pub mod exports {
                     }
                 }
                 pub trait Guest {
-                    /// Builds the canister located in the specified directory.
-                    ///
-                    /// - `canister-dir`: The relative path to the canister's directory,
-                    ///   which is expected to contain a manifest file (e.g., `canister.toml`)
-                    ///   detailing its name and type.
-                    ///
-                    /// Returns `ok()` on successful build, or `err(string)` with an error message on failure.
                     fn build_canister(
                         canister_dir: _rt::String,
                     ) -> Result<(), _rt::String>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_build_canister_build_0_5_0_cabi {
+                macro_rules! __export_icp_build_rs_canister_build_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:build/canister-build@0.5.0#build-canister")] unsafe extern
-                        "C" fn export_build_canister(arg0 : * mut u8, arg1 : usize,) -> *
-                        mut u8 { unsafe { $($path_to_types)*::
+                        "icp:build-rs/canister-build#build-canister")] unsafe extern "C"
+                        fn export_build_canister(arg0 : * mut u8, arg1 : usize,) -> * mut
+                        u8 { unsafe { $($path_to_types)*::
                         _export_build_canister_cabi::<$ty > (arg0, arg1) } } #[unsafe
                         (export_name =
-                        "cabi_post_icp:build/canister-build@0.5.0#build-canister")]
-                        unsafe extern "C" fn _post_return_build_canister(arg0 : * mut
-                        u8,) { unsafe { $($path_to_types)*::
-                        __post_return_build_canister::<$ty > (arg0) } } };
+                        "cabi_post_icp:build-rs/canister-build#build-canister")] unsafe
+                        extern "C" fn _post_return_build_canister(arg0 : * mut u8,) {
+                        unsafe { $($path_to_types)*:: __post_return_build_canister::<$ty
+                        > (arg0) } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_build_canister_build_0_5_0_cabi;
+                pub(crate) use __export_icp_build_rs_canister_build_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -512,19 +594,19 @@ pub mod exports {
                     fn init() -> Result<(), _rt::String>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_cli_init_0_3_0_cabi {
+                macro_rules! __export_icp_cli_init_0_3_2_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:cli/init@0.3.0#init")] unsafe extern "C" fn export_init() ->
+                        "icp:cli/init@0.3.2#init")] unsafe extern "C" fn export_init() ->
                         * mut u8 { unsafe { $($path_to_types)*:: _export_init_cabi::<$ty
                         > () } } #[unsafe (export_name =
-                        "cabi_post_icp:cli/init@0.3.0#init")] unsafe extern "C" fn
+                        "cabi_post_icp:cli/init@0.3.2#init")] unsafe extern "C" fn
                         _post_return_init(arg0 : * mut u8,) { unsafe {
                         $($path_to_types)*:: __post_return_init::<$ty > (arg0) } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_cli_init_0_3_0_cabi;
+                pub(crate) use __export_icp_cli_init_0_3_2_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -599,27 +681,29 @@ pub mod exports {
                     _rt::as_i32(result4)
                 }
                 pub trait Guest {
+                    /// spec provides a schema a for the cli
                     fn spec() -> _rt::String;
+                    /// run the cli portion of the extension
                     fn run(args: _rt::Vec<_rt::String>) -> u8;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_cli_cli_0_3_0_cabi {
+                macro_rules! __export_icp_cli_cli_0_3_2_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:cli/cli@0.3.0#spec")] unsafe extern "C" fn export_spec() ->
+                        "icp:cli/cli@0.3.2#spec")] unsafe extern "C" fn export_spec() ->
                         * mut u8 { unsafe { $($path_to_types)*:: _export_spec_cabi::<$ty
                         > () } } #[unsafe (export_name =
-                        "cabi_post_icp:cli/cli@0.3.0#spec")] unsafe extern "C" fn
+                        "cabi_post_icp:cli/cli@0.3.2#spec")] unsafe extern "C" fn
                         _post_return_spec(arg0 : * mut u8,) { unsafe {
                         $($path_to_types)*:: __post_return_spec::<$ty > (arg0) } }
-                        #[unsafe (export_name = "icp:cli/cli@0.3.0#run")] unsafe extern
+                        #[unsafe (export_name = "icp:cli/cli@0.3.2#run")] unsafe extern
                         "C" fn export_run(arg0 : * mut u8, arg1 : usize,) -> i32 { unsafe
                         { $($path_to_types)*:: _export_run_cabi::<$ty > (arg0, arg1) } }
                         };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_cli_cli_0_3_0_cabi;
+                pub(crate) use __export_icp_cli_cli_0_3_2_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -751,12 +835,12 @@ macro_rules! __export_extension_impl {
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::icp::build::canister_build::__export_icp_build_canister_build_0_5_0_cabi!($ty
-        with_types_in $($path_to_types_root)*:: exports::icp::build::canister_build);
+        exports::icp::build_rs::canister_build::__export_icp_build_rs_canister_build_cabi!($ty
+        with_types_in $($path_to_types_root)*:: exports::icp::build_rs::canister_build);
         $($path_to_types_root)*::
-        exports::icp::cli::init::__export_icp_cli_init_0_3_0_cabi!($ty with_types_in
+        exports::icp::cli::init::__export_icp_cli_init_0_3_2_cabi!($ty with_types_in
         $($path_to_types_root)*:: exports::icp::cli::init); $($path_to_types_root)*::
-        exports::icp::cli::cli::__export_icp_cli_cli_0_3_0_cabi!($ty with_types_in
+        exports::icp::cli::cli::__export_icp_cli_cli_0_3_2_cabi!($ty with_types_in
         $($path_to_types_root)*:: exports::icp::cli::cli);
     };
 }
@@ -764,26 +848,27 @@ macro_rules! __export_extension_impl {
 pub(crate) use __export_extension_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:icp:build@0.5.0:extension:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:icp:build-rs:extension:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 641] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x81\x04\x01A\x02\x01\
-A\x0c\x01B\x03\x01j\0\x01s\x01@\x01\x0dcanister-types\0\0\x04\0\x11register-prov\
-ider\x01\x01\x03\0\x18icp:build/registry@0.5.0\x05\0\x01B\x06\x01@\x01\x01ss\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 718] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xce\x04\x01A\x02\x01\
+A\x0e\x01B\x03\x01j\0\x01s\x01@\x01\x0dcanister-types\0\0\x04\0\x11register-prov\
+ider\x01\x01\x03\0\x18icp:build/registry@0.6.9\x05\0\x01B\x06\x01@\x01\x01ss\x01\
 \0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\x01\x01\x01@\0\0w\x04\0\x04time\x01\
-\x02\x03\0\x12icp:cli/misc@0.3.0\x05\x01\x01B\x09\x01j\0\x01s\x01@\x01\x04paths\0\
+\x02\x03\0\x12icp:cli/misc@0.3.2\x05\x01\x01B\x09\x01j\0\x01s\x01@\x01\x04paths\0\
 \0\x04\0\x10create-directory\x01\x01\x01p}\x01@\x02\x04paths\x08contents\x02\0\0\
 \x04\0\x0awrite-file\x01\x03\x01j\x01\x02\x01s\x01@\x01\x04paths\0\x04\x04\0\x09\
-read-file\x01\x05\x03\0\x18icp:cli/filesystem@0.3.0\x05\x02\x01B\x03\x01j\0\x01s\
-\x01@\x01\x0ccanister-dirs\0\0\x04\0\x0ebuild-canister\x01\x01\x04\0\x1eicp:buil\
-d/canister-build@0.5.0\x05\x03\x01B\x03\x01j\0\x01s\x01@\0\0\0\x04\0\x04init\x01\
-\x01\x04\0\x12icp:cli/init@0.3.0\x05\x04\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01\
-ps\x01@\x01\x04args\x01\0}\x04\0\x03run\x01\x02\x04\0\x11icp:cli/cli@0.3.0\x05\x05\
-\x04\0\x19icp:build/extension@0.5.0\x04\0\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09\
-producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rus\
-t\x060.41.0";
+read-file\x01\x05\x03\0\x18icp:cli/filesystem@0.3.2\x05\x02\x01B\x03\x01j\0\x01s\
+\x01@\x02\x0einterface-names\x0dfunction-names\0\0\x04\0\x06invoke\x01\x01\x03\0\
+\x17icp:cli/component@0.3.2\x05\x03\x01B\x03\x01j\0\x01s\x01@\x01\x0ccanister-di\
+rs\0\0\x04\0\x0ebuild-canister\x01\x01\x04\0\x1bicp:build-rs/canister-build\x05\x04\
+\x01B\x03\x01j\0\x01s\x01@\0\0\0\x04\0\x04init\x01\x01\x04\0\x12icp:cli/init@0.3\
+.2\x05\x05\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\
+\0\x03run\x01\x02\x04\0\x11icp:cli/cli@0.3.2\x05\x06\x04\0\x16icp:build-rs/exten\
+sion\x04\0\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09producers\x01\x0cprocessed-b\
+y\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

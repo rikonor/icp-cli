@@ -7,9 +7,9 @@ name = "icp:build"
 registry = "ghcr.io"
 
 [[packages.versions]]
-requirement = "=0.5.0"
-version = "0.5.0"
-digest = "sha256:42dbf83b93ea839fa7ba9d2e55beda075f83931ea212216aa9a53d77e58b73f4"
+requirement = "=0.6.7"
+version = "0.6.7"
+digest = "sha256:3616ab3530e864d1dd0c182c1249fdc2752af8895449b8762b41145cd0237015"
 
 [[packages]]
 name = "icp:cli"

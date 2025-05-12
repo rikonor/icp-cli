@@ -95,7 +95,7 @@ static DEFAULT_DIR_PRECOMPILES: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION
 });
 
 // WIT Bindings
-use icp::cli::{filesystem, misc};
+use icp::cli::{component, filesystem, misc};
 
 bindgen!({
     path: "../../wit/cli",
@@ -104,6 +104,17 @@ bindgen!({
 });
 
 struct State;
+
+impl component::Host for State {
+    async fn invoke(
+        &mut self,
+        interface_name: String,
+        function_name: String,
+    ) -> Result<(), String> {
+        println!("[host] invoke called: {interface_name} {function_name}");
+        Ok(())
+    }
+}
 
 impl misc::Host for State {
     async fn print(&mut self, s: String) {
@@ -330,6 +341,10 @@ async fn main() -> Result<(), Error> {
     )?;
     filesystem::add_to_linker(
         // Link filesystem host functions
+        &mut lnk,                  // linker
+        |state: &mut State| state, // get
+    )?;
+    component::add_to_linker(
         &mut lnk,                  // linker
         |state: &mut State| state, // get
     )?;

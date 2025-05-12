@@ -5,125 +5,6 @@
 #[allow(dead_code, clippy::all)]
 pub mod icp {
     pub mod build {
-        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
-        pub mod types {
-            #[used]
-            #[doc(hidden)]
-            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
-            use super::super::super::_rt;
-            #[derive(Debug)]
-            #[repr(transparent)]
-            pub struct Builder {
-                handle: _rt::Resource<Builder>,
-            }
-            impl Builder {
-                #[doc(hidden)]
-                pub unsafe fn from_handle(handle: u32) -> Self {
-                    Self {
-                        handle: unsafe { _rt::Resource::from_handle(handle) },
-                    }
-                }
-                #[doc(hidden)]
-                pub fn take_handle(&self) -> u32 {
-                    _rt::Resource::take_handle(&self.handle)
-                }
-                #[doc(hidden)]
-                pub fn handle(&self) -> u32 {
-                    _rt::Resource::handle(&self.handle)
-                }
-            }
-            unsafe impl _rt::WasmResource for Builder {
-                #[inline]
-                unsafe fn drop(_handle: u32) {
-                    #[cfg(not(target_arch = "wasm32"))]
-                    unreachable!();
-                    #[cfg(target_arch = "wasm32")]
-                    {
-                        #[link(wasm_import_module = "icp:build/types@0.6.4")]
-                        unsafe extern "C" {
-                            #[link_name = "[resource-drop]builder"]
-                            fn drop(_: u32);
-                        }
-                        unsafe { drop(_handle) };
-                    }
-                }
-            }
-            impl Builder {
-                #[allow(unused_unsafe, clippy::all)]
-                pub fn build_canister(
-                    &self,
-                    canister_dir: &str,
-                ) -> Result<(), _rt::String> {
-                    unsafe {
-                        #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
-                        #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
-                        struct RetArea(
-                            [::core::mem::MaybeUninit<
-                                u8,
-                            >; 3 * ::core::mem::size_of::<*const u8>()],
-                        );
-                        let mut ret_area = RetArea(
-                            [::core::mem::MaybeUninit::uninit(); 3
-                                * ::core::mem::size_of::<*const u8>()],
-                        );
-                        let vec0 = canister_dir;
-                        let ptr0 = vec0.as_ptr().cast::<u8>();
-                        let len0 = vec0.len();
-                        let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
-                        #[cfg(target_arch = "wasm32")]
-                        #[link(wasm_import_module = "icp:build/types@0.6.4")]
-                        unsafe extern "C" {
-                            #[link_name = "[method]builder.build-canister"]
-                            fn wit_import2(_: i32, _: *mut u8, _: usize, _: *mut u8);
-                        }
-                        #[cfg(not(target_arch = "wasm32"))]
-                        unsafe extern "C" fn wit_import2(
-                            _: i32,
-                            _: *mut u8,
-                            _: usize,
-                            _: *mut u8,
-                        ) {
-                            unreachable!()
-                        }
-                        unsafe {
-                            wit_import2(
-                                (self).handle() as i32,
-                                ptr0.cast_mut(),
-                                len0,
-                                ptr1,
-                            )
-                        };
-                        let l3 = i32::from(*ptr1.add(0).cast::<u8>());
-                        let result7 = match l3 {
-                            0 => {
-                                let e = ();
-                                Ok(e)
-                            }
-                            1 => {
-                                let e = {
-                                    let l4 = *ptr1
-                                        .add(::core::mem::size_of::<*const u8>())
-                                        .cast::<*mut u8>();
-                                    let l5 = *ptr1
-                                        .add(2 * ::core::mem::size_of::<*const u8>())
-                                        .cast::<usize>();
-                                    let len6 = l5;
-                                    let bytes6 = _rt::Vec::from_raw_parts(
-                                        l4.cast(),
-                                        len6,
-                                        len6,
-                                    );
-                                    _rt::string_lift(bytes6)
-                                };
-                                Err(e)
-                            }
-                            _ => _rt::invalid_enum_discriminant(),
-                        };
-                        result7
-                    }
-                }
-            }
-        }
         /// Interface for build providers to register themselves with the Build Facade.
         /// This interface is implemented and exported by the Build Facade.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
@@ -132,22 +13,19 @@ pub mod icp {
             #[doc(hidden)]
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
-            pub type Builder = super::super::super::icp::build::types::Builder;
             #[allow(unused_unsafe, clippy::all)]
             /// Registers a build provider for a specific canister type.
             ///
             /// - `canister-type`: A string identifying the type of canister this provider
             ///   handles (e.g., "motoko", "rust", "javascript").
             ///
-            /// The mechanism for the facade to obtain a callable instance of the provider's
-            /// `canister-build` interface upon registration will be defined in a subsequent step.
+            /// The facade will use the provided `canister-type` to later invoke the
+            /// correct provider's `build-canister` function via a host mechanism (details TBD).
+            ///
             /// For now, this function primarily signals the provider's availability.
             ///
             /// Returns `ok()` on successful registration, or `err(string)` on failure.
-            pub fn register_provider(
-                canister_type: &str,
-                canister_builder: Builder,
-            ) -> Result<(), _rt::String> {
+            pub fn register_provider(canister_type: &str) -> Result<(), _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                     #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
@@ -165,28 +43,16 @@ pub mod icp {
                     let len0 = vec0.len();
                     let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:build/registry@0.6.4")]
+                    #[link(wasm_import_module = "icp:build/registry@0.6.9")]
                     unsafe extern "C" {
                         #[link_name = "register-provider"]
-                        fn wit_import2(_: *mut u8, _: usize, _: i32, _: *mut u8);
+                        fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
                     }
                     #[cfg(not(target_arch = "wasm32"))]
-                    unsafe extern "C" fn wit_import2(
-                        _: *mut u8,
-                        _: usize,
-                        _: i32,
-                        _: *mut u8,
-                    ) {
+                    unsafe extern "C" fn wit_import2(_: *mut u8, _: usize, _: *mut u8) {
                         unreachable!()
                     }
-                    unsafe {
-                        wit_import2(
-                            ptr0.cast_mut(),
-                            len0,
-                            (&canister_builder).take_handle() as i32,
-                            ptr1,
-                        )
-                    };
+                    unsafe { wit_import2(ptr0.cast_mut(), len0, ptr1) };
                     let l3 = i32::from(*ptr1.add(0).cast::<u8>());
                     let result7 = match l3 {
                         0 => {
@@ -231,7 +97,7 @@ pub mod icp {
                     let ptr0 = vec0.as_ptr().cast::<u8>();
                     let len0 = vec0.len();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/misc@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "print"]
                         fn wit_import1(_: *mut u8, _: usize);
@@ -247,7 +113,7 @@ pub mod icp {
             pub fn rand() -> u8 {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/misc@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "rand"]
                         fn wit_import0() -> i32;
@@ -264,7 +130,7 @@ pub mod icp {
             pub fn time() -> u64 {
                 unsafe {
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/misc@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/misc@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "time"]
                         fn wit_import0() -> i64;
@@ -278,6 +144,7 @@ pub mod icp {
                 }
             }
         }
+        /// A custom filesystem interface mediated by the host.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod filesystem {
             #[used]
@@ -285,6 +152,8 @@ pub mod icp {
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             #[allow(unused_unsafe, clippy::all)]
+            /// Creates a directory at the specified path relative to the current workspace.
+            /// Returns `ok()` on success, or `err(string)` with an error message on failure.
             pub fn create_directory(path: &str) -> Result<(), _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -303,7 +172,7 @@ pub mod icp {
                     let len0 = vec0.len();
                     let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "create-directory"]
                         fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
@@ -343,6 +212,9 @@ pub mod icp {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Writes the given bytes to a file at the specified path relative to the current workspace.
+            /// Creates the file if it doesn't exist, overwrites it if it does.
+            /// Returns `ok()` on success, or `err(string)` with an error message on failure.
             pub fn write_file(path: &str, contents: &[u8]) -> Result<(), _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -364,7 +236,7 @@ pub mod icp {
                     let len1 = vec1.len();
                     let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "write-file"]
                         fn wit_import3(
@@ -418,6 +290,8 @@ pub mod icp {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Reads the entire contents of a file at the specified path relative to the current workspace.
+            /// Returns `ok(list<u8>)` with the file contents on success, or `err(string)` with an error message on failure.
             pub fn read_file(path: &str) -> Result<_rt::Vec<u8>, _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -436,7 +310,7 @@ pub mod icp {
                     let len0 = vec0.len();
                     let ptr1 = ret_area.0.as_mut_ptr().cast::<u8>();
                     #[cfg(target_arch = "wasm32")]
-                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.0")]
+                    #[link(wasm_import_module = "icp:cli/filesystem@0.3.2")]
                     unsafe extern "C" {
                         #[link_name = "read-file"]
                         fn wit_import2(_: *mut u8, _: usize, _: *mut u8);
@@ -485,284 +359,98 @@ pub mod icp {
                 }
             }
         }
+        #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
+        pub mod component {
+            #[used]
+            #[doc(hidden)]
+            static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
+            use super::super::super::_rt;
+            #[allow(unused_unsafe, clippy::all)]
+            pub fn invoke(
+                interface_name: &str,
+                function_name: &str,
+            ) -> Result<(), _rt::String> {
+                unsafe {
+                    #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
+                    #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
+                    struct RetArea(
+                        [::core::mem::MaybeUninit<
+                            u8,
+                        >; 3 * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let mut ret_area = RetArea(
+                        [::core::mem::MaybeUninit::uninit(); 3
+                            * ::core::mem::size_of::<*const u8>()],
+                    );
+                    let vec0 = interface_name;
+                    let ptr0 = vec0.as_ptr().cast::<u8>();
+                    let len0 = vec0.len();
+                    let vec1 = function_name;
+                    let ptr1 = vec1.as_ptr().cast::<u8>();
+                    let len1 = vec1.len();
+                    let ptr2 = ret_area.0.as_mut_ptr().cast::<u8>();
+                    #[cfg(target_arch = "wasm32")]
+                    #[link(wasm_import_module = "icp:cli/component@0.3.2")]
+                    unsafe extern "C" {
+                        #[link_name = "invoke"]
+                        fn wit_import3(
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                            _: usize,
+                            _: *mut u8,
+                        );
+                    }
+                    #[cfg(not(target_arch = "wasm32"))]
+                    unsafe extern "C" fn wit_import3(
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                        _: usize,
+                        _: *mut u8,
+                    ) {
+                        unreachable!()
+                    }
+                    unsafe {
+                        wit_import3(ptr0.cast_mut(), len0, ptr1.cast_mut(), len1, ptr2)
+                    };
+                    let l4 = i32::from(*ptr2.add(0).cast::<u8>());
+                    let result8 = match l4 {
+                        0 => {
+                            let e = ();
+                            Ok(e)
+                        }
+                        1 => {
+                            let e = {
+                                let l5 = *ptr2
+                                    .add(::core::mem::size_of::<*const u8>())
+                                    .cast::<*mut u8>();
+                                let l6 = *ptr2
+                                    .add(2 * ::core::mem::size_of::<*const u8>())
+                                    .cast::<usize>();
+                                let len7 = l6;
+                                let bytes7 = _rt::Vec::from_raw_parts(
+                                    l5.cast(),
+                                    len7,
+                                    len7,
+                                );
+                                _rt::string_lift(bytes7)
+                            };
+                            Err(e)
+                        }
+                        _ => _rt::invalid_enum_discriminant(),
+                    };
+                    result8
+                }
+            }
+        }
     }
 }
 #[rustfmt::skip]
 #[allow(dead_code, clippy::all)]
 pub mod exports {
     pub mod icp {
-        pub mod build {
-            #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
-            pub mod types {
-                #[used]
-                #[doc(hidden)]
-                static __FORCE_SECTION_REF: fn() = super::super::super::super::__link_custom_section_describing_imports;
-                use super::super::super::super::_rt;
-                #[derive(Debug)]
-                #[repr(transparent)]
-                pub struct Builder {
-                    handle: _rt::Resource<Builder>,
-                }
-                type _BuilderRep<T> = Option<T>;
-                impl Builder {
-                    /// Creates a new resource from the specified representation.
-                    ///
-                    /// This function will create a new resource handle by moving `val` onto
-                    /// the heap and then passing that heap pointer to the component model to
-                    /// create a handle. The owned handle is then returned as `Builder`.
-                    pub fn new<T: GuestBuilder>(val: T) -> Self {
-                        Self::type_guard::<T>();
-                        let val: _BuilderRep<T> = Some(val);
-                        let ptr: *mut _BuilderRep<T> = _rt::Box::into_raw(
-                            _rt::Box::new(val),
-                        );
-                        unsafe { Self::from_handle(T::_resource_new(ptr.cast())) }
-                    }
-                    /// Gets access to the underlying `T` which represents this resource.
-                    pub fn get<T: GuestBuilder>(&self) -> &T {
-                        let ptr = unsafe { &*self.as_ptr::<T>() };
-                        ptr.as_ref().unwrap()
-                    }
-                    /// Gets mutable access to the underlying `T` which represents this
-                    /// resource.
-                    pub fn get_mut<T: GuestBuilder>(&mut self) -> &mut T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.as_mut().unwrap()
-                    }
-                    /// Consumes this resource and returns the underlying `T`.
-                    pub fn into_inner<T: GuestBuilder>(self) -> T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.take().unwrap()
-                    }
-                    #[doc(hidden)]
-                    pub unsafe fn from_handle(handle: u32) -> Self {
-                        Self {
-                            handle: unsafe { _rt::Resource::from_handle(handle) },
-                        }
-                    }
-                    #[doc(hidden)]
-                    pub fn take_handle(&self) -> u32 {
-                        _rt::Resource::take_handle(&self.handle)
-                    }
-                    #[doc(hidden)]
-                    pub fn handle(&self) -> u32 {
-                        _rt::Resource::handle(&self.handle)
-                    }
-                    #[doc(hidden)]
-                    fn type_guard<T: 'static>() {
-                        use core::any::TypeId;
-                        static mut LAST_TYPE: Option<TypeId> = None;
-                        unsafe {
-                            assert!(! cfg!(target_feature = "atomics"));
-                            let id = TypeId::of::<T>();
-                            match LAST_TYPE {
-                                Some(ty) => {
-                                    assert!(
-                                        ty == id, "cannot use two types with this resource type"
-                                    )
-                                }
-                                None => LAST_TYPE = Some(id),
-                            }
-                        }
-                    }
-                    #[doc(hidden)]
-                    pub unsafe fn dtor<T: 'static>(handle: *mut u8) {
-                        Self::type_guard::<T>();
-                        let _ = unsafe {
-                            _rt::Box::from_raw(handle as *mut _BuilderRep<T>)
-                        };
-                    }
-                    fn as_ptr<T: GuestBuilder>(&self) -> *mut _BuilderRep<T> {
-                        Builder::type_guard::<T>();
-                        T::_resource_rep(self.handle()).cast()
-                    }
-                }
-                /// A borrowed version of [`Builder`] which represents a borrowed value
-                /// with the lifetime `'a`.
-                #[derive(Debug)]
-                #[repr(transparent)]
-                pub struct BuilderBorrow<'a> {
-                    rep: *mut u8,
-                    _marker: core::marker::PhantomData<&'a Builder>,
-                }
-                impl<'a> BuilderBorrow<'a> {
-                    #[doc(hidden)]
-                    pub unsafe fn lift(rep: usize) -> Self {
-                        Self {
-                            rep: rep as *mut u8,
-                            _marker: core::marker::PhantomData,
-                        }
-                    }
-                    /// Gets access to the underlying `T` in this resource.
-                    pub fn get<T: GuestBuilder>(&self) -> &T {
-                        let ptr = unsafe { &mut *self.as_ptr::<T>() };
-                        ptr.as_ref().unwrap()
-                    }
-                    fn as_ptr<T: 'static>(&self) -> *mut _BuilderRep<T> {
-                        Builder::type_guard::<T>();
-                        self.rep.cast()
-                    }
-                }
-                unsafe impl _rt::WasmResource for Builder {
-                    #[inline]
-                    unsafe fn drop(_handle: u32) {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        unreachable!();
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]icp:build/types@0.6.4")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-drop]builder"]
-                                fn drop(_: u32);
-                            }
-                            unsafe { drop(_handle) };
-                        }
-                    }
-                }
-                #[doc(hidden)]
-                #[allow(non_snake_case)]
-                pub unsafe fn _export_method_builder_build_canister_cabi<
-                    T: GuestBuilder,
-                >(arg0: *mut u8, arg1: *mut u8, arg2: usize) -> *mut u8 {
-                    #[cfg(target_arch = "wasm32")] _rt::run_ctors_once();
-                    let len0 = arg2;
-                    let bytes0 = _rt::Vec::from_raw_parts(arg1.cast(), len0, len0);
-                    let result1 = T::build_canister(
-                        unsafe { BuilderBorrow::lift(arg0 as u32 as usize) }.get(),
-                        _rt::string_lift(bytes0),
-                    );
-                    let ptr2 = (&raw mut _RET_AREA.0).cast::<u8>();
-                    match result1 {
-                        Ok(_) => {
-                            *ptr2.add(0).cast::<u8>() = (0i32) as u8;
-                        }
-                        Err(e) => {
-                            *ptr2.add(0).cast::<u8>() = (1i32) as u8;
-                            let vec3 = (e.into_bytes()).into_boxed_slice();
-                            let ptr3 = vec3.as_ptr().cast::<u8>();
-                            let len3 = vec3.len();
-                            ::core::mem::forget(vec3);
-                            *ptr2
-                                .add(2 * ::core::mem::size_of::<*const u8>())
-                                .cast::<usize>() = len3;
-                            *ptr2
-                                .add(::core::mem::size_of::<*const u8>())
-                                .cast::<*mut u8>() = ptr3.cast_mut();
-                        }
-                    };
-                    ptr2
-                }
-                #[doc(hidden)]
-                #[allow(non_snake_case)]
-                pub unsafe fn __post_return_method_builder_build_canister<
-                    T: GuestBuilder,
-                >(arg0: *mut u8) {
-                    let l0 = i32::from(*arg0.add(0).cast::<u8>());
-                    match l0 {
-                        0 => {}
-                        _ => {
-                            let l1 = *arg0
-                                .add(::core::mem::size_of::<*const u8>())
-                                .cast::<*mut u8>();
-                            let l2 = *arg0
-                                .add(2 * ::core::mem::size_of::<*const u8>())
-                                .cast::<usize>();
-                            _rt::cabi_dealloc(l1, l2, 1);
-                        }
-                    }
-                }
-                pub trait Guest {
-                    type Builder: GuestBuilder;
-                }
-                pub trait GuestBuilder: 'static {
-                    #[doc(hidden)]
-                    unsafe fn _resource_new(val: *mut u8) -> u32
-                    where
-                        Self: Sized,
-                    {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            let _ = val;
-                            unreachable!();
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]icp:build/types@0.6.4")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-new]builder"]
-                                fn new(_: *mut u8) -> u32;
-                            }
-                            unsafe { new(val) }
-                        }
-                    }
-                    #[doc(hidden)]
-                    fn _resource_rep(handle: u32) -> *mut u8
-                    where
-                        Self: Sized,
-                    {
-                        #[cfg(not(target_arch = "wasm32"))]
-                        {
-                            let _ = handle;
-                            unreachable!();
-                        }
-                        #[cfg(target_arch = "wasm32")]
-                        {
-                            #[link(wasm_import_module = "[export]icp:build/types@0.6.4")]
-                            unsafe extern "C" {
-                                #[link_name = "[resource-rep]builder"]
-                                fn rep(_: u32) -> *mut u8;
-                            }
-                            unsafe { rep(handle) }
-                        }
-                    }
-                    fn build_canister(
-                        &self,
-                        canister_dir: _rt::String,
-                    ) -> Result<(), _rt::String>;
-                }
-                #[doc(hidden)]
-                macro_rules! __export_icp_build_types_0_6_4_cabi {
-                    ($ty:ident with_types_in $($path_to_types:tt)*) => {
-                        const _ : () = { #[unsafe (export_name =
-                        "icp:build/types@0.6.4#[method]builder.build-canister")] unsafe
-                        extern "C" fn export_method_builder_build_canister(arg0 : * mut
-                        u8, arg1 : * mut u8, arg2 : usize,) -> * mut u8 { unsafe {
-                        $($path_to_types)*::
-                        _export_method_builder_build_canister_cabi::<<$ty as
-                        $($path_to_types)*:: Guest >::Builder > (arg0, arg1, arg2) } }
-                        #[unsafe (export_name =
-                        "cabi_post_icp:build/types@0.6.4#[method]builder.build-canister")]
-                        unsafe extern "C" fn
-                        _post_return_method_builder_build_canister(arg0 : * mut u8,) {
-                        unsafe { $($path_to_types)*::
-                        __post_return_method_builder_build_canister::<<$ty as
-                        $($path_to_types)*:: Guest >::Builder > (arg0) } } const _ : () =
-                        { #[doc(hidden)] #[unsafe (export_name =
-                        "icp:build/types@0.6.4#[dtor]builder")] #[allow(non_snake_case)]
-                        unsafe extern "C" fn dtor(rep : * mut u8) { unsafe {
-                        $($path_to_types)*:: Builder::dtor::< <$ty as
-                        $($path_to_types)*:: Guest >::Builder > (rep) } } }; };
-                    };
-                }
-                #[doc(hidden)]
-                pub(crate) use __export_icp_build_types_0_6_4_cabi;
-                #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
-                #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
-                struct _RetArea(
-                    [::core::mem::MaybeUninit<
-                        u8,
-                    >; 3 * ::core::mem::size_of::<*const u8>()],
-                );
-                static mut _RET_AREA: _RetArea = _RetArea(
-                    [::core::mem::MaybeUninit::uninit(); 3
-                        * ::core::mem::size_of::<*const u8>()],
-                );
-            }
-            /// Defines build contracts and worlds
-            /// Common interface for building a canister.
-            /// This contract is implemented by:
-            ///  1. The Build Facade: Its implementation determines canister type and delegates.
-            ///  2. Specific Build Providers (e.g., Motoko, Rust): Their implementations perform the actual build.
+        pub mod build_mo {
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
             pub mod canister_build {
                 #[used]
@@ -818,34 +506,27 @@ pub mod exports {
                     }
                 }
                 pub trait Guest {
-                    /// Builds the canister located in the specified directory.
-                    ///
-                    /// - `canister-dir`: The relative path to the canister's directory,
-                    ///   which is expected to contain a manifest file (e.g., `canister.toml`)
-                    ///   detailing its name and type.
-                    ///
-                    /// Returns `ok()` on successful build, or `err(string)` with an error message on failure.
                     fn build_canister(
                         canister_dir: _rt::String,
                     ) -> Result<(), _rt::String>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_build_canister_build_0_6_4_cabi {
+                macro_rules! __export_icp_build_mo_canister_build_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:build/canister-build@0.6.4#build-canister")] unsafe extern
-                        "C" fn export_build_canister(arg0 : * mut u8, arg1 : usize,) -> *
-                        mut u8 { unsafe { $($path_to_types)*::
+                        "icp:build-mo/canister-build#build-canister")] unsafe extern "C"
+                        fn export_build_canister(arg0 : * mut u8, arg1 : usize,) -> * mut
+                        u8 { unsafe { $($path_to_types)*::
                         _export_build_canister_cabi::<$ty > (arg0, arg1) } } #[unsafe
                         (export_name =
-                        "cabi_post_icp:build/canister-build@0.6.4#build-canister")]
-                        unsafe extern "C" fn _post_return_build_canister(arg0 : * mut
-                        u8,) { unsafe { $($path_to_types)*::
-                        __post_return_build_canister::<$ty > (arg0) } } };
+                        "cabi_post_icp:build-mo/canister-build#build-canister")] unsafe
+                        extern "C" fn _post_return_build_canister(arg0 : * mut u8,) {
+                        unsafe { $($path_to_types)*:: __post_return_build_canister::<$ty
+                        > (arg0) } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_build_canister_build_0_6_4_cabi;
+                pub(crate) use __export_icp_build_mo_canister_build_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -913,19 +594,19 @@ pub mod exports {
                     fn init() -> Result<(), _rt::String>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_cli_init_0_3_0_cabi {
+                macro_rules! __export_icp_cli_init_0_3_2_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:cli/init@0.3.0#init")] unsafe extern "C" fn export_init() ->
+                        "icp:cli/init@0.3.2#init")] unsafe extern "C" fn export_init() ->
                         * mut u8 { unsafe { $($path_to_types)*:: _export_init_cabi::<$ty
                         > () } } #[unsafe (export_name =
-                        "cabi_post_icp:cli/init@0.3.0#init")] unsafe extern "C" fn
+                        "cabi_post_icp:cli/init@0.3.2#init")] unsafe extern "C" fn
                         _post_return_init(arg0 : * mut u8,) { unsafe {
                         $($path_to_types)*:: __post_return_init::<$ty > (arg0) } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_cli_init_0_3_0_cabi;
+                pub(crate) use __export_icp_cli_init_0_3_2_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -1000,27 +681,29 @@ pub mod exports {
                     _rt::as_i32(result4)
                 }
                 pub trait Guest {
+                    /// spec provides a schema a for the cli
                     fn spec() -> _rt::String;
+                    /// run the cli portion of the extension
                     fn run(args: _rt::Vec<_rt::String>) -> u8;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_cli_cli_0_3_0_cabi {
+                macro_rules! __export_icp_cli_cli_0_3_2_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:cli/cli@0.3.0#spec")] unsafe extern "C" fn export_spec() ->
+                        "icp:cli/cli@0.3.2#spec")] unsafe extern "C" fn export_spec() ->
                         * mut u8 { unsafe { $($path_to_types)*:: _export_spec_cabi::<$ty
                         > () } } #[unsafe (export_name =
-                        "cabi_post_icp:cli/cli@0.3.0#spec")] unsafe extern "C" fn
+                        "cabi_post_icp:cli/cli@0.3.2#spec")] unsafe extern "C" fn
                         _post_return_spec(arg0 : * mut u8,) { unsafe {
                         $($path_to_types)*:: __post_return_spec::<$ty > (arg0) } }
-                        #[unsafe (export_name = "icp:cli/cli@0.3.0#run")] unsafe extern
+                        #[unsafe (export_name = "icp:cli/cli@0.3.2#run")] unsafe extern
                         "C" fn export_run(arg0 : * mut u8, arg1 : usize,) -> i32 { unsafe
                         { $($path_to_types)*:: _export_run_cabi::<$ty > (arg0, arg1) } }
                         };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_cli_cli_0_3_0_cabi;
+                pub(crate) use __export_icp_cli_cli_0_3_2_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -1039,80 +722,6 @@ pub mod exports {
 #[rustfmt::skip]
 mod _rt {
     #![allow(dead_code, clippy::all)]
-    use core::fmt;
-    use core::marker;
-    use core::sync::atomic::{AtomicU32, Ordering::Relaxed};
-    /// A type which represents a component model resource, either imported or
-    /// exported into this component.
-    ///
-    /// This is a low-level wrapper which handles the lifetime of the resource
-    /// (namely this has a destructor). The `T` provided defines the component model
-    /// intrinsics that this wrapper uses.
-    ///
-    /// One of the chief purposes of this type is to provide `Deref` implementations
-    /// to access the underlying data when it is owned.
-    ///
-    /// This type is primarily used in generated code for exported and imported
-    /// resources.
-    #[repr(transparent)]
-    pub struct Resource<T: WasmResource> {
-        handle: AtomicU32,
-        _marker: marker::PhantomData<T>,
-    }
-    /// A trait which all wasm resources implement, namely providing the ability to
-    /// drop a resource.
-    ///
-    /// This generally is implemented by generated code, not user-facing code.
-    #[allow(clippy::missing_safety_doc)]
-    pub unsafe trait WasmResource {
-        /// Invokes the `[resource-drop]...` intrinsic.
-        unsafe fn drop(handle: u32);
-    }
-    impl<T: WasmResource> Resource<T> {
-        #[doc(hidden)]
-        pub unsafe fn from_handle(handle: u32) -> Self {
-            debug_assert!(handle != u32::MAX);
-            Self {
-                handle: AtomicU32::new(handle),
-                _marker: marker::PhantomData,
-            }
-        }
-        /// Takes ownership of the handle owned by `resource`.
-        ///
-        /// Note that this ideally would be `into_handle` taking `Resource<T>` by
-        /// ownership. The code generator does not enable that in all situations,
-        /// unfortunately, so this is provided instead.
-        ///
-        /// Also note that `take_handle` is in theory only ever called on values
-        /// owned by a generated function. For example a generated function might
-        /// take `Resource<T>` as an argument but then call `take_handle` on a
-        /// reference to that argument. In that sense the dynamic nature of
-        /// `take_handle` should only be exposed internally to generated code, not
-        /// to user code.
-        #[doc(hidden)]
-        pub fn take_handle(resource: &Resource<T>) -> u32 {
-            resource.handle.swap(u32::MAX, Relaxed)
-        }
-        #[doc(hidden)]
-        pub fn handle(resource: &Resource<T>) -> u32 {
-            resource.handle.load(Relaxed)
-        }
-    }
-    impl<T: WasmResource> fmt::Debug for Resource<T> {
-        fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-            f.debug_struct("Resource").field("handle", &self.handle).finish()
-        }
-    }
-    impl<T: WasmResource> Drop for Resource<T> {
-        fn drop(&mut self) {
-            unsafe {
-                match self.handle.load(Relaxed) {
-                    u32::MAX => {}
-                    other => T::drop(other),
-                }
-            }
-        }
-    }
     pub use alloc_crate::string::String;
     pub use alloc_crate::vec::Vec;
     pub unsafe fn string_lift(bytes: Vec<u8>) -> String {
@@ -1129,7 +738,6 @@ mod _rt {
             unsafe { core::hint::unreachable_unchecked() }
         }
     }
-    pub use alloc_crate::boxed::Box;
     #[cfg(target_arch = "wasm32")]
     pub fn run_ctors_once() {
         wit_bindgen_rt::run_ctors_once();
@@ -1227,15 +835,12 @@ macro_rules! __export_extension_impl {
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::icp::build::types::__export_icp_build_types_0_6_4_cabi!($ty
-        with_types_in $($path_to_types_root)*:: exports::icp::build::types);
+        exports::icp::build_mo::canister_build::__export_icp_build_mo_canister_build_cabi!($ty
+        with_types_in $($path_to_types_root)*:: exports::icp::build_mo::canister_build);
         $($path_to_types_root)*::
-        exports::icp::build::canister_build::__export_icp_build_canister_build_0_6_4_cabi!($ty
-        with_types_in $($path_to_types_root)*:: exports::icp::build::canister_build);
-        $($path_to_types_root)*::
-        exports::icp::cli::init::__export_icp_cli_init_0_3_0_cabi!($ty with_types_in
+        exports::icp::cli::init::__export_icp_cli_init_0_3_2_cabi!($ty with_types_in
         $($path_to_types_root)*:: exports::icp::cli::init); $($path_to_types_root)*::
-        exports::icp::cli::cli::__export_icp_cli_cli_0_3_0_cabi!($ty with_types_in
+        exports::icp::cli::cli::__export_icp_cli_cli_0_3_2_cabi!($ty with_types_in
         $($path_to_types_root)*:: exports::icp::cli::cli);
     };
 }
@@ -1243,31 +848,27 @@ macro_rules! __export_extension_impl {
 pub(crate) use __export_extension_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:icp:build@0.6.4:extension:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:icp:build-mo:extension:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 910] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x8e\x06\x01A\x02\x01\
-A\x11\x01B\x05\x04\0\x07builder\x03\x01\x01h\0\x01j\0\x01s\x01@\x02\x04self\x01\x0c\
-canister-dirs\0\x02\x04\0\x1e[method]builder.build-canister\x01\x03\x03\0\x15icp\
-:build/types@0.6.4\x05\0\x02\x03\0\0\x07builder\x01B\x06\x02\x03\x02\x01\x01\x04\
-\0\x07builder\x03\0\0\x01i\x01\x01j\0\x01s\x01@\x02\x0dcanister-types\x10caniste\
-r-builder\x02\0\x03\x04\0\x11register-provider\x01\x04\x03\0\x18icp:build/regist\
-ry@0.6.4\x05\x02\x01B\x06\x01@\x01\x01ss\x01\0\x04\0\x05print\x01\0\x01@\0\0}\x04\
-\0\x04rand\x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\x03\0\x12icp:cli/misc@0.3.0\x05\
-\x03\x01B\x09\x01j\0\x01s\x01@\x01\x04paths\0\0\x04\0\x10create-directory\x01\x01\
-\x01p}\x01@\x02\x04paths\x08contents\x02\0\0\x04\0\x0awrite-file\x01\x03\x01j\x01\
-\x02\x01s\x01@\x01\x04paths\0\x04\x04\0\x09read-file\x01\x05\x03\0\x18icp:cli/fi\
-lesystem@0.3.0\x05\x04\x01B\x05\x04\0\x07builder\x03\x01\x01h\0\x01j\0\x01s\x01@\
-\x02\x04self\x01\x0ccanister-dirs\0\x02\x04\0\x1e[method]builder.build-canister\x01\
-\x03\x04\0\x15icp:build/types@0.6.4\x05\x05\x01B\x03\x01j\0\x01s\x01@\x01\x0ccan\
-ister-dirs\0\0\x04\0\x0ebuild-canister\x01\x01\x04\0\x1eicp:build/canister-build\
-@0.6.4\x05\x06\x01B\x03\x01j\0\x01s\x01@\0\0\0\x04\0\x04init\x01\x01\x04\0\x12ic\
-p:cli/init@0.3.0\x05\x07\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04\
-args\x01\0}\x04\0\x03run\x01\x02\x04\0\x11icp:cli/cli@0.3.0\x05\x08\x04\0\x19icp\
-:build/extension@0.6.4\x04\0\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09producers\x01\
-\x0cprocessed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 718] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xce\x04\x01A\x02\x01\
+A\x0e\x01B\x03\x01j\0\x01s\x01@\x01\x0dcanister-types\0\0\x04\0\x11register-prov\
+ider\x01\x01\x03\0\x18icp:build/registry@0.6.9\x05\0\x01B\x06\x01@\x01\x01ss\x01\
+\0\x04\0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\x01\x01\x01@\0\0w\x04\0\x04time\x01\
+\x02\x03\0\x12icp:cli/misc@0.3.2\x05\x01\x01B\x09\x01j\0\x01s\x01@\x01\x04paths\0\
+\0\x04\0\x10create-directory\x01\x01\x01p}\x01@\x02\x04paths\x08contents\x02\0\0\
+\x04\0\x0awrite-file\x01\x03\x01j\x01\x02\x01s\x01@\x01\x04paths\0\x04\x04\0\x09\
+read-file\x01\x05\x03\0\x18icp:cli/filesystem@0.3.2\x05\x02\x01B\x03\x01j\0\x01s\
+\x01@\x02\x0einterface-names\x0dfunction-names\0\0\x04\0\x06invoke\x01\x01\x03\0\
+\x17icp:cli/component@0.3.2\x05\x03\x01B\x03\x01j\0\x01s\x01@\x01\x0ccanister-di\
+rs\0\0\x04\0\x0ebuild-canister\x01\x01\x04\0\x1bicp:build-mo/canister-build\x05\x04\
+\x01B\x03\x01j\0\x01s\x01@\0\0\0\x04\0\x04init\x01\x01\x04\0\x12icp:cli/init@0.3\
+.2\x05\x05\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\
+\0\x03run\x01\x02\x04\0\x11icp:cli/cli@0.3.2\x05\x06\x04\0\x16icp:build-mo/exten\
+sion\x04\0\x0b\x0f\x01\0\x09extension\x03\0\0\0G\x09producers\x01\x0cprocessed-b\
+y\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {
