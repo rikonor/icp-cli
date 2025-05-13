@@ -86,6 +86,46 @@ impl FunctionRegistry {
         Ok(())
     }
 
+    /// Look up a resolved function reference by its interface and function name.
+    ///
+    /// # Arguments
+    ///
+    /// * `interface_name` - Name of the interface containing the function.
+    /// * `function_name` - Name of the function.
+    ///
+    /// # Returns
+    ///
+    /// * `Ok(Some(Func))` if the function is registered and resolved.
+    /// * `Ok(None)` if the function is registered but not yet resolved.
+    /// * `Err(FunctionRegistryError::NotFound)` if the key is not registered.
+    pub fn lookup(
+        &self,
+        interface_name: &str,
+        function_name: &str,
+    ) -> Result<Option<Func>, FunctionRegistryError> {
+        // Create the key using the established format
+        let key = Self::create_key(interface_name, function_name);
+
+        // Get the Arc<Mutex<Option<Func>>> from the map
+        let reference_arc = self
+            .references
+            .get(&key)
+            .ok_or_else(|| FunctionRegistryError::NotFound(key.clone()))?; // Return NotFound error if key doesn't exist
+
+        // Lock the mutex to access the Option<Func>
+        // We expect the lock to succeed unless there's poisoning, which we'll unwrap for now.
+        // A production scenario might handle poisoning more gracefully.
+        let guard = reference_arc.lock().map_err(|_| {
+            // Handle potential mutex poisoning, perhaps return a specific error
+            // For now, let's treat it as NotFound or a new error type
+            FunctionRegistryError::NotFound(format!("Mutex poisoned for key: {}", key))
+        })?;
+
+        // Return the Option<Func> contained within the guard.
+        // Since Func is Copy, we can copy it out of the Option.
+        Ok(*guard) // Dereferencing the MutexGuard gives &Option<Func>, copying Func if Some.
+    }
+
     /// Create a key for a function reference
     ///
     /// # Arguments

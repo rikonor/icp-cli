@@ -5,17 +5,17 @@ use std::{
     fs::{create_dir_all, read},
     path::{Path, PathBuf},
     str::FromStr,
-    sync::Arc,
+    sync::{Arc, Mutex},
     time::{SystemTime, UNIX_EPOCH},
 };
 
-use anyhow::{anyhow, Context, Error};
+use anyhow::{anyhow, bail, Context, Error};
 use clap::{value_parser, Arg, ArgAction, Command};
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 
 use wasmtime::{
-    component::{bindgen, Component, Linker},
+    component::{bindgen, Component, Linker, Val},
     Config, Engine, Store as WasmStore,
 };
 
@@ -24,7 +24,7 @@ use icp_core::{
     dependency::DependencyGraph,
     interface::IfaceDetector,
     manifest::{Load, LoadError, Manifest, ManifestHandle, Store as _},
-    Interface,
+    FunctionRegistryError, Interface,
 };
 use icp_distribution::Distribution;
 
@@ -95,7 +95,7 @@ static DEFAULT_DIR_PRECOMPILES: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION
 });
 
 // WIT Bindings
-use icp::cli::{component, filesystem, misc};
+use icp::cli::{filesystem, misc};
 
 bindgen!({
     path: "../../wit/cli",
@@ -104,17 +104,6 @@ bindgen!({
 });
 
 struct State;
-
-impl component::Host for State {
-    async fn invoke(
-        &mut self,
-        interface_name: String,
-        function_name: String,
-    ) -> Result<(), String> {
-        println!("[host] invoke called: {interface_name} {function_name}");
-        Ok(())
-    }
-}
 
 impl misc::Host for State {
     async fn print(&mut self, s: String) {
@@ -334,27 +323,6 @@ async fn main() -> Result<(), Error> {
     // Linker
     let mut lnk = Linker::new(&ngn);
 
-    // Link host imports
-    misc::add_to_linker(
-        &mut lnk,                  // linker
-        |state: &mut State| state, // get
-    )?;
-    filesystem::add_to_linker(
-        // Link filesystem host functions
-        &mut lnk,                  // linker
-        |state: &mut State| state, // get
-    )?;
-    component::add_to_linker(
-        &mut lnk,                  // linker
-        |state: &mut State| state, // get
-    )?;
-
-    // Store
-    let mut store = WasmStore::new(
-        &ngn,  // engine
-        State, // data
-    );
-
     // Components (initialize)
     let cmpnts: DashMap<String, Component> = DashMap::new();
 
@@ -376,9 +344,10 @@ async fn main() -> Result<(), Error> {
 
     // Create function registry
     let reg = FunctionRegistry::new();
+    let reg = Arc::new(Mutex::new(reg));
 
     // Create dynamic linker
-    let mut dynlnk = DynamicLinker::new(reg);
+    let mut dynlnk = DynamicLinker::new(Arc::clone(&reg));
 
     // Collect unique interfaces
     let mut ifaces: HashMap<String, Interface> = HashMap::new();
@@ -397,6 +366,108 @@ async fn main() -> Result<(), Error> {
         &mut lnk,                       // linker
         ifaces.into_values().collect(), // interfaces
     )?;
+
+    // Host imports
+    misc::add_to_linker(
+        &mut lnk,                  // linker
+        |state: &mut State| state, // get
+    )?;
+
+    filesystem::add_to_linker(
+        // Link filesystem host functions
+        &mut lnk,                  // linker
+        |state: &mut State| state, // get
+    )?;
+
+    // NOTE: Well this is gonna be annoying - are we going to have to keep this version up to date??
+    lnk.instance("icp:cli/component@0.3.2")?.func_new_async(
+        "invoke",
+        move |mut store, params: &[Val], results: &mut [Val]| {
+            Box::new({
+                let reg = Arc::clone(&reg);
+                async move {
+                    const INTERFACE_NAME_IDX: usize = 0;
+                    const FUNCTION_NAME_IDX: usize = 1;
+
+                    // Extract interface name
+                    let interface_name = match params.get(INTERFACE_NAME_IDX) {
+                        Some(v) => v,
+                        None => bail!("missing interface_name parameter for invoke host function"),
+                    };
+
+                    let interface_name = match interface_name {
+                        Val::String(s) => s,
+                        _ => bail!("interface_name has the wrong type: {interface_name:?}"),
+                    };
+
+                    // Extract function name
+                    let function_name = match params.get(FUNCTION_NAME_IDX) {
+                        Some(v) => v,
+                        None => bail!("missing function_name parameter for invoke host function"),
+                    };
+
+                    let function_name = match function_name {
+                        Val::String(s) => s,
+                        _ => bail!("function_name has the wrong type: {function_name:?}"),
+                    };
+
+                    // Lookup function using function registry
+                    let f = match reg.lock().unwrap().lookup(interface_name, function_name) {
+                        // Found function
+                        Ok(Some(f)) => Ok(f),
+
+                        // Register, but not resolved
+                        Ok(None) => Err(format!(
+                            "function {}:{} is registered by not yet resolved",
+                            interface_name, function_name
+                        )),
+
+                        // Not found
+                        Err(FunctionRegistryError::NotFound(key)) => Err(format!(
+                            "function {}:{} (key: {}) not found in registry",
+                            interface_name, function_name, key
+                        )),
+
+                        // Other errors
+                        Err(err) => Err(format!(
+                            "Error during function lookup for {}:{}: {}",
+                            interface_name, function_name, err,
+                        )),
+                    };
+
+                    let f = match f {
+                        Ok(f) => f,
+                        Err(err) => {
+                            results[0] = Val::Result(Err(Some(Box::new(Val::String(err.into())))));
+                            return Ok(());
+                        }
+                    };
+
+                    // Invoke function
+                    f.call_async(
+                        &mut store,                                    // store
+                        &[Val::String("canisters/canister-2".into())], // params
+                        &mut [Val::Bool(false)],                       // results
+                    )
+                    .await
+                    .context(anyhow!(
+                        "failed to call function {interface_name}:{function_name}"
+                    ))?;
+
+                    // Set results
+                    results[0] = Val::Result(Ok(None));
+
+                    Ok(())
+                }
+            })
+        },
+    )?;
+
+    // Store
+    let mut store = WasmStore::new(
+        &ngn,  // engine
+        State, // data
+    );
 
     // Components (instantiate)
     let insts: DashMap<String, Extension> = DashMap::new();

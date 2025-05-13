@@ -31,7 +31,7 @@ pub enum DynamicLinkingError {
 /// handling both import linking and export resolution.
 pub struct DynamicLinker {
     /// Registry for function references
-    registry: FunctionRegistry,
+    registry: Arc<Mutex<FunctionRegistry>>,
 
     /// Map from extension name to resolved status
     resolved_exports: HashMap<String, bool>,
@@ -43,7 +43,7 @@ impl DynamicLinker {
     /// # Arguments
     ///
     /// * `registry` - Function registry to use for managing references
-    pub fn new(registry: FunctionRegistry) -> Self {
+    pub fn new(registry: Arc<Mutex<FunctionRegistry>>) -> Self {
         Self {
             registry,
             resolved_exports: HashMap::new(),
@@ -87,7 +87,9 @@ impl DynamicLinker {
                     &f,          // function
                 );
 
-                if self.registry.contains(k.as_str()) {
+                let mut registry = self.registry.lock().unwrap();
+
+                if registry.contains(k.as_str()) {
                     continue;
                 }
 
@@ -95,7 +97,7 @@ impl DynamicLinker {
                 let fref = Arc::new(Mutex::new(None));
 
                 // Register the function reference
-                self.registry.register(k.clone(), Arc::clone(&fref))?;
+                registry.register(k.clone(), Arc::clone(&fref))?;
 
                 let fname = f.clone();
 
@@ -187,7 +189,7 @@ impl DynamicLinker {
                     )
                     .ok_or(anyhow!("missing function"))?;
 
-                self.registry.resolve(&k, f)?;
+                self.registry.lock().unwrap().resolve(&k, f)?;
             }
         }
 
@@ -214,11 +216,6 @@ impl DynamicLinker {
             .copied()
             .unwrap_or(false)
     }
-
-    /// Get a reference to the function registry
-    pub fn registry(&self) -> &FunctionRegistry {
-        &self.registry
-    }
 }
 
 #[cfg(test)]
@@ -230,7 +227,7 @@ mod tests {
 
     #[test]
     fn test_new_linker() {
-        let registry = FunctionRegistry::new();
+        let registry = Arc::new(Mutex::new(FunctionRegistry::new()));
         let linker = DynamicLinker::new(registry);
         assert_eq!(linker.resolved_export_count(), 0);
         assert_eq!(linker.export_count(), 0);
@@ -238,7 +235,7 @@ mod tests {
 
     #[test]
     fn test_extension_resolution_tracking() {
-        let registry = FunctionRegistry::new();
+        let registry = Arc::new(Mutex::new(FunctionRegistry::new()));
         let mut linker = DynamicLinker::new(registry);
 
         assert!(!linker.is_extension_resolved("test"));
@@ -260,6 +257,7 @@ mod tests {
 
         // Create function registry
         let reg = FunctionRegistry::new();
+        let reg = Arc::new(Mutex::new(reg));
 
         // Create dynamic linker
         let mut dynlnk = DynamicLinker::new(reg);
@@ -307,6 +305,7 @@ mod tests {
 
         // Create function registry
         let reg = FunctionRegistry::new();
+        let reg = Arc::new(Mutex::new(reg));
 
         // Create dynamic linker
         let mut dynlnk = DynamicLinker::new(reg);
