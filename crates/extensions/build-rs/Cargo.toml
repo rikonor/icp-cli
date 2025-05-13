@@ -18,5 +18,5 @@ package = "icp:build-rs"
 [package.metadata.component.dependencies]
 
 [package.metadata.component.target.dependencies]
-"icp:build" = "0.6.9"
-"icp:cli" = "0.3.2"
+"icp:build" = "0.6.10"
+"icp:cli" = "0.3.3"

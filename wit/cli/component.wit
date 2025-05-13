@@ -1,3 +1,8 @@
 interface component {
-  invoke: func(interface-name: string, function-name: string) -> result<_, string>;
+  //
+  invoke: func(
+    interface-name: string,
+    function-name: string,
+    params: list<u8>,
+  ) -> result<list<u8>, string>;
 }

@@ -1,6 +1,7 @@
 use std::path::Path;
 
 use dashmap::DashMap;
+use serde::Serialize;
 
 use crate::{
     CanisterManifest, LazyRef,
@@ -47,13 +48,13 @@ pub trait Build {
 
 pub struct Builder {
     read_file: Box<dyn Fn(&str) -> Result<Vec<u8>, String>>,
-    builders: LazyRef<DashMap<String, ()>>,
+    builders: LazyRef<DashMap<String, (String, String)>>,
 }
 
 impl Builder {
     pub fn new(
         read_file: Box<dyn Fn(&str) -> Result<Vec<u8>, String>>,
-        builders: LazyRef<DashMap<String, ()>>,
+        builders: LazyRef<DashMap<String, (String, String)>>,
     ) -> Self {
         Builder {
             read_file,
@@ -82,9 +83,9 @@ impl Build for Builder {
             ))
         })?;
 
-        let b = match self.builders.get(&cm.canister.canister_type) {
+        let (interface_name, function_name) = match self.builders.get(&cm.canister.canister_type) {
             // Ok
-            Some(b) => b,
+            Some(b) => b.value().clone(),
 
             // No such builder
             None => {
@@ -100,16 +101,58 @@ impl Build for Builder {
             }
         };
 
+        let params = serde_json::to_vec(&[
+            Val::String(canister_dir.to_string()), // canister-dir
+        ])
+        .expect("failed to serialize params");
+
         invoke(
-            "icp:build-mo/canister-build", // interface_name
-            "build-canister",              // function_name
+            &interface_name, // interface_name
+            &function_name,  // function_name
+            &params,
         )
         .map_err(|err| BuildError::BuildFailed(err))?;
 
-        // b.value()
-        //     .build_canister(canister_dir)
-        //     .map_err(|err| BuildError::BuildFailed(err))
-
         Ok(())
     }
+}
+
+#[derive(Debug, Clone, Serialize)]
+pub enum Val {
+    // Primitive types
+    Bool(bool),
+
+    // Signed integers
+    S8(i8),
+    S32(i32),
+    S64(i64),
+    S16(i16),
+
+    // Unsigned integers
+    U8(u8),
+    U16(u16),
+    U32(u32),
+    U64(u64),
+
+    // Floating point numbers
+    Float32(f32),
+    Float64(f64),
+
+    // Text
+    Char(char),
+    String(String),
+
+    // Containers
+    Enum(String),
+    List(Vec<Val>),
+    Option(Option<Box<Val>>),
+    Record(Vec<(String, Val)>),
+    Result(Result<Option<Box<Val>>, Option<Box<Val>>>),
+    Tuple(Vec<Val>),
+    Variant(String, Option<Box<Val>>),
+
+    // Other
+    Flags(Vec<String>),
+    // TODO: Figure out how to represent this
+    // Resource(ResourceAny),
 }

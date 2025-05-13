@@ -25,7 +25,11 @@ const CLI_SPEC: &str = r#"{
 
 impl init::Guest for Component {
     fn init() -> Result<(), String> {
-        register_provider("motoko")?;
+        register_provider(
+            "motoko",                      // canister-type
+            "icp:build-mo/canister-build", // interface-name
+            "build-canister",              // function-name
+        )?;
 
         Ok(())
     }

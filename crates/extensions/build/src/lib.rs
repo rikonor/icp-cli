@@ -27,7 +27,7 @@ struct Component;
 
 pub type LazyRef<T> = &'static Lazy<T>;
 
-static BUILDERS: Lazy<DashMap<String, ()>> = Lazy::new(|| DashMap::new());
+static BUILDERS: Lazy<DashMap<String, (String, String)>> = Lazy::new(|| DashMap::new());
 
 thread_local! {
     static BUILDER: OnceCell<Box<dyn Build>> = OnceCell::with_value({
@@ -102,10 +102,14 @@ impl cli::Guest for Component {
 }
 
 impl registry::Guest for Component {
-    fn register_provider(canister_type: String) -> Result<(), String> {
+    fn register_provider(
+        canister_type: String,
+        interface_name: String,
+        function_name: String,
+    ) -> Result<(), String> {
         BUILDERS.insert(
-            canister_type, // type
-            (),            // builder
+            canister_type,                   // type
+            (interface_name, function_name), // builder
         );
 
         Ok(())

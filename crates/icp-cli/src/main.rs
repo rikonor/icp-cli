@@ -14,8 +14,9 @@ use clap::{value_parser, Arg, ArgAction, Command};
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 
+use serde::Deserialize;
 use wasmtime::{
-    component::{bindgen, Component, Linker, Val},
+    component::{bindgen, Component, Linker, Val as WasmVal},
     Config, Engine, Store as WasmStore,
 };
 
@@ -380,14 +381,15 @@ async fn main() -> Result<(), Error> {
     )?;
 
     // NOTE: Well this is gonna be annoying - are we going to have to keep this version up to date??
-    lnk.instance("icp:cli/component@0.3.2")?.func_new_async(
+    lnk.instance("icp:cli/component@0.3.3")?.func_new_async(
         "invoke",
-        move |mut store, params: &[Val], results: &mut [Val]| {
+        move |mut store, params: &[WasmVal], results: &mut [WasmVal]| {
             Box::new({
                 let reg = Arc::clone(&reg);
                 async move {
                     const INTERFACE_NAME_IDX: usize = 0;
                     const FUNCTION_NAME_IDX: usize = 1;
+                    const NESTED_PARAMS_IDX: usize = 2;
 
                     // Extract interface name
                     let interface_name = match params.get(INTERFACE_NAME_IDX) {
@@ -396,7 +398,7 @@ async fn main() -> Result<(), Error> {
                     };
 
                     let interface_name = match interface_name {
-                        Val::String(s) => s,
+                        WasmVal::String(s) => s,
                         _ => bail!("interface_name has the wrong type: {interface_name:?}"),
                     };
 
@@ -407,7 +409,7 @@ async fn main() -> Result<(), Error> {
                     };
 
                     let function_name = match function_name {
-                        Val::String(s) => s,
+                        WasmVal::String(s) => s,
                         _ => bail!("function_name has the wrong type: {function_name:?}"),
                     };
 
@@ -435,27 +437,72 @@ async fn main() -> Result<(), Error> {
                         )),
                     };
 
-                    let f = match f {
-                        Ok(f) => f,
+                    // Extract nested params
+                    let nparams = match params.get(NESTED_PARAMS_IDX) {
+                        Some(v) => v,
+                        None => bail!("missing nested params for invoke host function"),
+                    };
+
+                    // Convert nparams to Vec<u8>
+                    let nparams = match nparams {
+                        WasmVal::List(vs) => {
+                            let mut bytes = Vec::new();
+                            for v in vs.iter() {
+                                match v {
+                                    WasmVal::String(s) => bytes.extend_from_slice(s.as_bytes()),
+                                    _ => bail!("nested params has the wrong type: {nparams:?}"),
+                                }
+                            }
+                            bytes
+                        }
+                        _ => bail!("nested params has the wrong type: {nparams:?}"),
+                    };
+
+                    // Deserialize params
+                    let nparams: Vec<Val> = match serde_json::from_slice(&nparams) {
+                        Ok(params) => params,
                         Err(err) => {
-                            results[0] = Val::Result(Err(Some(Box::new(Val::String(err.into())))));
+                            results[0] = WasmVal::Result(Err(Some(Box::new(WasmVal::String(
+                                err.to_string(),
+                            )))));
                             return Ok(());
                         }
                     };
 
+                    let nparams = nparams
+                        .into_iter()
+                        .map(|v| v.into())
+                        .collect::<Vec<WasmVal>>();
+
+                    let f = match f {
+                        Ok(f) => f,
+                        Err(err) => {
+                            results[0] =
+                                WasmVal::Result(Err(Some(Box::new(WasmVal::String(err.into())))));
+                            return Ok(());
+                        }
+                    };
+
+                    // Nested results
+                    let mut nresults = vec![WasmVal::Bool(false)];
+
                     // Invoke function
                     f.call_async(
-                        &mut store,                                    // store
-                        &[Val::String("canisters/canister-2".into())], // params
-                        &mut [Val::Bool(false)],                       // results
+                        &mut store,    // store
+                        &nparams,      // params
+                        &mut nresults, // results
                     )
                     .await
-                    .context(anyhow!(
-                        "failed to call function {interface_name}:{function_name}"
-                    ))?;
+                    .context(anyhow!("failed to call {interface_name}:{function_name}"))?;
 
-                    // Set results
-                    results[0] = Val::Result(Ok(None));
+                    f.post_return_async(&mut store)
+                        .await
+                        .context(anyhow!("post return failed"))?;
+
+                    // Set results from nested results
+                    println!("nresults: {nresults:?}");
+
+                    results[0] = WasmVal::Result(Ok(None));
 
                     Ok(())
                 }
@@ -640,4 +687,50 @@ async fn main() -> Result<(), Error> {
     }
 
     Ok(())
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub enum Val {
+    // Primitive types
+    Bool(bool),
+
+    // Signed integers
+    S8(i8),
+    S32(i32),
+    S64(i64),
+    S16(i16),
+
+    // Unsigned integers
+    U8(u8),
+    U16(u16),
+    U32(u32),
+    U64(u64),
+
+    // Floating point numbers
+    Float32(f32),
+    Float64(f64),
+
+    // Text
+    Char(char),
+    String(String),
+
+    // Containers
+    Enum(String),
+    List(Vec<Val>),
+    Option(Option<Box<Val>>),
+    Record(Vec<(String, Val)>),
+    Result(Result<Option<Box<Val>>, Option<Box<Val>>>),
+    Tuple(Vec<Val>),
+    Variant(String, Option<Box<Val>>),
+
+    // Other
+    Flags(Vec<String>),
+    // TODO: Figure out how to represent this
+    // Resource(ResourceAny),
+}
+
+impl From<Val> for WasmVal {
+    fn from(value: Val) -> Self {
+        todo!()
+    }
 }

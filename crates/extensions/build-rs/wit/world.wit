@@ -5,7 +5,7 @@ interface canister-build {
 }
 
 world extension {
-  include icp:cli/extension@0.3.2;
-  import icp:build/registry@0.6.9;
+  include icp:cli/extension@0.3.3;
+  import icp:build/registry@0.6.10;
   export canister-build;
 }
