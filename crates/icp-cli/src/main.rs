@@ -449,7 +449,7 @@ async fn main() -> Result<(), Error> {
                             let mut bytes = Vec::new();
                             for v in vs.iter() {
                                 match v {
-                                    WasmVal::String(s) => bytes.extend_from_slice(s.as_bytes()),
+                                    WasmVal::U8(v) => bytes.push(v.to_owned()),
                                     _ => bail!("nested params has the wrong type: {nparams:?}"),
                                 }
                             }
@@ -731,6 +731,78 @@ pub enum Val {
 
 impl From<Val> for WasmVal {
     fn from(value: Val) -> Self {
-        todo!()
+        match value {
+            // Primitive types
+            Val::Bool(v) => WasmVal::Bool(v),
+
+            // Signed integers
+            Val::S8(v) => WasmVal::S8(v),
+            Val::S32(v) => WasmVal::S32(v),
+            Val::S64(v) => WasmVal::S64(v),
+            Val::S16(v) => WasmVal::S16(v),
+
+            // Unsigned integers
+            Val::U8(v) => WasmVal::U8(v),
+            Val::U16(v) => WasmVal::U16(v),
+            Val::U32(v) => WasmVal::U32(v),
+            Val::U64(v) => WasmVal::U64(v),
+
+            // Floating point numbers
+            Val::Float32(v) => WasmVal::Float32(v),
+            Val::Float64(v) => WasmVal::Float64(v),
+
+            // Text
+            Val::Char(v) => WasmVal::Char(v),
+            Val::String(v) => WasmVal::String(v),
+
+            // Containers
+            Val::Enum(v) => WasmVal::Enum(v),
+            Val::List(vals) => WasmVal::List(vals.into_iter().map(WasmVal::from).collect()),
+
+            // Option
+            Val::Option(val) => {
+                if let Some(val) = val {
+                    WasmVal::Option(Some(Box::new(WasmVal::from(*val))))
+                } else {
+                    WasmVal::Option(None)
+                }
+            }
+
+            // Record
+            Val::Record(items) => {
+                let mut map = Vec::new();
+                for (k, v) in items {
+                    map.push((k, WasmVal::from(v)));
+                }
+                WasmVal::Record(map)
+            }
+
+            // Result
+            Val::Result(val) => match val {
+                Ok(v) => WasmVal::Result(Ok(v.map(|v| Box::new(WasmVal::from(*v))))),
+                Err(e) => WasmVal::Result(Err(e.map(|v| Box::new(WasmVal::from(*v))))),
+            },
+
+            // Tuple
+            Val::Tuple(vals) => {
+                let mut tuple = Vec::new();
+                for v in vals {
+                    tuple.push(WasmVal::from(v));
+                }
+                WasmVal::Tuple(tuple)
+            }
+
+            // Variant
+            Val::Variant(k, val) => {
+                if let Some(val) = val {
+                    WasmVal::Variant(k, Some(Box::new(WasmVal::from(*val))))
+                } else {
+                    WasmVal::Variant(k, None)
+                }
+            }
+
+            // Flags
+            Val::Flags(items) => WasmVal::Flags(items),
+        }
     }
 }
