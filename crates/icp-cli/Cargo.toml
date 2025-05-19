@@ -19,6 +19,9 @@ async-trait = { workspace = true }
 clap = { workspace = true }
 dashmap = { workspace = true }
 icp-core = { path = "../icp-core" }
+icp-component-invoke = { path = "../icp-component-invoke", features = [
+    "wasmtime-conversions",
+] }
 dirs = { workspace = true }
 http = { workspace = true }
 once_cell = { workspace = true }

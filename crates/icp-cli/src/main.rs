@@ -14,12 +14,12 @@ use clap::{value_parser, Arg, ArgAction, Command};
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 
-use serde::{Deserialize, Serialize};
 use wasmtime::{
     component::{bindgen, Component, Linker, Val as WasmVal},
     Config, Engine, Store as WasmStore,
 };
 
+use icp_component_invoke::Val;
 use icp_core::{
     component::{DynamicLinker, FunctionRegistry},
     dependency::DependencyGraph,
@@ -437,6 +437,19 @@ async fn main() -> Result<(), Error> {
                         )),
                     };
 
+                    let f = match f {
+                        // Ok
+                        Ok(f) => f,
+
+                        // Fail
+                        Err(err) => {
+                            results[0] =
+                                WasmVal::Result(Err(Some(Box::new(WasmVal::String(err.into())))));
+
+                            return Ok(());
+                        }
+                    };
+
                     // Extract nested params
                     let nparams = match params.get(NESTED_PARAMS_IDX) {
                         Some(v) => v,
@@ -445,6 +458,7 @@ async fn main() -> Result<(), Error> {
 
                     // Convert nparams to Vec<u8>
                     let nparams = match nparams {
+                        // Correct
                         WasmVal::List(vs) => {
                             let mut bytes = Vec::new();
                             for v in vs.iter() {
@@ -455,33 +469,30 @@ async fn main() -> Result<(), Error> {
                             }
                             bytes
                         }
+
+                        // Wrong
                         _ => bail!("nested params has the wrong type: {nparams:?}"),
                     };
 
                     // Deserialize params
-                    let nparams: Vec<Val> = match serde_json::from_slice(&nparams) {
+                    let nparams = match serde_json::from_slice::<Vec<Val>>(&nparams) {
+                        // Ok
                         Ok(params) => params,
+
+                        // Fail
                         Err(err) => {
                             results[0] = WasmVal::Result(Err(Some(Box::new(WasmVal::String(
                                 err.to_string(),
                             )))));
+
                             return Ok(());
                         }
                     };
 
                     let nparams = nparams
                         .into_iter()
-                        .map(|v| v.into())
+                        .map(WasmVal::from)
                         .collect::<Vec<WasmVal>>();
-
-                    let f = match f {
-                        Ok(f) => f,
-                        Err(err) => {
-                            results[0] =
-                                WasmVal::Result(Err(Some(Box::new(WasmVal::String(err.into())))));
-                            return Ok(());
-                        }
-                    };
 
                     // Nested results
                     let mut nresults = vec![WasmVal::Bool(false)];
@@ -499,10 +510,10 @@ async fn main() -> Result<(), Error> {
                         .await
                         .context(anyhow!("post return failed"))?;
 
-                    // Set results from nested results
+                    // Convert and set nested results
                     let nresults = nresults //
                         .into_iter()
-                        .map(|v| v.into())
+                        .map(Val::from)
                         .collect::<Vec<Val>>();
 
                     let nresults =
@@ -510,7 +521,7 @@ async fn main() -> Result<(), Error> {
 
                     let nresults = nresults
                         .into_iter()
-                        .map(|v| WasmVal::U8(v))
+                        .map(WasmVal::U8)
                         .collect::<Vec<WasmVal>>();
 
                     results[0] = WasmVal::Result(Ok(Some(Box::new(WasmVal::List(nresults)))));
@@ -698,201 +709,4 @@ async fn main() -> Result<(), Error> {
     }
 
     Ok(())
-}
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-pub enum Val {
-    // Primitive types
-    Bool(bool),
-
-    // Signed integers
-    S8(i8),
-    S32(i32),
-    S64(i64),
-    S16(i16),
-
-    // Unsigned integers
-    U8(u8),
-    U16(u16),
-    U32(u32),
-    U64(u64),
-
-    // Floating point numbers
-    Float32(f32),
-    Float64(f64),
-
-    // Text
-    Char(char),
-    String(String),
-
-    // Containers
-    Enum(String),
-    List(Vec<Val>),
-    Option(Option<Box<Val>>),
-    Record(Vec<(String, Val)>),
-    Result(Result<Option<Box<Val>>, Option<Box<Val>>>),
-    Tuple(Vec<Val>),
-    Variant(String, Option<Box<Val>>),
-
-    // Other
-    Flags(Vec<String>),
-    // TODO: Figure out how to represent this
-    // Resource(ResourceAny),
-}
-
-impl From<Val> for WasmVal {
-    fn from(value: Val) -> Self {
-        match value {
-            // Primitive types
-            Val::Bool(v) => WasmVal::Bool(v),
-
-            // Signed integers
-            Val::S8(v) => WasmVal::S8(v),
-            Val::S32(v) => WasmVal::S32(v),
-            Val::S64(v) => WasmVal::S64(v),
-            Val::S16(v) => WasmVal::S16(v),
-
-            // Unsigned integers
-            Val::U8(v) => WasmVal::U8(v),
-            Val::U16(v) => WasmVal::U16(v),
-            Val::U32(v) => WasmVal::U32(v),
-            Val::U64(v) => WasmVal::U64(v),
-
-            // Floating point numbers
-            Val::Float32(v) => WasmVal::Float32(v),
-            Val::Float64(v) => WasmVal::Float64(v),
-
-            // Text
-            Val::Char(v) => WasmVal::Char(v),
-            Val::String(v) => WasmVal::String(v),
-
-            // Containers
-            Val::Enum(v) => WasmVal::Enum(v),
-            Val::List(vals) => WasmVal::List(vals.into_iter().map(WasmVal::from).collect()),
-
-            // Option
-            Val::Option(val) => {
-                if let Some(val) = val {
-                    WasmVal::Option(Some(Box::new(WasmVal::from(*val))))
-                } else {
-                    WasmVal::Option(None)
-                }
-            }
-
-            // Record
-            Val::Record(items) => {
-                let mut map = Vec::new();
-                for (k, v) in items {
-                    map.push((k, WasmVal::from(v)));
-                }
-                WasmVal::Record(map)
-            }
-
-            // Result
-            Val::Result(val) => match val {
-                Ok(v) => WasmVal::Result(Ok(v.map(|v| Box::new(WasmVal::from(*v))))),
-                Err(e) => WasmVal::Result(Err(e.map(|v| Box::new(WasmVal::from(*v))))),
-            },
-
-            // Tuple
-            Val::Tuple(vals) => {
-                let mut tuple = Vec::new();
-                for v in vals {
-                    tuple.push(WasmVal::from(v));
-                }
-                WasmVal::Tuple(tuple)
-            }
-
-            // Variant
-            Val::Variant(k, val) => {
-                if let Some(val) = val {
-                    WasmVal::Variant(k, Some(Box::new(WasmVal::from(*val))))
-                } else {
-                    WasmVal::Variant(k, None)
-                }
-            }
-
-            // Flags
-            Val::Flags(items) => WasmVal::Flags(items),
-        }
-    }
-}
-
-impl From<WasmVal> for Val {
-    fn from(value: WasmVal) -> Self {
-        match value {
-            // Primitive types
-            WasmVal::Bool(v) => Val::Bool(v),
-
-            // Signed integers
-            WasmVal::S8(v) => Val::S8(v),
-            WasmVal::S32(v) => Val::S32(v),
-            WasmVal::S64(v) => Val::S64(v),
-            WasmVal::S16(v) => Val::S16(v),
-
-            // Unsigned integers
-            WasmVal::U8(v) => Val::U8(v),
-            WasmVal::U16(v) => Val::U16(v),
-            WasmVal::U32(v) => Val::U32(v),
-            WasmVal::U64(v) => Val::U64(v),
-
-            // Floating point numbers
-            WasmVal::Float32(v) => Val::Float32(v),
-            WasmVal::Float64(v) => Val::Float64(v),
-
-            // Text
-            WasmVal::Char(v) => Val::Char(v),
-            WasmVal::String(v) => Val::String(v),
-
-            // Containers
-            WasmVal::Enum(v) => Val::Enum(v),
-            WasmVal::List(vals) => Val::List(vals.into_iter().map(Val::from).collect()),
-
-            // Option
-            WasmVal::Option(val) => {
-                if let Some(val) = val {
-                    Val::Option(Some(Box::new(Val::from(*val))))
-                } else {
-                    Val::Option(None)
-                }
-            }
-
-            // Record
-            WasmVal::Record(items) => {
-                let mut map = Vec::new();
-                for (k, v) in items {
-                    map.push((k, Val::from(v)));
-                }
-                Val::Record(map)
-            }
-
-            // Result
-            WasmVal::Result(val) => match val {
-                Ok(v) => Val::Result(Ok(v.map(|v| Box::new(Val::from(*v))))),
-                Err(e) => Val::Result(Err(e.map(|v| Box::new(Val::from(*v))))),
-            },
-
-            // Tuple
-            WasmVal::Tuple(vals) => {
-                let mut tuple = Vec::new();
-                for v in vals {
-                    tuple.push(Val::from(v));
-                }
-                Val::Tuple(tuple)
-            }
-
-            // Variant
-            WasmVal::Variant(k, val) => {
-                if let Some(val) = val {
-                    Val::Variant(k, Some(Box::new(Val::from(*val))))
-                } else {
-                    Val::Variant(k, None)
-                }
-            }
-            WasmVal::Flags(items) => Val::Flags(items),
-
-            // Other
-            WasmVal::Resource(_) => unimplemented!("Resource type not implemented"),
-        }
-    }
 }

@@ -3,6 +3,7 @@ resolver = "2"
 members = [
     "crates/icp-cli",
     "crates/icp-core",
+    "crates/icp-component-invoke",
     "crates/extensions/*",
     "crates/examples/*",
     "crates/test-utils",

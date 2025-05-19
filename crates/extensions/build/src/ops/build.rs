@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use dashmap::DashMap;
-use serde::Serialize;
+use icp_component_invoke::Val;
 
 use crate::{
     CanisterManifest, LazyRef,
@@ -115,44 +115,4 @@ impl Build for Builder {
 
         Ok(())
     }
-}
-
-#[derive(Debug, Clone, Serialize)]
-pub enum Val {
-    // Primitive types
-    Bool(bool),
-
-    // Signed integers
-    S8(i8),
-    S32(i32),
-    S64(i64),
-    S16(i16),
-
-    // Unsigned integers
-    U8(u8),
-    U16(u16),
-    U32(u32),
-    U64(u64),
-
-    // Floating point numbers
-    Float32(f32),
-    Float64(f64),
-
-    // Text
-    Char(char),
-    String(String),
-
-    // Containers
-    Enum(String),
-    List(Vec<Val>),
-    Option(Option<Box<Val>>),
-    Record(Vec<(String, Val)>),
-    Result(Result<Option<Box<Val>>, Option<Box<Val>>>),
-    Tuple(Vec<Val>),
-    Variant(String, Option<Box<Val>>),
-
-    // Other
-    Flags(Vec<String>),
-    // TODO: Figure out how to represent this
-    // Resource(ResourceAny),
 }
