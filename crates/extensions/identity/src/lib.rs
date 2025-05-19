@@ -6,7 +6,7 @@ mod bindings;
 use bindings::{
     exports::icp::{
         cli::{cli, init},
-        identity::{self, lib::Guest},
+        identity,
     },
     icp::cli::misc::print,
 };

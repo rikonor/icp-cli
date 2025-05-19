@@ -42,7 +42,9 @@ thread_local! {
 
 #[derive(Deserialize, Debug)]
 struct CanisterProperties {
+    #[allow(unused)]
     name: String,
+
     #[serde(rename = "type")]
     canister_type: String,
 }

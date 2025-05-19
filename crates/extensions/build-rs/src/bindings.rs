@@ -180,6 +180,7 @@ pub mod icp {
                 }
             }
         }
+        /// A custom filesystem interface mediated by the host.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod filesystem {
             #[used]
@@ -187,6 +188,8 @@ pub mod icp {
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             #[allow(unused_unsafe, clippy::all)]
+            /// Creates a directory at the specified path relative to the current workspace.
+            /// Returns `ok()` on success, or `err(string)` with an error message on failure.
             pub fn create_directory(path: &str) -> Result<(), _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -245,6 +248,9 @@ pub mod icp {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Writes the given bytes to a file at the specified path relative to the current workspace.
+            /// Creates the file if it doesn't exist, overwrites it if it does.
+            /// Returns `ok()` on success, or `err(string)` with an error message on failure.
             pub fn write_file(path: &str, contents: &[u8]) -> Result<(), _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -320,6 +326,8 @@ pub mod icp {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
+            /// Reads the entire contents of a file at the specified path relative to the current workspace.
+            /// Returns `ok(list<u8>)` with the file contents on success, or `err(string)` with an error message on failure.
             pub fn read_file(path: &str) -> Result<_rt::Vec<u8>, _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -734,7 +742,9 @@ pub mod exports {
                     _rt::as_i32(result4)
                 }
                 pub trait Guest {
+                    /// spec provides a schema a for the cli
                     fn spec() -> _rt::String;
+                    /// run the cli portion of the extension
                     fn run(args: _rt::Vec<_rt::String>) -> u8;
                 }
                 #[doc(hidden)]

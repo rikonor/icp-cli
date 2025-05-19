@@ -14,7 +14,7 @@ use clap::{value_parser, Arg, ArgAction, Command};
 use dashmap::DashMap;
 use once_cell::sync::Lazy;
 
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use wasmtime::{
     component::{bindgen, Component, Linker, Val as WasmVal},
     Config, Engine, Store as WasmStore,
@@ -500,9 +500,20 @@ async fn main() -> Result<(), Error> {
                         .context(anyhow!("post return failed"))?;
 
                     // Set results from nested results
-                    println!("nresults: {nresults:?}");
+                    let nresults = nresults //
+                        .into_iter()
+                        .map(|v| v.into())
+                        .collect::<Vec<Val>>();
 
-                    results[0] = WasmVal::Result(Ok(None));
+                    let nresults =
+                        serde_json::to_vec(&nresults).expect("failed to serialize results");
+
+                    let nresults = nresults
+                        .into_iter()
+                        .map(|v| WasmVal::U8(v))
+                        .collect::<Vec<WasmVal>>();
+
+                    results[0] = WasmVal::Result(Ok(Some(Box::new(WasmVal::List(nresults)))));
 
                     Ok(())
                 }
@@ -689,7 +700,7 @@ async fn main() -> Result<(), Error> {
     Ok(())
 }
 
-#[derive(Debug, Clone, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum Val {
     // Primitive types
     Bool(bool),
@@ -803,6 +814,85 @@ impl From<Val> for WasmVal {
 
             // Flags
             Val::Flags(items) => WasmVal::Flags(items),
+        }
+    }
+}
+
+impl From<WasmVal> for Val {
+    fn from(value: WasmVal) -> Self {
+        match value {
+            // Primitive types
+            WasmVal::Bool(v) => Val::Bool(v),
+
+            // Signed integers
+            WasmVal::S8(v) => Val::S8(v),
+            WasmVal::S32(v) => Val::S32(v),
+            WasmVal::S64(v) => Val::S64(v),
+            WasmVal::S16(v) => Val::S16(v),
+
+            // Unsigned integers
+            WasmVal::U8(v) => Val::U8(v),
+            WasmVal::U16(v) => Val::U16(v),
+            WasmVal::U32(v) => Val::U32(v),
+            WasmVal::U64(v) => Val::U64(v),
+
+            // Floating point numbers
+            WasmVal::Float32(v) => Val::Float32(v),
+            WasmVal::Float64(v) => Val::Float64(v),
+
+            // Text
+            WasmVal::Char(v) => Val::Char(v),
+            WasmVal::String(v) => Val::String(v),
+
+            // Containers
+            WasmVal::Enum(v) => Val::Enum(v),
+            WasmVal::List(vals) => Val::List(vals.into_iter().map(Val::from).collect()),
+
+            // Option
+            WasmVal::Option(val) => {
+                if let Some(val) = val {
+                    Val::Option(Some(Box::new(Val::from(*val))))
+                } else {
+                    Val::Option(None)
+                }
+            }
+
+            // Record
+            WasmVal::Record(items) => {
+                let mut map = Vec::new();
+                for (k, v) in items {
+                    map.push((k, Val::from(v)));
+                }
+                Val::Record(map)
+            }
+
+            // Result
+            WasmVal::Result(val) => match val {
+                Ok(v) => Val::Result(Ok(v.map(|v| Box::new(Val::from(*v))))),
+                Err(e) => Val::Result(Err(e.map(|v| Box::new(Val::from(*v))))),
+            },
+
+            // Tuple
+            WasmVal::Tuple(vals) => {
+                let mut tuple = Vec::new();
+                for v in vals {
+                    tuple.push(Val::from(v));
+                }
+                Val::Tuple(tuple)
+            }
+
+            // Variant
+            WasmVal::Variant(k, val) => {
+                if let Some(val) = val {
+                    Val::Variant(k, Some(Box::new(Val::from(*val))))
+                } else {
+                    Val::Variant(k, None)
+                }
+            }
+            WasmVal::Flags(items) => Val::Flags(items),
+
+            // Other
+            WasmVal::Resource(_) => unimplemented!("Resource type not implemented"),
         }
     }
 }
