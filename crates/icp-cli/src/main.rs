@@ -19,7 +19,6 @@ use wasmtime::{
     Config, Engine, Store as WasmStore,
 };
 
-use icp_component_invoke::Val;
 use icp_core::{
     component::{DynamicLinker, FunctionRegistry},
     dependency::DependencyGraph,
@@ -37,6 +36,8 @@ use extension::{
 
 mod spec;
 use spec::CommandSpec;
+
+mod component_invoke;
 
 // Service configuration
 const SERVICE_NAME: &str = "icp";
@@ -104,7 +105,7 @@ bindgen!({
     async: true,
 });
 
-struct State;
+pub(crate) struct State;
 
 impl misc::Host for State {
     async fn print(&mut self, s: String) {
@@ -413,6 +414,19 @@ async fn main() -> Result<(), Error> {
                         _ => bail!("function_name has the wrong type: {function_name:?}"),
                     };
 
+                    // Extract nested params from host function arguments
+                    let nparams_raw_val = match params.get(NESTED_PARAMS_IDX) {
+                        Some(v) => v,
+                        None => bail!("missing nested params for invoke host function"),
+                    };
+
+                    // Convert raw WasmVal (expected to be List of U8) to Vec<u8> using the helper
+                    let nparams_bytes =
+                        match component_invoke::try_wasm_list_u8_to_vec_u8(nparams_raw_val) {
+                            Ok(bytes) => bytes,
+                            Err(e) => bail!(e),
+                        };
+
                     // Lookup function using function registry
                     let f = match reg.lock().unwrap().lookup(interface_name, function_name) {
                         // Found function
@@ -450,81 +464,25 @@ async fn main() -> Result<(), Error> {
                         }
                     };
 
-                    // Extract nested params
-                    let nparams = match params.get(NESTED_PARAMS_IDX) {
-                        Some(v) => v,
-                        None => bail!("missing nested params for invoke host function"),
-                    };
-
-                    // Convert nparams to Vec<u8>
-                    let nparams = match nparams {
-                        // Correct
-                        WasmVal::List(vs) => {
-                            let mut bytes = Vec::new();
-                            for v in vs.iter() {
-                                match v {
-                                    WasmVal::U8(v) => bytes.push(v.to_owned()),
-                                    _ => bail!("nested params has the wrong type: {nparams:?}"),
-                                }
-                            }
-                            bytes
-                        }
-
-                        // Wrong
-                        _ => bail!("nested params has the wrong type: {nparams:?}"),
-                    };
-
-                    // Deserialize params
-                    let nparams = match serde_json::from_slice::<Vec<Val>>(&nparams) {
-                        // Ok
-                        Ok(params) => params,
-
-                        // Fail
-                        Err(err) => {
-                            results[0] = WasmVal::Result(Err(Some(Box::new(WasmVal::String(
-                                err.to_string(),
-                            )))));
-
-                            return Ok(());
-                        }
-                    };
-
-                    let nparams = nparams
-                        .into_iter()
-                        .map(WasmVal::from)
-                        .collect::<Vec<WasmVal>>();
-
-                    // Nested results
-                    let mut nresults = vec![WasmVal::Bool(false)];
-
-                    // Invoke function
-                    f.call_async(
-                        &mut store,    // store
-                        &nparams,      // params
-                        &mut nresults, // results
+                    // Call the extracted function to execute the component function
+                    match component_invoke::execute_component_function(
+                        &mut store,
+                        &f,
+                        nparams_bytes,
                     )
                     .await
-                    .context(anyhow!("failed to call {interface_name}:{function_name}"))?;
-
-                    f.post_return_async(&mut store)
-                        .await
-                        .context(anyhow!("post return failed"))?;
-
-                    // Convert and set nested results
-                    let nresults = nresults //
-                        .into_iter()
-                        .map(Val::from)
-                        .collect::<Vec<Val>>();
-
-                    let nresults =
-                        serde_json::to_vec(&nresults).expect("failed to serialize results");
-
-                    let nresults = nresults
-                        .into_iter()
-                        .map(WasmVal::U8)
-                        .collect::<Vec<WasmVal>>();
-
-                    results[0] = WasmVal::Result(Ok(Some(Box::new(WasmVal::List(nresults)))));
+                    {
+                        Ok(wasm_u8_list) => {
+                            results[0] =
+                                WasmVal::Result(Ok(Some(Box::new(WasmVal::List(wasm_u8_list)))));
+                        }
+                        Err(e) => {
+                            // Convert anyhow::Error to a WasmVal::String for the error part of WasmVal::Result
+                            results[0] = WasmVal::Result(Err(Some(Box::new(WasmVal::String(
+                                e.to_string().into(),
+                            )))));
+                        }
+                    }
 
                     Ok(())
                 }
