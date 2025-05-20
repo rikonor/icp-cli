@@ -5,6 +5,6 @@ interface lib {
 }
 
 world extension {
-  include icp:cli/extension@0.3.0;
+  include icp:cli/extension@0.3.4;
   export lib;
 }

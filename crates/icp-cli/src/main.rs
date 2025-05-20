@@ -407,13 +407,17 @@ async fn main() -> Result<(), Error> {
     )?;
 
     filesystem::add_to_linker(
-        // Link filesystem host functions
+        &mut lnk,                  // linker
+        |state: &mut State| state, // get
+    )?;
+
+    command::add_to_linker(
         &mut lnk,                  // linker
         |state: &mut State| state, // get
     )?;
 
     // NOTE: Well this is gonna be annoying - are we going to have to keep this version up to date??
-    lnk.instance("icp:cli/component@0.3.3")?.func_new_async(
+    lnk.instance("icp:cli/component@0.3.4")?.func_new_async(
         "invoke",
         move |mut store, params: &[WasmVal], results: &mut [WasmVal]| {
             Box::new({
@@ -423,7 +427,7 @@ async fn main() -> Result<(), Error> {
                     const FUNCTION_NAME_IDX: usize = 1;
                     const NESTED_PARAMS_IDX: usize = 2;
 
-                    // Extract interface name
+                    // interface name
                     let interface_name = match params.get(INTERFACE_NAME_IDX) {
                         Some(v) => v,
                         None => bail!("missing interface_name parameter for invoke host function"),
@@ -434,7 +438,7 @@ async fn main() -> Result<(), Error> {
                         _ => bail!("interface_name has the wrong type: {interface_name:?}"),
                     };
 
-                    // Extract function name
+                    // function name
                     let function_name = match params.get(FUNCTION_NAME_IDX) {
                         Some(v) => v,
                         None => bail!("missing function_name parameter for invoke host function"),
@@ -445,7 +449,7 @@ async fn main() -> Result<(), Error> {
                         _ => bail!("function_name has the wrong type: {function_name:?}"),
                     };
 
-                    // Extract nested params from host function arguments
+                    // nested parameters
                     let nparams_raw_val = match params.get(NESTED_PARAMS_IDX) {
                         Some(v) => v,
                         None => bail!("missing nested params for invoke host function"),

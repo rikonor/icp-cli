@@ -15,7 +15,7 @@ interface lib {
 
 world extension {
   // Include standard CLI world (provides cli, misc, filesystem imports)
-  include icp:cli/extension@0.3.0;
+  include icp:cli/extension@0.3.4;
 
   // Import the build library interface to call build functions
   import icp:build/canister-build@0.6.7;

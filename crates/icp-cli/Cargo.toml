@@ -14,14 +14,9 @@ icp-distribution = { path = "../icp-distribution" }
 
 [dependencies]
 anyhow = { workspace = true }
-icp-distribution = { path = "../icp-distribution" }
 async-trait = { workspace = true }
 clap = { workspace = true }
 dashmap = { workspace = true }
-icp-core = { path = "../icp-core" }
-icp-component-invoke = { path = "../icp-component-invoke", features = [
-    "wasmtime-conversions",
-] }
 dirs = { workspace = true }
 http = { workspace = true }
 once_cell = { workspace = true }
@@ -32,6 +27,16 @@ sha2 = { workspace = true }
 thiserror = { workspace = true }
 tokio = { workspace = true }
 wasmtime = { workspace = true }
+
+[dependencies.icp-distribution]
+path = "../icp-distribution"
+
+[dependencies.icp-core]
+path = "../icp-core"
+
+[dependencies.icp-component-invoke]
+path = "../icp-component-invoke"
+features = ["wasmtime-conversions"]
 
 [dev-dependencies]
 tempfile = { workspace = true }

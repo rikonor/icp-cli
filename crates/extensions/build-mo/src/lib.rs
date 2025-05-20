@@ -8,7 +8,10 @@ use bindings::{
         build_mo::canister_build,
         cli::{cli, init},
     },
-    icp::{build::registry::register_provider, cli::misc::print},
+    icp::{
+        build::registry::register_provider,
+        cli::{command::execute, misc::print},
+    },
 };
 
 mod spec;
@@ -74,7 +77,7 @@ impl canister_build::Guest for Component {
         // - Determining build steps based on canister type
         // - Executing build commands (e.g., dfx build, cargo build)
 
-        Ok(()) // Simulate success for now
+        Ok(())
     }
 }
 
