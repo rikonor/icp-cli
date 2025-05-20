@@ -1,0 +1,13 @@
+interface command {
+  /// Executes a command on the host.
+  /// `command`: The name or path of the command to execute.
+  /// `args`: A list of arguments to pass to the command.
+  /// Returns the result of the command execution, including stdout, stderr, and exit code.
+  execute: func(command: string, args: list<string>) -> result<command-output, string>;
+
+  record command-output {
+    stdout: list<u8>,
+    stderr: list<u8>,
+    exit-code: u32,
+  }
+}

@@ -97,7 +97,10 @@ static DEFAULT_DIR_PRECOMPILES: Lazy<PathBuf> = Lazy::new(|| match *DISTRIBUTION
 });
 
 // WIT Bindings
-use icp::cli::{filesystem, misc};
+use icp::cli::{
+    command::{self, CommandOutput},
+    filesystem, misc,
+};
 
 bindgen!({
     path: "../../wit/cli",
@@ -124,33 +127,61 @@ impl misc::Host for State {
     }
 }
 
-// Implementation for the custom filesystem interface
+/// Host implementation for the `icp:cli/filesystem` interface.
+/// Provides file system access to extensions.
 impl filesystem::Host for State {
+    /// Creates a directory on the host file system.
+    /// Paths are relative to the workspace root where icp-cli runs.
     async fn create_directory(&mut self, path: String) -> Result<(), String> {
-        // Note: Paths are relative to the workspace root where icp-cli runs.
-        // TODO: Add interception/administration logic here if desired.
-        match std::fs::create_dir_all(&path) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(format!("Failed to create directory '{}': {}", path, e)),
-        }
+        std::fs::create_dir_all(&path)
+            .map_err(|err| format!("failed to create directory '{path}': {err}"))?;
+
+        Ok(())
     }
 
+    /// Writes content to a file on the host file system.
+    /// Paths are relative to the workspace root where icp-cli runs.
     async fn write_file(&mut self, path: String, contents: Vec<u8>) -> Result<(), String> {
-        // Note: Paths are relative to the workspace root where icp-cli runs.
-        // TODO: Add interception/administration logic here if desired.
-        match std::fs::write(&path, &contents) {
-            Ok(_) => Ok(()),
-            Err(e) => Err(format!("Failed to write file '{}': {}", path, e)),
-        }
+        std::fs::write(&path, &contents)
+            .map_err(|err| format!("failed to write file '{path}': {err}"))?;
+
+        Ok(())
     }
 
+    /// Reads content from a file on the host file system.
+    /// Paths are relative to the workspace root where icp-cli runs.
     async fn read_file(&mut self, path: String) -> Result<Vec<u8>, String> {
-        // Note: Paths are relative to the workspace root where icp-cli runs.
-        // TODO: Add interception/administration logic here if desired.
-        match std::fs::read(&path) {
-            Ok(contents) => Ok(contents),
-            Err(e) => Err(format!("Failed to read file '{}': {}", path, e)),
-        }
+        let out =
+            std::fs::read(&path).map_err(|err| format!("failed to read file '{path}': {err}"))?;
+
+        Ok(out)
+    }
+}
+
+/// Host implementation for the `icp:cli/command` interface.
+/// Allows extensions to execute commands on the host system.
+impl command::Host for State {
+    /// Executes a command with the given arguments on the host.
+    /// Returns the standard output, standard error, and exit code.
+    /// If the process is terminated by a signal and has no exit code,
+    /// a default exit code of 1 is returned.
+    async fn execute(
+        &mut self,
+        command: String,
+        args: Vec<String>,
+    ) -> Result<CommandOutput, String> {
+        use std::process::Command;
+
+        let out = Command::new(command)
+            .args(args)
+            .output()
+            .map_err(|err| format!("failed to execute command: {err}"))?;
+
+        Ok(CommandOutput {
+            stdout: out.stdout,
+            stderr: out.stderr,
+            exit_code: out.status.code().unwrap_or(1) as u32,
+        })
     }
 }
 

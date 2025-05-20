@@ -1,8 +1,20 @@
+// This interface provides functions for extensions to interact with other
+// components loaded by the CLI host.
+
+/// The `component` interface allows extensions to dynamically invoke
+/// functions exported by other components loaded by the host.
 interface component {
-  //
-  invoke: func(
-    interface-name: string,
-    function-name: string,
-    params: list<u8>,
-  ) -> result<list<u8>, string>;
+  /// Represents the raw bytes of the encoded result value on successful
+  /// component function invocation.
+  type invoke-output = list<u8>;
+
+  /// Dynamically invokes a function from another component.
+  ///
+  /// `interface-name`: The name of the interface the target function belongs to (e.g., "icp:build/canister-build").
+  /// `function-name`: The name of the function to invoke (e.g., "build-canister").
+  /// `params`: The raw bytes of the encoded parameters for the target function.
+  ///
+  /// Returns the raw bytes of the encoded result value on success, or a string
+  /// describing the error on failure.
+  invoke: func(interface-name: string, function-name: string, params: list<u8>) -> result<invoke-output, string>;
 }
