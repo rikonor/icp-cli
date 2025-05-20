@@ -1,10 +1,13 @@
-package icp:build@0.6.11; // Defines build contracts and worlds
+package icp:build@0.6.13;
 
 /// Common interface for building a canister.
 /// This contract is implemented by:
 ///  1. The Build Facade: Its implementation determines canister type and delegates.
 ///  2. Specific Build Providers (e.g., Motoko, Rust): Their implementations perform the actual build.
 interface canister-build {
+  /// Represents the path to the output artifact (e.g., a .wasm file).
+  type output-path = string;
+
   /// Builds the canister located in the specified directory.
   ///
   /// - `canister-dir`: The relative path to the canister's directory,
@@ -12,7 +15,7 @@ interface canister-build {
   ///   detailing its name and type.
   ///
   /// Returns `ok()` on successful build, or `err(string)` with an error message on failure.
-  build-canister: func(canister-dir: string) -> result<_, string>;
+  build-canister: func(canister-dir: string) -> result<output-path, string>;
 }
 
 /// Interface for build providers to register themselves with the Build Facade.

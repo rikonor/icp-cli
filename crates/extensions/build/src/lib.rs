@@ -119,14 +119,13 @@ impl registry::Guest for Component {
 }
 
 impl canister_build::Guest for Component {
-    fn build_canister(canister_dir: String) -> Result<(), String> {
-        BUILDER
-            .with(|v| {
-                v.get()
-                    .expect("builder not initialized")
-                    .build(&canister_dir)
-            })
-            .map_err(|err| format!("{err}"))
+    fn build_canister(canister_dir: String) -> Result<String, String> {
+        BUILDER.with(|v| {
+            v.get()
+                .expect("builder not initialized")
+                .build(&canister_dir)
+                .map_err(|err| format!("{err}"))
+        })
     }
 }
 

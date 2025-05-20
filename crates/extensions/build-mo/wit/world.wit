@@ -1,11 +1,20 @@
 package icp:build-mo;
 
-interface canister-build {
-  build-canister: func(canister-dir: string) -> result<_, string>;
-}
+// This world file defines the capabilities and requirements for the `build-mo`
+// extension component. It specifies the interfaces it imports from the host
+// and other extensions, and the interfaces it exports.
 
+/// The `extension` world for the `build-mo` component.
+/// It specifies the interfaces required by this extension and the interfaces it provides.
 world extension {
+  // Includes standard CLI functionalities provided by the host.
   include icp:cli/extension@0.3.4;
-  import icp:build/registry@0.6.11;
-  export canister-build;
+
+  /// Imports the `registry` interface from the `icp:build` facade extension
+  /// to register this provider.
+  import icp:build/registry@0.6.13;
+
+  /// Exports the `canister-build` interface implemented by this extension,
+  /// allowing the `icp:build` facade to delegate Motoko builds to it.
+  export icp:build/canister-build@0.6.13;
 }

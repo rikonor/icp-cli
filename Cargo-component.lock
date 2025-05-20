@@ -11,9 +11,9 @@ version = "0.6.10"
 digest = "sha256:658780c0b1b1eb5155219130fbcdbae746eb82d659714998d7ce77773874a16c"
 
 [[package.version]]
-requirement = "^0.6.11"
-version = "0.6.11"
-digest = "sha256:5590ac0320ca5a04f1ba5b5fd394904c5d955bb7a46c3a735bd6fa34d8d7486c"
+requirement = "^0.6.13"
+version = "0.6.13"
+digest = "sha256:762e28941c16a2f1ad2820a58c5123c4eabc8b9b27bc91147512f3f5c87baa61"
 
 [[package]]
 name = "icp:cli"

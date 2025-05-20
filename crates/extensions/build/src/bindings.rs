@@ -628,23 +628,23 @@ pub mod exports {
                     ) -> Result<(), _rt::String>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_build_registry_0_6_11_cabi {
+                macro_rules! __export_icp_build_registry_0_6_13_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:build/registry@0.6.11#register-provider")] unsafe extern "C"
+                        "icp:build/registry@0.6.13#register-provider")] unsafe extern "C"
                         fn export_register_provider(arg0 : * mut u8, arg1 : usize, arg2 :
                         * mut u8, arg3 : usize, arg4 : * mut u8, arg5 : usize,) -> * mut
                         u8 { unsafe { $($path_to_types)*::
                         _export_register_provider_cabi::<$ty > (arg0, arg1, arg2, arg3,
                         arg4, arg5) } } #[unsafe (export_name =
-                        "cabi_post_icp:build/registry@0.6.11#register-provider")] unsafe
+                        "cabi_post_icp:build/registry@0.6.13#register-provider")] unsafe
                         extern "C" fn _post_return_register_provider(arg0 : * mut u8,) {
                         unsafe { $($path_to_types)*::
                         __post_return_register_provider::<$ty > (arg0) } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_build_registry_0_6_11_cabi;
+                pub(crate) use __export_icp_build_registry_0_6_13_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -657,7 +657,6 @@ pub mod exports {
                         * ::core::mem::size_of::<*const u8>()],
                 );
             }
-            /// Defines build contracts and worlds
             /// Common interface for building a canister.
             /// This contract is implemented by:
             ///  1. The Build Facade: Its implementation determines canister type and delegates.
@@ -668,6 +667,8 @@ pub mod exports {
                 #[doc(hidden)]
                 static __FORCE_SECTION_REF: fn() = super::super::super::super::__link_custom_section_describing_imports;
                 use super::super::super::super::_rt;
+                /// Represents the path to the output artifact (e.g., a .wasm file).
+                pub type OutputPath = _rt::String;
                 #[doc(hidden)]
                 #[allow(non_snake_case)]
                 pub unsafe fn _export_build_canister_cabi<T: Guest>(
@@ -680,11 +681,8 @@ pub mod exports {
                     let result1 = T::build_canister(_rt::string_lift(bytes0));
                     let ptr2 = (&raw mut _RET_AREA.0).cast::<u8>();
                     match result1 {
-                        Ok(_) => {
+                        Ok(e) => {
                             *ptr2.add(0).cast::<u8>() = (0i32) as u8;
-                        }
-                        Err(e) => {
-                            *ptr2.add(0).cast::<u8>() = (1i32) as u8;
                             let vec3 = (e.into_bytes()).into_boxed_slice();
                             let ptr3 = vec3.as_ptr().cast::<u8>();
                             let len3 = vec3.len();
@@ -696,6 +694,19 @@ pub mod exports {
                                 .add(::core::mem::size_of::<*const u8>())
                                 .cast::<*mut u8>() = ptr3.cast_mut();
                         }
+                        Err(e) => {
+                            *ptr2.add(0).cast::<u8>() = (1i32) as u8;
+                            let vec4 = (e.into_bytes()).into_boxed_slice();
+                            let ptr4 = vec4.as_ptr().cast::<u8>();
+                            let len4 = vec4.len();
+                            ::core::mem::forget(vec4);
+                            *ptr2
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>() = len4;
+                            *ptr2
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>() = ptr4.cast_mut();
+                        }
                     };
                     ptr2
                 }
@@ -704,8 +715,7 @@ pub mod exports {
                 pub unsafe fn __post_return_build_canister<T: Guest>(arg0: *mut u8) {
                     let l0 = i32::from(*arg0.add(0).cast::<u8>());
                     match l0 {
-                        0 => {}
-                        _ => {
+                        0 => {
                             let l1 = *arg0
                                 .add(::core::mem::size_of::<*const u8>())
                                 .cast::<*mut u8>();
@@ -713,6 +723,15 @@ pub mod exports {
                                 .add(2 * ::core::mem::size_of::<*const u8>())
                                 .cast::<usize>();
                             _rt::cabi_dealloc(l1, l2, 1);
+                        }
+                        _ => {
+                            let l3 = *arg0
+                                .add(::core::mem::size_of::<*const u8>())
+                                .cast::<*mut u8>();
+                            let l4 = *arg0
+                                .add(2 * ::core::mem::size_of::<*const u8>())
+                                .cast::<usize>();
+                            _rt::cabi_dealloc(l3, l4, 1);
                         }
                     }
                 }
@@ -726,25 +745,25 @@ pub mod exports {
                     /// Returns `ok()` on successful build, or `err(string)` with an error message on failure.
                     fn build_canister(
                         canister_dir: _rt::String,
-                    ) -> Result<(), _rt::String>;
+                    ) -> Result<OutputPath, _rt::String>;
                 }
                 #[doc(hidden)]
-                macro_rules! __export_icp_build_canister_build_0_6_11_cabi {
+                macro_rules! __export_icp_build_canister_build_0_6_13_cabi {
                     ($ty:ident with_types_in $($path_to_types:tt)*) => {
                         const _ : () = { #[unsafe (export_name =
-                        "icp:build/canister-build@0.6.11#build-canister")] unsafe extern
+                        "icp:build/canister-build@0.6.13#build-canister")] unsafe extern
                         "C" fn export_build_canister(arg0 : * mut u8, arg1 : usize,) -> *
                         mut u8 { unsafe { $($path_to_types)*::
                         _export_build_canister_cabi::<$ty > (arg0, arg1) } } #[unsafe
                         (export_name =
-                        "cabi_post_icp:build/canister-build@0.6.11#build-canister")]
+                        "cabi_post_icp:build/canister-build@0.6.13#build-canister")]
                         unsafe extern "C" fn _post_return_build_canister(arg0 : * mut
                         u8,) { unsafe { $($path_to_types)*::
                         __post_return_build_canister::<$ty > (arg0) } } };
                     };
                 }
                 #[doc(hidden)]
-                pub(crate) use __export_icp_build_canister_build_0_6_11_cabi;
+                pub(crate) use __export_icp_build_canister_build_0_6_13_cabi;
                 #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
                 #[cfg_attr(target_pointer_width = "32", repr(align(4)))]
                 struct _RetArea(
@@ -1051,10 +1070,10 @@ macro_rules! __export_facade_impl {
     };
     ($ty:ident with_types_in $($path_to_types_root:tt)*) => {
         $($path_to_types_root)*::
-        exports::icp::build::registry::__export_icp_build_registry_0_6_11_cabi!($ty
+        exports::icp::build::registry::__export_icp_build_registry_0_6_13_cabi!($ty
         with_types_in $($path_to_types_root)*:: exports::icp::build::registry);
         $($path_to_types_root)*::
-        exports::icp::build::canister_build::__export_icp_build_canister_build_0_6_11_cabi!($ty
+        exports::icp::build::canister_build::__export_icp_build_canister_build_0_6_13_cabi!($ty
         with_types_in $($path_to_types_root)*:: exports::icp::build::canister_build);
         $($path_to_types_root)*::
         exports::icp::cli::init::__export_icp_cli_init_0_3_4_cabi!($ty with_types_in
@@ -1067,12 +1086,12 @@ macro_rules! __export_facade_impl {
 pub(crate) use __export_facade_impl as export;
 #[cfg(target_arch = "wasm32")]
 #[unsafe(
-    link_section = "component-type:wit-bindgen:0.41.0:icp:build@0.6.11:facade:encoded world"
+    link_section = "component-type:wit-bindgen:0.41.0:icp:build@0.6.13:facade:encoded world"
 )]
 #[doc(hidden)]
 #[allow(clippy::octal_escapes)]
-pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 909] = *b"\
-\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\x90\x06\x01A\x02\x01\
+pub static __WIT_BINDGEN_COMPONENT_TYPE: [u8; 929] = *b"\
+\0asm\x0d\0\x01\0\0\x19\x16wit-component-encoding\x04\0\x07\xa4\x06\x01A\x02\x01\
 A\x10\x01B\x07\x01p}\x01r\x03\x06stdout\0\x06stderr\0\x09exit-codey\x04\0\x0ecom\
 mand-output\x03\0\x01\x01ps\x01j\x01\x02\x01s\x01@\x02\x07commands\x04args\x03\0\
 \x04\x04\0\x07execute\x01\x05\x03\0\x15icp:cli/command@0.3.4\x05\0\x01B\x06\x01p\
@@ -1085,13 +1104,14 @@ ite-file\x01\x03\x01j\x01\x02\x01s\x01@\x01\x04paths\0\x04\x04\0\x09read-file\x0
 \0\x05print\x01\0\x01@\0\0}\x04\0\x04rand\x01\x01\x01@\0\0w\x04\0\x04time\x01\x02\
 \x03\0\x12icp:cli/misc@0.3.4\x05\x03\x01B\x03\x01j\0\x01s\x01@\x03\x0dcanister-t\
 ypes\x0einterface-names\x0dfunction-names\0\0\x04\0\x11register-provider\x01\x01\
-\x04\0\x19icp:build/registry@0.6.11\x05\x04\x01B\x03\x01j\0\x01s\x01@\x01\x0ccan\
-ister-dirs\0\0\x04\0\x0ebuild-canister\x01\x01\x04\0\x1ficp:build/canister-build\
-@0.6.11\x05\x05\x01B\x03\x01j\0\x01s\x01@\0\0\0\x04\0\x04init\x01\x01\x04\0\x12i\
-cp:cli/init@0.3.4\x05\x06\x01B\x05\x01@\0\0s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04\
-args\x01\0}\x04\0\x03run\x01\x02\x04\0\x11icp:cli/cli@0.3.4\x05\x07\x04\0\x17icp\
-:build/facade@0.6.11\x04\0\x0b\x0c\x01\0\x06facade\x03\0\0\0G\x09producers\x01\x0c\
-processed-by\x02\x0dwit-component\x070.227.1\x10wit-bindgen-rust\x060.41.0";
+\x04\0\x19icp:build/registry@0.6.13\x05\x04\x01B\x05\x01s\x04\0\x0boutput-path\x03\
+\0\0\x01j\x01\x01\x01s\x01@\x01\x0ccanister-dirs\0\x02\x04\0\x0ebuild-canister\x01\
+\x03\x04\0\x1ficp:build/canister-build@0.6.13\x05\x05\x01B\x03\x01j\0\x01s\x01@\0\
+\0\0\x04\0\x04init\x01\x01\x04\0\x12icp:cli/init@0.3.4\x05\x06\x01B\x05\x01@\0\0\
+s\x04\0\x04spec\x01\0\x01ps\x01@\x01\x04args\x01\0}\x04\0\x03run\x01\x02\x04\0\x11\
+icp:cli/cli@0.3.4\x05\x07\x04\0\x17icp:build/facade@0.6.13\x04\0\x0b\x0c\x01\0\x06\
+facade\x03\0\0\0G\x09producers\x01\x0cprocessed-by\x02\x0dwit-component\x070.227\
+.1\x10wit-bindgen-rust\x060.41.0";
 #[inline(never)]
 #[doc(hidden)]
 pub fn __link_custom_section_describing_imports() {

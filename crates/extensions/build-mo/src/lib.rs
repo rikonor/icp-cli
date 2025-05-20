@@ -5,7 +5,7 @@ mod bindings;
 
 use bindings::{
     exports::icp::{
-        build_mo::canister_build,
+        build::canister_build,
         cli::{cli, init},
     },
     icp::{
@@ -65,7 +65,7 @@ impl cli::Guest for Component {
 }
 
 impl canister_build::Guest for Component {
-    fn build_canister(canister_dir: String) -> Result<(), String> {
+    fn build_canister(canister_dir: String) -> Result<String, String> {
         print(&format!(
             "[build-mo] Received build request for canister at: {}",
             canister_dir
@@ -77,7 +77,7 @@ impl canister_build::Guest for Component {
         // - Determining build steps based on canister type
         // - Executing build commands (e.g., dfx build, cargo build)
 
-        Ok(())
+        Ok("OUTPUT_PATH".into())
     }
 }
 

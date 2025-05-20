@@ -43,7 +43,7 @@ impl From<BuildError> for u8 {
 }
 
 pub trait Build {
-    fn build(&self, canister_dir: &str) -> Result<(), BuildError>;
+    fn build(&self, canister_dir: &str) -> Result<String, BuildError>;
 }
 
 pub struct Builder {
@@ -64,7 +64,7 @@ impl Builder {
 }
 
 impl Build for Builder {
-    fn build(&self, canister_dir: &str) -> Result<(), BuildError> {
+    fn build(&self, canister_dir: &str) -> Result<String, BuildError> {
         let manifest_path = Path::new(canister_dir).join("canister.toml");
         let manifest_path = manifest_path.to_string_lossy();
 
@@ -113,6 +113,6 @@ impl Build for Builder {
         )
         .map_err(|err| BuildError::BuildFailed(err))?;
 
-        Ok(())
+        Ok("TODO".into())
     }
 }
