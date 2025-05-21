@@ -4,6 +4,24 @@ package icp:build-mo;
 // extension component. It specifies the interfaces it imports from the host
 // and other extensions, and the interfaces it exports.
 
+/// Common interface for building a canister.
+/// This contract is implemented by:
+///  1. The Build Facade: Its implementation determines canister type and delegates.
+///  2. Specific Build Providers (e.g., Motoko, Rust): Their implementations perform the actual build.
+interface canister-build {
+  /// Represents the path to the output artifact (e.g., a .wasm file).
+  type output-path = string;
+
+  /// Builds the canister located in the specified directory.
+  ///
+  /// - `canister-dir`: The relative path to the canister's directory,
+  ///   which is expected to contain a manifest file (e.g., `canister.toml`)
+  ///   detailing its name and type.
+  ///
+  /// Returns `ok()` on successful build, or `err(string)` with an error message on failure.
+  build-canister: func(canister-dir: string) -> result<output-path, string>;
+}
+
 /// The `extension` world for the `build-mo` component.
 /// It specifies the interfaces required by this extension and the interfaces it provides.
 world extension {
@@ -16,5 +34,5 @@ world extension {
 
   /// Exports the `canister-build` interface implemented by this extension,
   /// allowing the `icp:build` facade to delegate Motoko builds to it.
-  export icp:build/canister-build@0.6.13;
+  export canister-build;
 }

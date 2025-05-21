@@ -5,13 +5,10 @@ mod bindings;
 
 use bindings::{
     exports::icp::{
-        build::canister_build,
+        build_mo::canister_build,
         cli::{cli, init},
     },
-    icp::{
-        build::registry::register_provider,
-        cli::{command::execute, misc::print},
-    },
+    icp::{build::registry::register_provider, cli::misc::print},
 };
 
 mod spec;

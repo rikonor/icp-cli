@@ -92,7 +92,10 @@ impl cli::Guest for Component {
                 .build(&canister_dir)
         }) {
             // Ok
-            Ok(_) => 0,
+            Ok(output_path) => {
+                print(&format!("{output_path}"));
+                0
+            }
 
             // Failure
             Err(err) => {

@@ -1,7 +1,7 @@
 use std::path::Path;
 
 use dashmap::DashMap;
-use icp_component_invoke::Val;
+use icp_component_invoke::Val as IcpVal;
 
 use crate::{
     CanisterManifest, LazyRef,
@@ -101,18 +101,90 @@ impl Build for Builder {
             }
         };
 
-        let params = serde_json::to_vec(&[
-            Val::String(canister_dir.to_string()), // canister-dir
-        ])
-        .expect("failed to serialize params");
+        let params = vec![
+            IcpVal::String(canister_dir.to_string()), // canister_dir
+        ];
 
-        invoke(
-            &interface_name, // interface_name
-            &function_name,  // function_name
-            &params,
-        )
-        .map_err(|err| BuildError::BuildFailed(err))?;
+        // TODO(or.ricon): The following is probably going to have to be repeated in other facades,
+        // We should look into creating a common function for this under icp-component-invoke
 
-        Ok("TODO".into())
+        // Serialize parameters
+        let params = serde_json::to_vec(&params).map_err(|err| {
+            BuildError::BuildFailed(format!("failed to serialize parameters: {:?}", err))
+        })?;
+
+        // Invoke the builder
+        let out = invoke(&interface_name, &function_name, &params).map_err(|err| {
+            BuildError::BuildFailed(format!("failed to invoke builder: {:?}", err))
+        })?;
+
+        // Deserialize results
+        let out: Vec<IcpVal> = serde_json::from_slice(&out).map_err(|err| {
+            BuildError::BuildFailed(format!("failed to deserialize results: {:?}", err))
+        })?;
+
+        // Check the number of results
+        if out.len() != 1 {
+            return Err(BuildError::BuildFailed(format!(
+                "results were expected to have one element: {:?}",
+                out
+            )));
+        }
+
+        // Get the first result
+        let out = out.get(0).ok_or_else(|| {
+            BuildError::BuildFailed(format!("invalid result from canister builder: {:?}", out))
+        })?;
+
+        // Check the type of the result
+        let out = match out {
+            // Correct
+            IcpVal::Result(out) => out,
+
+            // Wrong
+            _ => {
+                return Err(BuildError::BuildFailed(format!(
+                    "expected result, but got something else: {:?}",
+                    out
+                )));
+            }
+        };
+
+        // Check the result and error
+        let out = match out {
+            // Correct
+            Ok(Some(out)) => Ok(out),
+
+            // Correct
+            Err(Some(err)) => Err(err),
+
+            // Wrong
+            _ => {
+                return Err(BuildError::BuildFailed(format!(
+                    "invalid result from canister builder: {:?}",
+                    out
+                )));
+            }
+        };
+
+        let out = out.map_err(|err| {
+            BuildError::BuildFailed(format!("canister builder failed: {:?}", err))
+        })?;
+
+        // Extract the result
+        let out = match out.as_ref() {
+            // Correct
+            IcpVal::String(out) => out,
+
+            // Wrong
+            _ => {
+                return Err(BuildError::BuildFailed(format!(
+                    "invalid result from canister builder: {:?}",
+                    out
+                )));
+            }
+        };
+
+        Ok(out.to_owned())
     }
 }
