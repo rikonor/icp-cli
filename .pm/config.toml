@@ -12,4 +12,5 @@ active = [
     "ambiguity-resolution",
     "guideline-management",
     "release-process",
+    "wit-spec-docs",
 ]
