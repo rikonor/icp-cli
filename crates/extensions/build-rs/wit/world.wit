@@ -1,11 +1,38 @@
 package icp:build-rs;
 
+// This world file defines the capabilities and requirements for the `build-rs`
+// extension component. It specifies the interfaces it imports from the host
+// and other extensions, and the interfaces it exports.
+
+/// Common interface for building a canister.
+/// This contract is implemented by:
+///  1. The Build Facade: Its implementation determines canister type and delegates.
+///  2. Specific Build Providers (e.g., Motoko, Rust): Their implementations perform the actual build.
 interface canister-build {
-  build-canister: func(canister-dir: string) -> result<_, string>;
+  /// Represents the path to the output artifact (e.g., a .wasm file).
+  type output-path = string;
+
+  /// Builds the canister located in the specified directory.
+  ///
+  /// - `canister-dir`: The relative path to the canister's directory,
+  ///   which is expected to contain a manifest file (e.g., `canister.toml`)
+  ///   detailing its name and type.
+  ///
+  /// Returns `ok()` on successful build, or `err(string)` with an error message on failure.
+  build-canister: func(canister-dir: string) -> result<output-path, string>;
 }
 
+/// The `extension` world for the `build-rs` component.
+/// It specifies the interfaces required by this extension and the interfaces it provides.
 world extension {
-  include icp:cli/extension@0.3.3;
-  import icp:build/registry@0.6.10;
+  // Includes standard CLI functionalities provided by the host.
+  include icp:cli/extension@0.3.4;
+
+  /// Imports the `registry` interface from the `icp:build` facade extension
+  /// to register this provider.
+  import icp:build/registry@0.6.13;
+
+  /// Exports the `canister-build` interface implemented by this extension,
+  /// allowing the `icp:build` facade to delegate Motoko builds to it.
   export canister-build;
 }

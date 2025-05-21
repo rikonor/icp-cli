@@ -4,9 +4,13 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+anyhow.workspace = true
 clap.workspace = true
-serde.workspace = true
+once_cell.workspace = true
 serde_json.workspace = true
+serde.workspace = true
+thiserror.workspace = true
+toml.workspace = true
 wit-bindgen-rt = { workspace = true, features = ["bitflags"] }
 
 [lib]
@@ -18,5 +22,5 @@ package = "icp:build-rs"
 [package.metadata.component.dependencies]
 
 [package.metadata.component.target.dependencies]
-"icp:build" = "0.6.10"
-"icp:cli" = "0.3.3"
+"icp:build" = "0.6.13"
+"icp:cli" = "0.3.4"

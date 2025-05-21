@@ -186,9 +186,13 @@ dependencies = [
 name = "build-mo"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "clap",
+ "once_cell",
  "serde",
  "serde_json",
+ "thiserror 2.0.12",
+ "toml",
  "wit-bindgen-rt 0.41.0",
 ]
 
@@ -196,9 +200,13 @@ dependencies = [
 name = "build-rs"
 version = "0.1.0"
 dependencies = [
+ "anyhow",
  "clap",
+ "once_cell",
  "serde",
  "serde_json",
+ "thiserror 2.0.12",
+ "toml",
  "wit-bindgen-rt 0.41.0",
 ]
 
