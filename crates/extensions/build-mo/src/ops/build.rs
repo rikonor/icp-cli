@@ -77,11 +77,34 @@ impl Build for Builder {
             ))
         })?;
 
-        print(&format!("{cm:?}"));
+        let mut input_path = cm.canister.motoko.input;
 
-        // let out = (self.execute)("moc", &["build", canister_dir])
-        //     .map_err(|err| BuildError::BuildFailed(format!("failed to build canister: {}", err)))?;
+        // Check if the input path is relative
+        if input_path.is_relative() {
+            input_path = Path::new(canister_dir).join(input_path);
+        }
 
-        Ok("woot woot".to_string())
+        // Convert the path to a string
+        let input_path = input_path.to_string_lossy().into_owned();
+
+        // Specify output path
+        let output_path = Path::new(canister_dir)
+            .join("main.wasm")
+            .to_string_lossy()
+            .into_owned();
+
+        // Invoke the `moc` command
+        let out = (self.execute)("moc", &[input_path, "-o".to_string(), output_path.clone()])
+            .map_err(|err| BuildError::BuildFailed(format!("failed to build canister: {}", err)))?;
+
+        // Check the exit code
+        if out.exit_code != 0 {
+            return Err(BuildError::BuildFailed(format!(
+                "moc failed with exit code {}",
+                out.exit_code
+            )));
+        }
+
+        Ok(output_path)
     }
 }

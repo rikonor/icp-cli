@@ -1,3 +1,5 @@
+use std::path::PathBuf;
+
 use clap::Command;
 use once_cell::sync::OnceCell;
 use serde::Deserialize;
@@ -36,12 +38,20 @@ thread_local! {
 }
 
 #[derive(Deserialize, Debug)]
+struct MotokoProperties {
+    input: PathBuf,
+}
+
+#[derive(Deserialize, Debug)]
 struct CanisterProperties {
     #[allow(unused)]
     name: String,
 
     #[serde(rename = "type")]
     canister_type: String,
+
+    #[serde(rename = "motoko")]
+    motoko: MotokoProperties,
 }
 
 #[derive(Deserialize, Debug)]

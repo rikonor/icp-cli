@@ -3,11 +3,9 @@ name = "icp-component-invoke"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
 [dependencies]
-serde = { version = "1.0", features = ["derive"] }
-wasmtime = { version = "32.0.0", optional = true }
+serde = { workspace = true, features = ["derive"] }
+wasmtime = { workspace = true, optional = true }
 
 [features]
 default = []
