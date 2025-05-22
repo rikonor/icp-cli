@@ -77,11 +77,47 @@ impl Build for Builder {
             ))
         })?;
 
-        print(&format!("{cm:?}"));
+        #[rustfmt::skip]
+        let args = [
+            "build",
 
-        // let out = (self.execute)("moc", &["build", canister_dir])
-        //     .map_err(|err| BuildError::BuildFailed(format!("failed to build canister: {}", err)))?;
+            //
+            "--release",
 
-        Ok("woot woot".to_string())
+            // target architecture
+            "--target", "wasm32-unknown-unknown",
+
+            // package name
+            "-p", &cm.canister.rust.package,
+
+            // ensure the build is reproducible
+            "--locked",
+        ]
+        .map(ToString::to_string);
+
+        // Invoke the `cargo` command
+        let out = (self.execute)("cargo", &args)
+            .map_err(|err| BuildError::BuildFailed(format!("failed to build canister: {}", err)))?;
+
+        // Check the exit code
+        if out.exit_code != 0 {
+            return Err(BuildError::BuildFailed(format!(
+                "moc failed with exit code {}",
+                out.exit_code
+            )));
+        }
+
+        // Specify output path
+        let output_path = Path::new("target")
+            .join("wasm32-unknown-unknown")
+            .join("release")
+            .join(format!(
+                "{}.wasm",
+                cm.canister.rust.package.replace("-", "_")
+            ))
+            .to_string_lossy()
+            .into_owned();
+
+        Ok(output_path)
     }
 }

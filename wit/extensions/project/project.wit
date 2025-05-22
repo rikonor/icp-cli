@@ -1,4 +1,4 @@
-package icp:project@0.7.1; // Add library interface, update cli dep
+package icp:project@0.7.2;
 
 // Interface for programmatic interaction with the project extension
 interface lib {
@@ -18,9 +18,8 @@ world extension {
   include icp:cli/extension@0.3.4;
 
   // Import the build library interface to call build functions
-  import icp:build/canister-build@0.6.7;
+  import icp:build/canister-build@0.6.13;
 
   // Exported library interface for other extensions to use
-  // Must be named 'lib' due to hardcoded suffix check
   export lib;
 }

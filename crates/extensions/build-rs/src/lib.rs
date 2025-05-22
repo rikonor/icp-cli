@@ -36,12 +36,20 @@ thread_local! {
 }
 
 #[derive(Deserialize, Debug)]
+struct RustProperties {
+    package: String,
+}
+
+#[derive(Deserialize, Debug)]
 struct CanisterProperties {
     #[allow(unused)]
     name: String,
 
     #[serde(rename = "type")]
     canister_type: String,
+
+    #[serde(rename = "rust")]
+    rust: RustProperties,
 }
 
 #[derive(Deserialize, Debug)]

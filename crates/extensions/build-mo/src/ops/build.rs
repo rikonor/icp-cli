@@ -1,9 +1,6 @@
 use std::path::Path;
 
-use crate::{
-    CanisterManifest,
-    bindings::icp::cli::{command::CommandOutput, misc::print},
-};
+use crate::{CanisterManifest, bindings::icp::cli::command::CommandOutput};
 
 #[derive(Debug, thiserror::Error)]
 pub enum BuildError {
@@ -93,8 +90,17 @@ impl Build for Builder {
             .to_string_lossy()
             .into_owned();
 
+        #[rustfmt::skip]
+        let args = [
+            &input_path,
+
+            // output path
+            "-o", &output_path,
+        ]
+        .map(ToString::to_string);
+
         // Invoke the `moc` command
-        let out = (self.execute)("moc", &[input_path, "-o".to_string(), output_path.clone()])
+        let out = (self.execute)("moc", &args)
             .map_err(|err| BuildError::BuildFailed(format!("failed to build canister: {}", err)))?;
 
         // Check the exit code

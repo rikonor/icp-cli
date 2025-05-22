@@ -146,10 +146,6 @@ pub mod icp {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
-            /// Executes a command on the host.
-            /// `command`: The name or path of the command to execute.
-            /// `args`: A list of arguments to pass to the command.
-            /// Returns the result of the command execution, including stdout, stderr, and exit code.
             pub fn execute(
                 command: &str,
                 args: &[_rt::String],
@@ -277,28 +273,14 @@ pub mod icp {
                 }
             }
         }
-        /// This interface provides functions for extensions to interact with other
-        /// components loaded by the CLI host.
-        /// The `component` interface allows extensions to dynamically invoke
-        /// functions exported by other components loaded by the host.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod component {
             #[used]
             #[doc(hidden)]
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
-            /// Represents the raw bytes of the encoded result value on successful
-            /// component function invocation.
             pub type InvokeOutput = _rt::Vec<u8>;
             #[allow(unused_unsafe, clippy::all)]
-            /// Dynamically invokes a function from another component.
-            ///
-            /// `interface-name`: The name of the interface the target function belongs to (e.g., "icp:build/canister-build").
-            /// `function-name`: The name of the function to invoke (e.g., "build-canister").
-            /// `params`: The raw bytes of the encoded parameters for the target function.
-            ///
-            /// Returns the raw bytes of the encoded result value on success, or a string
-            /// describing the error on failure.
             pub fn invoke(
                 interface_name: &str,
                 function_name: &str,
@@ -402,7 +384,6 @@ pub mod icp {
                 }
             }
         }
-        /// A custom filesystem interface mediated by the host.
         #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
         pub mod filesystem {
             #[used]
@@ -410,8 +391,6 @@ pub mod icp {
             static __FORCE_SECTION_REF: fn() = super::super::super::__link_custom_section_describing_imports;
             use super::super::super::_rt;
             #[allow(unused_unsafe, clippy::all)]
-            /// Creates a directory at the specified path relative to the current workspace.
-            /// Returns `ok()` on success, or `err(string)` with an error message on failure.
             pub fn create_directory(path: &str) -> Result<(), _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -470,9 +449,6 @@ pub mod icp {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
-            /// Writes the given bytes to a file at the specified path relative to the current workspace.
-            /// Creates the file if it doesn't exist, overwrites it if it does.
-            /// Returns `ok()` on success, or `err(string)` with an error message on failure.
             pub fn write_file(path: &str, contents: &[u8]) -> Result<(), _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -548,8 +524,6 @@ pub mod icp {
                 }
             }
             #[allow(unused_unsafe, clippy::all)]
-            /// Reads the entire contents of a file at the specified path relative to the current workspace.
-            /// Returns `ok(list<u8>)` with the file contents on success, or `err(string)` with an error message on failure.
             pub fn read_file(path: &str) -> Result<_rt::Vec<u8>, _rt::String> {
                 unsafe {
                     #[cfg_attr(target_pointer_width = "64", repr(align(8)))]
@@ -807,7 +781,6 @@ pub mod exports {
             }
         }
         pub mod cli {
-            /// The `init` interface defines the initialization function for an extension.
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
             pub mod init {
                 #[used]
@@ -858,8 +831,6 @@ pub mod exports {
                     }
                 }
                 pub trait Guest {
-                    /// The initialization function is called by the host after the extension
-                    /// component has been instantiated.
                     fn init() -> Result<(), _rt::String>;
                 }
                 #[doc(hidden)]
@@ -888,8 +859,6 @@ pub mod exports {
                         * ::core::mem::size_of::<*const u8>()],
                 );
             }
-            /// The `cli` interface defines the functions that an extension must export
-            /// to provide CLI functionality.
             #[allow(dead_code, async_fn_in_trait, unused_imports, clippy::all)]
             pub mod cli {
                 #[used]
@@ -952,9 +921,7 @@ pub mod exports {
                     _rt::as_i32(result4)
                 }
                 pub trait Guest {
-                    /// spec provides a schema for the cli subcommand's arguments and help text.
                     fn spec() -> _rt::String;
-                    /// run the cli portion of the extension
                     fn run(args: _rt::Vec<_rt::String>) -> u8;
                 }
                 #[doc(hidden)]

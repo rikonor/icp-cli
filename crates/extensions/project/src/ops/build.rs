@@ -40,13 +40,13 @@ pub trait Build {
 
 pub struct Builder {
     list_canisters: LocalRef<Box<dyn List>>,
-    build_canister: Box<dyn Fn(&str) -> Result<(), String>>,
+    build_canister: Box<dyn Fn(&str) -> Result<String, String>>,
 }
 
 impl Builder {
     pub fn new(
         list_canisters: LocalRef<Box<dyn List>>,
-        build_canister: Box<dyn Fn(&str) -> Result<(), String>>,
+        build_canister: Box<dyn Fn(&str) -> Result<String, String>>,
     ) -> Self {
         Builder {
             list_canisters,
