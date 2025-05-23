@@ -1,0 +1,6 @@
+package icp:network-pic;
+
+world extension {
+  // Includes standard CLI functionalities provided by the host.
+  include icp:cli/extension@0.3.4;
+}
